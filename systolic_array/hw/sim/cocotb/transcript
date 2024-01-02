@@ -1,0 +1,337 @@
+# Reading pref.tcl
+# //  ModelSim SE-64 10.6d Feb 23 2018Linux 5.14.0-284.30.1.el9_2.x86_64
+# //
+# //  Copyright 1991-2018 Mentor Graphics Corporation
+# //  All Rights Reserved.
+# //
+# //  ModelSim SE-64 and its associated documentation contain trade
+# //  secrets and commercial or financial information that are the property of
+# //  Mentor Graphics Corporation and are privileged, confidential,
+# //  and exempt from disclosure under the Freedom of Information Act,
+# //  5 U.S.C. Section 552. Furthermore, this information
+# //  is prohibited from disclosure under the Trade Secrets Act,
+# //  18 U.S.C. Section 1905.
+# //
+# do sim_build/runsim.do
+# Model Technology ModelSim SE-64 vmap 10.6d Lib Mapping Utility 2018.02 Feb 23 2018
+# vmap -c 
+# ** Warning: vmap will not overwrite local modelsim.ini.
+# Model Technology ModelSim SE-64 vmap 10.6d Lib Mapping Utility 2018.02 Feb 23 2018
+# vmap work sim_build/work 
+# Modifying modelsim.ini
+# Model Technology ModelSim SE-64 vlog 10.6d Compiler 2018.02 Feb 23 2018
+# Start time: 10:05:14 on Jan 02,2024
+# vlog -reportprogress 300 -work work -L axi_vip_v1_1_6 -L xilinx_vip "+define+COCOTB_SIM" -sv "+define+XSIM" -timescale 1ns/1ps -mfcu "+acc" /home/thw20/FYP/systolic_array/hw/sim/modelsim/glbl.v /home/thw20/FYP/systolic_array/hw/ip/include/top_pkg.sv /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher_weight_bank.sv /home/thw20/FYP/systolic_array/hw/ip/lib/buffer/ultraram.v /home/thw20/FYP/systolic_array/hw/ip/lib/buffer/ultraram_fifo.sv /home/thw20/FYP/systolic_array/hw/ip/lib/axi/axi_read_master.sv /home/thw20/FYP/systolic_array/hw/ip/lib/axi/axi_interface.sv /home/thw20/FYP/systolic_array/hw/ip/lib/axi/axi_ram.sv /home/thw20/FYP/systolic_array/hw/ip/top/top.sv /home/thw20/FYP/systolic_array/imports/verilog-axi/rtl/axi_ram.v 
+# -- Compiling module glbl
+# -- Compiling package top_pkg
+# -- Compiling package glbl_v_unit
+# -- Importing package top_pkg
+# -- Compiling module prefetcher
+# -- Compiling module prefetcher_weight_bank
+# -- Compiling module ultraram
+# -- Compiling module ultraram_fifo
+# -- Compiling module axi_read_master
+# -- Compiling module axi_interface
+# -- Compiling module axi_ram
+# -- Compiling module top
+# -- Compiling module axi_ram
+# 
+# Top level modules:
+# 	glbl
+# 	axi_ram
+# 	top
+# End time: 10:05:14 on Jan 02,2024, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+# vsim -L axi_infrastructure_v1_1_0 -L axi_vip_v1_1_6 -L fifo_generator_v13_2_5 -L axi_interconnect_v1_7_17 -L generic_baseblocks_v2_1_0 -L axi_register_slice_v2_1_20 -L axi_data_fifo_v2_1_19 -L axi_crossbar_v2_1_21 -L xbip_utils_v3_0_10 -L axi_utils_v2_0_6 -L xbip_pipe_v3_0_6 -L xbip_dsp48_wrapper_v3_0_4 -L xbip_dsp48_addsub_v3_0_6 -L xbip_dsp48_multadd_v3_0_6 -L xbip_bram18k_v3_0_6 -L mult_gen_v12_0_16 -L floating_point_v7_1_9 -L xilinx_vip -L unisims_ver -L unimacro_ver -L secureip -L xpm -onfinish stop -pli "/home/thw20/miniconda3/envs/myenv/lib/python3.10/site-packages/cocotb/libs/libcocotbvpi_modelsim.so" sim_build/work.top sim_build/work.glbl 
+# Start time: 10:05:15 on Jan 02,2024
+# ** Note: (vsim-3812) Design is being optimized...
+# ** Note: (vsim-3865) Due to PLI being present, full design access is being specified.
+# ** Note: (vopt-143) Recognized 1 FSM in module "prefetcher_weight_bank(fast)".
+# ** Note: (vopt-143) Recognized 1 FSM in module "axi_read_master(fast)".
+# Loading sv_std.std
+# Loading work.top_pkg(fast)
+# Loading work.glbl_v_unit(fast)
+# Loading work.top(fast)
+# Loading work.axi_interface(fast)
+# Loading work.prefetcher(fast)
+# Loading work.prefetcher_weight_bank(fast)
+# Loading work.ultraram_fifo(fast)
+# Loading work.ultraram(fast)
+# Loading work.axi_read_master(fast)
+# Loading work.glbl(fast)
+# Loading /home/thw20/miniconda3/envs/myenv/lib/python3.10/site-packages/cocotb/libs/libcocotbvpi_modelsim.so
+#      -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:76   in set_program_name_in_venv        Did not detect Python virtual environment. Using system-wide Python interpreter
+#      -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
+add wave -position insertpoint sim:/top/prefetcher_i/weight_bank_fixed_i/*
+add wave -position insertpoint sim:/top/prefetcher_i/weight_bank_fixed_i/*
+add wave -position insertpoint sim:/top/axi_ram/*
+run -all
+#      0.00ns INFO     cocotb                             Running on ModelSim SE-64 version 10.6d 2018.02
+#      0.00ns INFO     cocotb                             Running tests with cocotb v1.8.0 from /home/thw20/miniconda3/envs/myenv/lib/python3.10/site-packages/cocotb
+#      0.00ns INFO     cocotb                             Seeding Python random module with 1704190034
+# ['', '/home/thw20/miniconda3/envs/myenv/lib/python310.zip', '/home/thw20/miniconda3/envs/myenv/lib/python3.10', '/home/thw20/miniconda3/envs/myenv/lib/python3.10/lib-dynload', '/home/thw20/miniconda3/envs/myenv/lib/python3.10/site-packages', '/home/thw20/FYP/systolic_array/hw/sim/cocotb/../../..']
+#      0.00ns INFO     cocotb.regression                  Found test runner.graph_test
+#      0.00ns INFO     cocotb.regression                  running graph_test (1/1)
+#    220.00ns INFO     cocotb.axi_ram.axi                 AXI slave model (write)
+#    220.00ns INFO     cocotb.axi_ram.axi                 cocotbext-axi version 0.1.24
+#    220.00ns INFO     cocotb.axi_ram.axi                 Copyright (c) 2021 Alex Forencich
+#    220.00ns INFO     cocotb.axi_ram.axi                 https://github.com/alexforencich/cocotbext-axi
+#    220.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    220.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    220.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    220.00ns INFO     cocotb.axi_ram.axi                 AXI slave model configuration:
+#    220.00ns INFO     cocotb.axi_ram.axi                   Address width: 34 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   ID width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   Byte size: 8 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   Data width: 512 bits (64 bytes)
+#    220.00ns INFO     cocotb.axi_ram.axi                 AXI slave model signals:
+#    220.00ns INFO     cocotb.axi_ram.axi                   awaddr width: 34 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awburst width: 2 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awcache width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awid width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awlen width: 8 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awlock width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awprot width: 3 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awqos width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awready width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awregion width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awsize width: 3 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awuser: not present
+#    220.00ns INFO     cocotb.axi_ram.axi                   awvalid width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   wdata width: 512 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   wlast width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   wready width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   wstrb width: 64 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   wuser: not present
+#    220.00ns INFO     cocotb.axi_ram.axi                   wvalid width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   bid width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   bready width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   bresp width: 2 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   buser: not present
+#    220.00ns INFO     cocotb.axi_ram.axi                   bvalid width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    220.00ns INFO     cocotb.axi_ram.axi                 AXI slave model (read)
+#    220.00ns INFO     cocotb.axi_ram.axi                 cocotbext-axi version 0.1.24
+#    220.00ns INFO     cocotb.axi_ram.axi                 Copyright (c) 2021 Alex Forencich
+#    220.00ns INFO     cocotb.axi_ram.axi                 https://github.com/alexforencich/cocotbext-axi
+#    220.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    220.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    220.00ns INFO     cocotb.axi_ram.axi                 AXI slave model configuration:
+#    220.00ns INFO     cocotb.axi_ram.axi                   Address width: 34 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   ID width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   Byte size: 8 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   Data width: 512 bits (64 bytes)
+#    220.00ns INFO     cocotb.axi_ram.axi                 AXI slave model signals:
+#    220.00ns INFO     cocotb.axi_ram.axi                   araddr width: 34 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   arburst width: 2 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   arcache width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   arid width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   arlen width: 8 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   arlock width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   arprot width: 3 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   arqos width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   arready width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   arregion width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   arsize width: 3 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   aruser: not present
+#    220.00ns INFO     cocotb.axi_ram.axi                   arvalid width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   rdata width: 512 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   rid width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   rlast width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   rready width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   rresp width: 2 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   ruser: not present
+#    220.00ns INFO     cocotb.axi_ram.axi                   rvalid width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    230.00ns INFO     cocotb.axi_ram.axi                 Reset asserted
+#    230.00ns INFO     cocotb.axi_ram.axi                 Reset asserted
+#    230.00ns INFO     cocotb.axi_ram.axi                 Reset asserted
+#    230.00ns INFO     cocotb.axi_ram.axi                 Reset asserted
+#    230.00ns INFO     cocotb.axi_ram.axi                 Reset asserted
+#    230.00ns INFO     cocotb.axi_ram.axi                 Reset asserted
+#    230.00ns INFO     cocotb.axi_ram.axi                 Reset asserted
+#    250.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    250.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    250.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    250.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    250.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    250.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    250.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+# Writing: index=0, value=44, bytes=x2c
+# Done writing
+# Writing: index=1, value=47, bytes=x2f
+# Done writing
+# Writing: index=2, value=64, bytes=x40
+# Done writing
+# Writing: index=3, value=67, bytes=x43
+# Done writing
+# Writing: index=4, value=67, bytes=x43
+# Done writing
+# Writing: index=5, value=9, bytes=x09
+# Done writing
+# Writing: index=6, value=83, bytes=x53
+# Done writing
+# Writing: index=7, value=21, bytes=x15
+# Done writing
+# Writing: index=8, value=36, bytes=x24
+# Done writing
+# Writing: index=9, value=87, bytes=x57
+# Done writing
+# Writing: index=10, value=70, bytes=x46
+# Done writing
+# Writing: index=11, value=88, bytes=x58
+# Done writing
+# Writing: index=12, value=88, bytes=x58
+# Done writing
+# Writing: index=13, value=12, bytes=x0c
+# Done writing
+# Writing: index=14, value=58, bytes=x3a
+# Done writing
+# Writing: index=15, value=65, bytes=x41
+# Done writing
+# Writing: index=16, value=44, bytes=x2c
+# Done writing
+# Writing: index=17, value=47, bytes=x2f
+# Done writing
+# Writing: index=18, value=64, bytes=x40
+# Done writing
+# Writing: index=19, value=67, bytes=x43
+# Done writing
+# Writing: index=20, value=67, bytes=x43
+# Done writing
+# Writing: index=21, value=9, bytes=x09
+# Done writing
+# Writing: index=22, value=83, bytes=x53
+# Done writing
+# Writing: index=23, value=21, bytes=x15
+# Done writing
+# Writing: index=24, value=36, bytes=x24
+# Done writing
+# Writing: index=25, value=87, bytes=x57
+# Done writing
+# Writing: index=26, value=70, bytes=x46
+# Done writing
+# Writing: index=27, value=88, bytes=x58
+# Done writing
+# Writing: index=28, value=88, bytes=x58
+# Done writing
+# Writing: index=29, value=12, bytes=x0c
+# Done writing
+# Writing: index=30, value=58, bytes=x3a
+# Done writing
+# Writing: index=31, value=65, bytes=x41
+# Done writing
+# index=0, value=44, bytes=x2c
+# Done reading
+# Reading: index=0, value=44, bytes=xb','
+# index=1, value=47, bytes=x2f
+# Done reading
+# Reading: index=1, value=47, bytes=xb'/'
+# index=2, value=64, bytes=x40
+# Done reading
+# Reading: index=2, value=64, bytes=xb'@'
+# index=3, value=67, bytes=x43
+# Done reading
+# Reading: index=3, value=67, bytes=xb'C'
+# index=4, value=67, bytes=x43
+# Done reading
+# Reading: index=4, value=67, bytes=xb'C'
+# index=5, value=9, bytes=x09
+# Done reading
+# Reading: index=5, value=9, bytes=xb'\t'
+# index=6, value=83, bytes=x53
+# Done reading
+# Reading: index=6, value=83, bytes=xb'S'
+# index=7, value=21, bytes=x15
+# Done reading
+# Reading: index=7, value=21, bytes=xb'\x15'
+# index=8, value=36, bytes=x24
+# Done reading
+# Reading: index=8, value=36, bytes=xb'$'
+# index=9, value=87, bytes=x57
+# Done reading
+# Reading: index=9, value=87, bytes=xb'W'
+# index=10, value=70, bytes=x46
+# Done reading
+# Reading: index=10, value=70, bytes=xb'F'
+# index=11, value=88, bytes=x58
+# Done reading
+# Reading: index=11, value=88, bytes=xb'X'
+# index=12, value=88, bytes=x58
+# Done reading
+# Reading: index=12, value=88, bytes=xb'X'
+# index=13, value=12, bytes=x0c
+# Done reading
+# Reading: index=13, value=12, bytes=xb'\x0c'
+# index=14, value=58, bytes=x3a
+# Done reading
+# Reading: index=14, value=58, bytes=xb':'
+# index=15, value=65, bytes=x41
+# Done reading
+# Reading: index=15, value=65, bytes=xb'A'
+# index=16, value=44, bytes=x2c
+# Done reading
+# Reading: index=16, value=44, bytes=xb','
+# index=17, value=47, bytes=x2f
+# Done reading
+# Reading: index=17, value=47, bytes=xb'/'
+# index=18, value=64, bytes=x40
+# Done reading
+# Reading: index=18, value=64, bytes=xb'@'
+# index=19, value=67, bytes=x43
+# Done reading
+# Reading: index=19, value=67, bytes=xb'C'
+# index=20, value=67, bytes=x43
+# Done reading
+# Reading: index=20, value=67, bytes=xb'C'
+# index=21, value=9, bytes=x09
+# Done reading
+# Reading: index=21, value=9, bytes=xb'\t'
+# index=22, value=83, bytes=x53
+# Done reading
+# Reading: index=22, value=83, bytes=xb'S'
+# index=23, value=21, bytes=x15
+# Done reading
+# Reading: index=23, value=21, bytes=xb'\x15'
+# index=24, value=36, bytes=x24
+# Done reading
+# Reading: index=24, value=36, bytes=xb'$'
+# index=25, value=87, bytes=x57
+# Done reading
+# Reading: index=25, value=87, bytes=xb'W'
+# index=26, value=70, bytes=x46
+# Done reading
+# Reading: index=26, value=70, bytes=xb'F'
+# index=27, value=88, bytes=x58
+# Done reading
+# Reading: index=27, value=88, bytes=xb'X'
+# index=28, value=88, bytes=x58
+# Done reading
+# Reading: index=28, value=88, bytes=xb'X'
+# index=29, value=12, bytes=x0c
+# Done reading
+# Reading: index=29, value=12, bytes=xb'\x0c'
+# index=30, value=58, bytes=x3a
+# Done reading
+# Reading: index=30, value=58, bytes=xb':'
+# index=31, value=65, bytes=x41
+# Done reading
+# Reading: index=31, value=65, bytes=xb'A'
+# Done writing and reading
+# Done writing
+#    300.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0x0 araddr: 0x00000000 arlen: 0 arsize: 6 arprot: AxiProt.0
+#    500.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0x0 araddr: 0x00000040 arlen: 0 arsize: 6 arprot: AxiProt.0
+#    700.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0x0 araddr: 0x00000080 arlen: 0 arsize: 6 arprot: AxiProt.0
+#    900.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0x0 araddr: 0x000000c0 arlen: 0 arsize: 6 arprot: AxiProt.0
+#   1270.00ns INFO     cocotb.regression                  graph_test passed
+#   1270.00ns INFO     cocotb.regression                  **************************************************************************************
+#                                                         ** TEST                          STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+#                                                         **************************************************************************************
+#                                                         ** runner.graph_test              PASS        1270.00           0.12      10636.80  **
+#                                                         **************************************************************************************
+#                                                         ** TESTS=1 PASS=1 FAIL=0 SKIP=0               1270.00           4.14        306.91  **
+#                                                         **************************************************************************************
+#                                                         
+# ** Note: $finish
+#    Time: 1270001 ps  Iteration: 0  Instance: /top/axi_ram
+# Simulation stop requested.

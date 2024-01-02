@@ -1,0 +1,22 @@
+Wed Dec 06 01:06:24 GMT 2023
+Trace back: bad window path name ".__tk__messagebox"
+    while executing
+"winfo reqwidth $w"
+    (procedure "::tk::PlaceWindow" line 20)
+    invoked from within
+"::tk::PlaceWindow $w widget $data(-parent)"
+    (procedure "::tk::MessageBox" line 266)
+    invoked from within
+"::tk::MessageBox {*}$args"
+    (procedure "tk_messageBox" line 2)
+    invoked from within
+"tk_messageBox -parent [Misc::getWinParent] -icon question  -title $title  -message "Are you sure you want to quit?"  -type yesno -default yes"
+    (procedure "Transcript::QuitDialog" line 5)
+    invoked from within
+"Transcript::QuitDialog"
+    (procedure "quit" line 75)
+    invoked from within
+"quit"
+    (command for "WM_DELETE_WINDOW" window manager protocol)
+  <2:/mnt/applications/mentor/modelsim-10.6d/modelsim/modeltech/linux_x86_64/tk8.6/bgerror.tcl:106: ::tkerror {bad window path name ".__tk__messagebox"}
+  <1:eval:1: ::tk::dialog::error::bgerror {bad window path name ".__tk__messagebox"}

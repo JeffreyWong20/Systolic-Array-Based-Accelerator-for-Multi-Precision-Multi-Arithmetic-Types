@@ -1,0 +1,807 @@
+rm -f results.xml
+make -f Makefile results.xml
+make[1]: Entering directory `/home/thw20/FYP/systolic_array/hw/sim/cocotb'
+# Make sure all libs in SOURCES_VHDL_* are mentioned in VHDL_LIB_ORDER and vice versa
+rm -f results.xml
+set -o pipefail; MODULE=runner TESTCASE= TOPLEVEL="work.top" \
+GPI_EXTRA= TOPLEVEL_LANG=verilog \
+abc= \
+ /mnt/applications/mentor/modelsim-10.6d/modelsim/modeltech/linux_x86_64/vsim -c -64  -do sim_build/runsim.do  2>&1 | tee sim_build/sim.log
+Reading pref.tcl
+
+# 10.6d
+
+# do sim_build/runsim.do
+# Model Technology ModelSim SE-64 vmap 10.6d Lib Mapping Utility 2018.02 Feb 23 2018
+# vmap -c 
+# ** Warning: vmap will not overwrite local modelsim.ini.
+# Model Technology ModelSim SE-64 vmap 10.6d Lib Mapping Utility 2018.02 Feb 23 2018
+# vmap work sim_build/work 
+# Modifying modelsim.ini
+# Model Technology ModelSim SE-64 vlog 10.6d Compiler 2018.02 Feb 23 2018
+# Start time: 11:11:29 on Jan 01,2024
+# vlog -work work -L axi_vip_v1_1_6 -L xilinx_vip "+define+COCOTB_SIM" -sv "+define+XSIM" -timescale 1ns/1ps -mfcu "+acc" /home/thw20/FYP/systolic_array/hw/sim/modelsim/glbl.v /home/thw20/FYP/systolic_array/hw/ip/include/top_pkg.sv /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher_weight_bank.sv /home/thw20/FYP/systolic_array/hw/ip/lib/buffer/ultraram.v /home/thw20/FYP/systolic_array/hw/ip/lib/buffer/ultraram_fifo.sv /home/thw20/FYP/systolic_array/hw/ip/lib/axi/axi_read_master.sv /home/thw20/FYP/systolic_array/hw/ip/lib/axi/axi_interface.sv /home/thw20/FYP/systolic_array/hw/ip/lib/axi/axi_ram.sv /home/thw20/FYP/systolic_array/hw/ip/top/top.sv 
+# -- Compiling module glbl
+# -- Compiling package top_pkg
+# -- Compiling package glbl_v_unit
+# -- Importing package top_pkg
+# -- Compiling module prefetcher
+# -- Compiling module prefetcher_weight_bank
+# -- Compiling module ultraram
+# -- Compiling module ultraram_fifo
+# -- Compiling module axi_read_master
+# -- Compiling module axi_interface
+# -- Compiling module axi_ram
+# -- Compiling module top
+# 
+# Top level modules:
+# 	glbl
+# 	axi_ram
+# 	top
+# End time: 11:11:29 on Jan 01,2024, Elapsed time: 0:00:00
+# Errors: 0, Warnings: 0
+# vsim -L axi_infrastructure_v1_1_0 -L axi_vip_v1_1_6 -L fifo_generator_v13_2_5 -L axi_interconnect_v1_7_17 -L generic_baseblocks_v2_1_0 -L axi_register_slice_v2_1_20 -L axi_data_fifo_v2_1_19 -L axi_crossbar_v2_1_21 -L xbip_utils_v3_0_10 -L axi_utils_v2_0_6 -L xbip_pipe_v3_0_6 -L xbip_dsp48_wrapper_v3_0_4 -L xbip_dsp48_addsub_v3_0_6 -L xbip_dsp48_multadd_v3_0_6 -L xbip_bram18k_v3_0_6 -L mult_gen_v12_0_16 -L floating_point_v7_1_9 -L xilinx_vip -L unisims_ver -L unimacro_ver -L secureip -L xpm -onfinish exit -pli "/home/thw20/miniconda3/envs/myenv/lib/python3.10/site-packages/cocotb/libs/libcocotbvpi_modelsim.so" sim_build/work.top sim_build/work.glbl 
+# Start time: 11:11:29 on Jan 01,2024
+# ** Note: (vsim-3812) Design is being optimized...
+# ** Note: (vsim-3865) Due to PLI being present, full design access is being specified.
+# ** Note: (vopt-143) Recognized 1 FSM in module "prefetcher_weight_bank(fast)".
+# ** Note: (vopt-143) Recognized 1 FSM in module "axi_read_master(fast)".
+# //  ModelSim SE-64 10.6d Feb 23 2018Linux 3.10.0-1160.99.1.el7.x86_64
+# //
+# //  Copyright 1991-2018 Mentor Graphics Corporation
+# //  All Rights Reserved.
+# //
+# //  ModelSim SE-64 and its associated documentation contain trade
+# //  secrets and commercial or financial information that are the property of
+# //  Mentor Graphics Corporation and are privileged, confidential,
+# //  and exempt from disclosure under the Freedom of Information Act,
+# //  5 U.S.C. Section 552. Furthermore, this information
+# //  is prohibited from disclosure under the Trade Secrets Act,
+# //  18 U.S.C. Section 1905.
+# //
+# Loading sv_std.std
+# Loading work.top_pkg(fast)
+# Loading work.glbl_v_unit(fast)
+# Loading work.top(fast)
+# Loading work.axi_interface(fast)
+# Loading work.prefetcher(fast)
+# Loading work.prefetcher_weight_bank(fast)
+# Loading work.ultraram_fifo(fast)
+# Loading work.ultraram(fast)
+# Loading work.axi_read_master(fast)
+# Loading work.glbl(fast)
+# ** Warning: (vsim-3839) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(224): Variable '/top/prefetcher_weight_bank_rm_axi_interconnect_axi_araddr', driven via a port connection, is multiply driven. See /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(172).
+#    Time: 0 ps  Iteration: 0  Instance: /top/prefetcher_i File: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv
+# ** Warning: (vsim-3839) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(224): Variable '/top/prefetcher_weight_bank_rm_axi_interconnect_axi_arburst', driven via a port connection, is multiply driven. See /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(172).
+#    Time: 0 ps  Iteration: 0  Instance: /top/prefetcher_i File: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv
+# ** Warning: (vsim-3839) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(224): Variable '/top/prefetcher_weight_bank_rm_axi_interconnect_axi_arcache', driven via a port connection, is multiply driven. See /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(172).
+#    Time: 0 ps  Iteration: 0  Instance: /top/prefetcher_i File: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv
+# ** Warning: (vsim-3839) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(224): Variable '/top/prefetcher_weight_bank_rm_axi_interconnect_axi_arid', driven via a port connection, is multiply driven. See /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(172).
+#    Time: 0 ps  Iteration: 0  Instance: /top/prefetcher_i File: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv
+# ** Warning: (vsim-3839) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(224): Variable '/top/prefetcher_weight_bank_rm_axi_interconnect_axi_arlen', driven via a port connection, is multiply driven. See /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(172).
+#    Time: 0 ps  Iteration: 0  Instance: /top/prefetcher_i File: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv
+# ** Warning: (vsim-3839) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(224): Variable '/top/prefetcher_weight_bank_rm_axi_interconnect_axi_arlock', driven via a port connection, is multiply driven. See /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(172).
+#    Time: 0 ps  Iteration: 0  Instance: /top/prefetcher_i File: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv
+# ** Warning: (vsim-3839) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(224): Variable '/top/prefetcher_weight_bank_rm_axi_interconnect_axi_arprot', driven via a port connection, is multiply driven. See /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(172).
+#    Time: 0 ps  Iteration: 0  Instance: /top/prefetcher_i File: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv
+# ** Warning: (vsim-3839) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(224): Variable '/top/prefetcher_weight_bank_rm_axi_interconnect_axi_arqos', driven via a port connection, is multiply driven. See /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(172).
+#    Time: 0 ps  Iteration: 0  Instance: /top/prefetcher_i File: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv
+# ** Warning: (vsim-3839) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(224): Variable '/top/prefetcher_weight_bank_rm_axi_interconnect_axi_arsize', driven via a port connection, is multiply driven. See /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(172).
+#    Time: 0 ps  Iteration: 0  Instance: /top/prefetcher_i File: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv
+# ** Warning: (vsim-3839) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(224): Variable '/top/prefetcher_weight_bank_rm_axi_interconnect_axi_arvalid', driven via a port connection, is multiply driven. See /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(172).
+#    Time: 0 ps  Iteration: 0  Instance: /top/prefetcher_i File: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv
+# ** Warning: (vsim-3839) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(224): Variable '/top/prefetcher_weight_bank_rm_axi_interconnect_axi_awaddr', driven via a port connection, is multiply driven. See /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(172).
+#    Time: 0 ps  Iteration: 0  Instance: /top/prefetcher_i File: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv
+# ** Warning: (vsim-3839) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(224): Variable '/top/prefetcher_weight_bank_rm_axi_interconnect_axi_awburst', driven via a port connection, is multiply driven. See /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(172).
+#    Time: 0 ps  Iteration: 0  Instance: /top/prefetcher_i File: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv
+# ** Warning: (vsim-3839) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(224): Variable '/top/prefetcher_weight_bank_rm_axi_interconnect_axi_awcache', driven via a port connection, is multiply driven. See /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(172).
+#    Time: 0 ps  Iteration: 0  Instance: /top/prefetcher_i File: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv
+# ** Warning: (vsim-3839) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(224): Variable '/top/prefetcher_weight_bank_rm_axi_interconnect_axi_awid', driven via a port connection, is multiply driven. See /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(172).
+#    Time: 0 ps  Iteration: 0  Instance: /top/prefetcher_i File: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv
+# ** Warning: (vsim-3839) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(224): Variable '/top/prefetcher_weight_bank_rm_axi_interconnect_axi_awlen', driven via a port connection, is multiply driven. See /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(172).
+#    Time: 0 ps  Iteration: 0  Instance: /top/prefetcher_i File: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv
+# ** Warning: (vsim-3839) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(224): Variable '/top/prefetcher_weight_bank_rm_axi_interconnect_axi_awlock', driven via a port connection, is multiply driven. See /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(172).
+#    Time: 0 ps  Iteration: 0  Instance: /top/prefetcher_i File: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv
+# ** Warning: (vsim-3839) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(224): Variable '/top/prefetcher_weight_bank_rm_axi_interconnect_axi_awprot', driven via a port connection, is multiply driven. See /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(172).
+#    Time: 0 ps  Iteration: 0  Instance: /top/prefetcher_i File: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv
+# ** Warning: (vsim-3839) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(224): Variable '/top/prefetcher_weight_bank_rm_axi_interconnect_axi_awqos', driven via a port connection, is multiply driven. See /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(172).
+#    Time: 0 ps  Iteration: 0  Instance: /top/prefetcher_i File: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv
+# ** Warning: (vsim-3839) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(224): Variable '/top/prefetcher_weight_bank_rm_axi_interconnect_axi_awsize', driven via a port connection, is multiply driven. See /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(172).
+#    Time: 0 ps  Iteration: 0  Instance: /top/prefetcher_i File: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv
+# ** Warning: (vsim-3839) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(224): Variable '/top/prefetcher_weight_bank_rm_axi_interconnect_axi_awvalid', driven via a port connection, is multiply driven. See /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(172).
+#    Time: 0 ps  Iteration: 0  Instance: /top/prefetcher_i File: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv
+# ** Warning: (vsim-3839) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(224): Variable '/top/prefetcher_weight_bank_rm_axi_interconnect_axi_bready', driven via a port connection, is multiply driven. See /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(172).
+#    Time: 0 ps  Iteration: 0  Instance: /top/prefetcher_i File: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv
+# ** Warning: (vsim-3839) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(224): Variable '/top/prefetcher_weight_bank_rm_axi_interconnect_axi_rready', driven via a port connection, is multiply driven. See /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(172).
+#    Time: 0 ps  Iteration: 0  Instance: /top/prefetcher_i File: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv
+# ** Warning: (vsim-3839) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(224): Variable '/top/prefetcher_weight_bank_rm_axi_interconnect_axi_wdata', driven via a port connection, is multiply driven. See /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(172).
+#    Time: 0 ps  Iteration: 0  Instance: /top/prefetcher_i File: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv
+# ** Warning: (vsim-3839) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(224): Variable '/top/prefetcher_weight_bank_rm_axi_interconnect_axi_wlast', driven via a port connection, is multiply driven. See /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(172).
+#    Time: 0 ps  Iteration: 0  Instance: /top/prefetcher_i File: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv
+# ** Warning: (vsim-3839) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(224): Variable '/top/prefetcher_weight_bank_rm_axi_interconnect_axi_wstrb', driven via a port connection, is multiply driven. See /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(172).
+#    Time: 0 ps  Iteration: 0  Instance: /top/prefetcher_i File: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv
+# ** Warning: (vsim-3839) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(224): Variable '/top/prefetcher_weight_bank_rm_axi_interconnect_axi_wvalid', driven via a port connection, is multiply driven. See /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(172).
+#    Time: 0 ps  Iteration: 0  Instance: /top/prefetcher_i File: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv
+# Loading /home/thw20/miniconda3/envs/myenv/lib/python3.10/site-packages/cocotb/libs/libcocotbvpi_modelsim.so
+#      -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:76   in set_program_name_in_venv        Did not detect Python virtual environment. Using system-wide Python interpreter
+#      -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
+# 1
+# 1
+/home/thw20/miniconda3/envs/myenv/lib/python3.10/site-packages/_pytest/assertion/rewrite.py:186: UserWarning: Python runners and associated APIs are an experimental feature and subject to change.
+  exec(co, module.__dict__)
+#      0.00ns INFO     cocotb                             Running on ModelSim SE-64 version 10.6d 2018.02
+#      0.00ns INFO     cocotb                             Running tests with cocotb v1.8.0 from /home/thw20/miniconda3/envs/myenv/lib/python3.10/site-packages/cocotb
+#      0.00ns INFO     cocotb                             Seeding Python random module with 1704107525
+# ['', '/home/thw20/miniconda3/envs/myenv/lib/python310.zip', '/home/thw20/miniconda3/envs/myenv/lib/python3.10', '/home/thw20/miniconda3/envs/myenv/lib/python3.10/lib-dynload', '/home/thw20/miniconda3/envs/myenv/lib/python3.10/site-packages', '/home/thw20/FYP/systolic_array/hw/sim/cocotb/../../..']
+#      0.00ns INFO     cocotb.regression                  Found test runner.graph_test
+#      0.00ns INFO     cocotb.regression                  running graph_test (1/1)
+#    220.00ns INFO     cocotb.axi_ram.axi                 AXI master (write)
+#    220.00ns INFO     cocotb.axi_ram.axi                 cocotbext-axi version 0.1.24
+#    220.00ns INFO     cocotb.axi_ram.axi                 Copyright (c) 2020 Alex Forencich
+#    220.00ns INFO     cocotb.axi_ram.axi                 https://github.com/alexforencich/cocotbext-axi
+#    220.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    220.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    220.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    220.00ns INFO     cocotb.axi_ram.axi                 AXI master configuration:
+#    220.00ns INFO     cocotb.axi_ram.axi                   Address width: 34 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   ID width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   Byte size: 8 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   Data width: 512 bits (64 bytes)
+#    220.00ns INFO     cocotb.axi_ram.axi                   Max burst size: 6 (64 bytes)
+#    220.00ns INFO     cocotb.axi_ram.axi                   Max burst length: 256 cycles (16384 bytes)
+#    220.00ns INFO     cocotb.axi_ram.axi                 AXI master signals:
+#    220.00ns INFO     cocotb.axi_ram.axi                   awaddr width: 34 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awburst width: 2 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awcache width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awid width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awlen width: 8 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awlock width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awprot width: 3 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awqos width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awready width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awregion width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awsize width: 3 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awuser: not present
+#    220.00ns INFO     cocotb.axi_ram.axi                   awvalid width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   wdata width: 512 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   wlast width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   wready width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   wstrb width: 64 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   wuser: not present
+#    220.00ns INFO     cocotb.axi_ram.axi                   wvalid width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   bid width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   bready width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   bresp width: 2 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   buser: not present
+#    220.00ns INFO     cocotb.axi_ram.axi                   bvalid width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    220.00ns INFO     cocotb.axi_ram.axi                 AXI master (read)
+#    220.00ns INFO     cocotb.axi_ram.axi                 cocotbext-axi version 0.1.24
+#    220.00ns INFO     cocotb.axi_ram.axi                 Copyright (c) 2020 Alex Forencich
+#    220.00ns INFO     cocotb.axi_ram.axi                 https://github.com/alexforencich/cocotbext-axi
+#    220.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    220.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    220.00ns INFO     cocotb.axi_ram.axi                 AXI master configuration:
+#    220.00ns INFO     cocotb.axi_ram.axi                   Address width: 34 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   ID width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   Byte size: 8 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   Data width: 512 bits (64 bytes)
+#    220.00ns INFO     cocotb.axi_ram.axi                   Max burst size: 6 (64 bytes)
+#    220.00ns INFO     cocotb.axi_ram.axi                   Max burst length: 256 cycles (16384 bytes)
+#    220.00ns INFO     cocotb.axi_ram.axi                 AXI master signals:
+#    220.00ns INFO     cocotb.axi_ram.axi                   araddr width: 34 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   arburst width: 2 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   arcache width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   arid width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   arlen width: 8 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   arlock width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   arprot width: 3 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   arqos width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   arready width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   arregion width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   arsize width: 3 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   aruser: not present
+#    220.00ns INFO     cocotb.axi_ram.axi                   arvalid width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   rdata width: 512 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   rid width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   rlast width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   rready width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   rresp width: 2 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   ruser: not present
+#    220.00ns INFO     cocotb.axi_ram.axi                   rvalid width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    220.00ns INFO     cocotb.axi_ram.axi                 AXI slave model (write)
+#    220.00ns INFO     cocotb.axi_ram.axi                 cocotbext-axi version 0.1.24
+#    220.00ns INFO     cocotb.axi_ram.axi                 Copyright (c) 2021 Alex Forencich
+#    220.00ns INFO     cocotb.axi_ram.axi                 https://github.com/alexforencich/cocotbext-axi
+#    220.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    220.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    220.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    220.00ns INFO     cocotb.axi_ram.axi                 AXI slave model configuration:
+#    220.00ns INFO     cocotb.axi_ram.axi                   Address width: 34 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   ID width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   Byte size: 8 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   Data width: 512 bits (64 bytes)
+#    220.00ns INFO     cocotb.axi_ram.axi                 AXI slave model signals:
+#    220.00ns INFO     cocotb.axi_ram.axi                   awaddr width: 34 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awburst width: 2 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awcache width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awid width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awlen width: 8 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awlock width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awprot width: 3 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awqos width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awready width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awregion width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awsize width: 3 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   awuser: not present
+#    220.00ns INFO     cocotb.axi_ram.axi                   awvalid width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   wdata width: 512 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   wlast width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   wready width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   wstrb width: 64 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   wuser: not present
+#    220.00ns INFO     cocotb.axi_ram.axi                   wvalid width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   bid width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   bready width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   bresp width: 2 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   buser: not present
+#    220.00ns INFO     cocotb.axi_ram.axi                   bvalid width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    220.00ns INFO     cocotb.axi_ram.axi                 AXI slave model (read)
+#    220.00ns INFO     cocotb.axi_ram.axi                 cocotbext-axi version 0.1.24
+#    220.00ns INFO     cocotb.axi_ram.axi                 Copyright (c) 2021 Alex Forencich
+#    220.00ns INFO     cocotb.axi_ram.axi                 https://github.com/alexforencich/cocotbext-axi
+#    220.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    220.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    220.00ns INFO     cocotb.axi_ram.axi                 AXI slave model configuration:
+#    220.00ns INFO     cocotb.axi_ram.axi                   Address width: 34 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   ID width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   Byte size: 8 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   Data width: 512 bits (64 bytes)
+#    220.00ns INFO     cocotb.axi_ram.axi                 AXI slave model signals:
+#    220.00ns INFO     cocotb.axi_ram.axi                   araddr width: 34 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   arburst width: 2 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   arcache width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   arid width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   arlen width: 8 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   arlock width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   arprot width: 3 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   arqos width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   arready width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   arregion width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   arsize width: 3 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   aruser: not present
+#    220.00ns INFO     cocotb.axi_ram.axi                   arvalid width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   rdata width: 512 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   rid width: 4 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   rlast width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   rready width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   rresp width: 2 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                   ruser: not present
+#    220.00ns INFO     cocotb.axi_ram.axi                   rvalid width: 1 bits
+#    220.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    230.00ns INFO     cocotb.axi_ram.axi                 Reset asserted
+#    230.00ns INFO     cocotb.axi_ram.axi                 Reset asserted
+#    230.00ns INFO     cocotb.axi_ram.axi                 Reset asserted
+#    230.00ns INFO     cocotb.axi_ram.axi                 Reset asserted
+#    230.00ns INFO     cocotb.axi_ram.axi                 Reset asserted
+#    230.00ns INFO     cocotb.axi_ram.axi                 Reset asserted
+#    230.00ns INFO     cocotb.axi_ram.axi                 Reset asserted
+#    230.00ns INFO     cocotb.axi_ram.axi                 Reset asserted
+#    230.00ns INFO     cocotb.axi_ram.axi                 Reset asserted
+#    230.00ns INFO     cocotb.axi_ram.axi                 Reset asserted
+#    230.00ns INFO     cocotb.axi_ram.axi                 Reset asserted
+#    230.00ns INFO     cocotb.axi_ram.axi                 Reset asserted
+#    230.00ns INFO     cocotb.axi_ram.axi                 Reset asserted
+#    230.00ns INFO     cocotb.axi_ram.axi                 Reset asserted
+#    250.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    250.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    250.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    250.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    250.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    250.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    250.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    250.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    250.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    250.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    250.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    250.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    250.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+#    250.00ns INFO     cocotb.axi_ram.axi                 Reset de-asserted
+# Writing: index=0, value=44, bytes=x2c
+#    270.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x00000000 awid: 0x0 prot: AxiProt.NONSECURE data: 2c
+#    270.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0x0 awaddr: 0x00000000 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    290.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0x0 awaddr: 0x00000000 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    310.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0x0 bresp: AxiResp.OKAY
+#    310.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x00000000 prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=1, value=47, bytes=x2f
+#    310.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x00000001 awid: 0x1 prot: AxiProt.NONSECURE data: 2f
+#    310.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0x1 awaddr: 0x00000001 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    330.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0x1 awaddr: 0x00000001 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    350.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0x1 bresp: AxiResp.OKAY
+#    350.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x00000001 prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=2, value=64, bytes=x40
+#    350.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x00000002 awid: 0x2 prot: AxiProt.NONSECURE data: 40
+#    350.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0x2 awaddr: 0x00000002 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    370.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0x2 awaddr: 0x00000002 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    390.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0x2 bresp: AxiResp.OKAY
+#    390.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x00000002 prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=3, value=67, bytes=x43
+#    390.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x00000003 awid: 0x3 prot: AxiProt.NONSECURE data: 43
+#    390.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0x3 awaddr: 0x00000003 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    410.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0x3 awaddr: 0x00000003 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    430.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0x3 bresp: AxiResp.OKAY
+#    430.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x00000003 prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=4, value=67, bytes=x43
+#    430.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x00000004 awid: 0x4 prot: AxiProt.NONSECURE data: 43
+#    430.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0x4 awaddr: 0x00000004 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    450.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0x4 awaddr: 0x00000004 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    470.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0x4 bresp: AxiResp.OKAY
+#    470.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x00000004 prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=5, value=9, bytes=x09
+#    470.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x00000005 awid: 0x5 prot: AxiProt.NONSECURE data: 09
+#    470.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0x5 awaddr: 0x00000005 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    490.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0x5 awaddr: 0x00000005 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    510.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0x5 bresp: AxiResp.OKAY
+#    510.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x00000005 prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=6, value=83, bytes=x53
+#    510.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x00000006 awid: 0x6 prot: AxiProt.NONSECURE data: 53
+#    510.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0x6 awaddr: 0x00000006 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    530.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0x6 awaddr: 0x00000006 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    550.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0x6 bresp: AxiResp.OKAY
+#    550.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x00000006 prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=7, value=21, bytes=x15
+#    550.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x00000007 awid: 0x7 prot: AxiProt.NONSECURE data: 15
+#    550.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0x7 awaddr: 0x00000007 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    570.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0x7 awaddr: 0x00000007 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    590.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0x7 bresp: AxiResp.OKAY
+#    590.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x00000007 prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=8, value=36, bytes=x24
+#    590.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x00000008 awid: 0x8 prot: AxiProt.NONSECURE data: 24
+#    590.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0x8 awaddr: 0x00000008 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    610.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0x8 awaddr: 0x00000008 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    630.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0x8 bresp: AxiResp.OKAY
+#    630.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x00000008 prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=9, value=87, bytes=x57
+#    630.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x00000009 awid: 0x9 prot: AxiProt.NONSECURE data: 57
+#    630.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0x9 awaddr: 0x00000009 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    650.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0x9 awaddr: 0x00000009 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    670.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0x9 bresp: AxiResp.OKAY
+#    670.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x00000009 prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=10, value=70, bytes=x46
+#    670.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x0000000a awid: 0xa prot: AxiProt.NONSECURE data: 46
+#    670.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0xa awaddr: 0x0000000a awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    690.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0xa awaddr: 0x0000000a awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    710.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0xa bresp: AxiResp.OKAY
+#    710.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x0000000a prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=11, value=88, bytes=x58
+#    710.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x0000000b awid: 0xb prot: AxiProt.NONSECURE data: 58
+#    710.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0xb awaddr: 0x0000000b awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    730.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0xb awaddr: 0x0000000b awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    750.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0xb bresp: AxiResp.OKAY
+#    750.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x0000000b prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=12, value=88, bytes=x58
+#    750.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x0000000c awid: 0xc prot: AxiProt.NONSECURE data: 58
+#    750.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0xc awaddr: 0x0000000c awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    770.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0xc awaddr: 0x0000000c awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    790.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0xc bresp: AxiResp.OKAY
+#    790.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x0000000c prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=13, value=12, bytes=x0c
+#    790.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x0000000d awid: 0xd prot: AxiProt.NONSECURE data: 0c
+#    790.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0xd awaddr: 0x0000000d awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    810.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0xd awaddr: 0x0000000d awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    830.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0xd bresp: AxiResp.OKAY
+#    830.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x0000000d prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=14, value=58, bytes=x3a
+#    830.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x0000000e awid: 0xe prot: AxiProt.NONSECURE data: 3a
+#    830.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0xe awaddr: 0x0000000e awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    850.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0xe awaddr: 0x0000000e awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    870.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0xe bresp: AxiResp.OKAY
+#    870.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x0000000e prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=15, value=65, bytes=x41
+#    870.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x0000000f awid: 0xf prot: AxiProt.NONSECURE data: 41
+#    870.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0xf awaddr: 0x0000000f awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    890.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0xf awaddr: 0x0000000f awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    910.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0xf bresp: AxiResp.OKAY
+#    910.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x0000000f prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=16, value=44, bytes=x2c
+#    910.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x00000010 awid: 0x0 prot: AxiProt.NONSECURE data: 2c
+#    910.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0x0 awaddr: 0x00000010 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    930.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0x0 awaddr: 0x00000010 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    950.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0x0 bresp: AxiResp.OKAY
+#    950.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x00000010 prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=17, value=47, bytes=x2f
+#    950.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x00000011 awid: 0x1 prot: AxiProt.NONSECURE data: 2f
+#    950.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0x1 awaddr: 0x00000011 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    970.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0x1 awaddr: 0x00000011 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#    990.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0x1 bresp: AxiResp.OKAY
+#    990.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x00000011 prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=18, value=64, bytes=x40
+#    990.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x00000012 awid: 0x2 prot: AxiProt.NONSECURE data: 40
+#    990.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0x2 awaddr: 0x00000012 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#   1010.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0x2 awaddr: 0x00000012 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#   1030.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0x2 bresp: AxiResp.OKAY
+#   1030.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x00000012 prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=19, value=67, bytes=x43
+#   1030.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x00000013 awid: 0x3 prot: AxiProt.NONSECURE data: 43
+#   1030.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0x3 awaddr: 0x00000013 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#   1050.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0x3 awaddr: 0x00000013 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#   1070.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0x3 bresp: AxiResp.OKAY
+#   1070.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x00000013 prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=20, value=67, bytes=x43
+#   1070.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x00000014 awid: 0x4 prot: AxiProt.NONSECURE data: 43
+#   1070.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0x4 awaddr: 0x00000014 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#   1090.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0x4 awaddr: 0x00000014 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#   1110.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0x4 bresp: AxiResp.OKAY
+#   1110.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x00000014 prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=21, value=9, bytes=x09
+#   1110.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x00000015 awid: 0x5 prot: AxiProt.NONSECURE data: 09
+#   1110.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0x5 awaddr: 0x00000015 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#   1130.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0x5 awaddr: 0x00000015 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#   1150.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0x5 bresp: AxiResp.OKAY
+#   1150.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x00000015 prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=22, value=83, bytes=x53
+#   1150.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x00000016 awid: 0x6 prot: AxiProt.NONSECURE data: 53
+#   1150.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0x6 awaddr: 0x00000016 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#   1170.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0x6 awaddr: 0x00000016 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#   1190.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0x6 bresp: AxiResp.OKAY
+#   1190.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x00000016 prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=23, value=21, bytes=x15
+#   1190.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x00000017 awid: 0x7 prot: AxiProt.NONSECURE data: 15
+#   1190.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0x7 awaddr: 0x00000017 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#   1210.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0x7 awaddr: 0x00000017 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#   1230.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0x7 bresp: AxiResp.OKAY
+#   1230.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x00000017 prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=24, value=36, bytes=x24
+#   1230.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x00000018 awid: 0x8 prot: AxiProt.NONSECURE data: 24
+#   1230.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0x8 awaddr: 0x00000018 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#   1250.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0x8 awaddr: 0x00000018 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#   1270.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0x8 bresp: AxiResp.OKAY
+#   1270.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x00000018 prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=25, value=87, bytes=x57
+#   1270.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x00000019 awid: 0x9 prot: AxiProt.NONSECURE data: 57
+#   1270.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0x9 awaddr: 0x00000019 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#   1290.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0x9 awaddr: 0x00000019 awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#   1310.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0x9 bresp: AxiResp.OKAY
+#   1310.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x00000019 prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=26, value=70, bytes=x46
+#   1310.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x0000001a awid: 0xa prot: AxiProt.NONSECURE data: 46
+#   1310.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0xa awaddr: 0x0000001a awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#   1330.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0xa awaddr: 0x0000001a awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#   1350.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0xa bresp: AxiResp.OKAY
+#   1350.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x0000001a prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=27, value=88, bytes=x58
+#   1350.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x0000001b awid: 0xb prot: AxiProt.NONSECURE data: 58
+#   1350.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0xb awaddr: 0x0000001b awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#   1370.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0xb awaddr: 0x0000001b awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#   1390.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0xb bresp: AxiResp.OKAY
+#   1390.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x0000001b prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=28, value=88, bytes=x58
+#   1390.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x0000001c awid: 0xc prot: AxiProt.NONSECURE data: 58
+#   1390.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0xc awaddr: 0x0000001c awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#   1410.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0xc awaddr: 0x0000001c awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#   1430.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0xc bresp: AxiResp.OKAY
+#   1430.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x0000001c prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=29, value=12, bytes=x0c
+#   1430.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x0000001d awid: 0xd prot: AxiProt.NONSECURE data: 0c
+#   1430.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0xd awaddr: 0x0000001d awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#   1450.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0xd awaddr: 0x0000001d awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#   1470.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0xd bresp: AxiResp.OKAY
+#   1470.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x0000001d prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=30, value=58, bytes=x3a
+#   1470.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x0000001e awid: 0xe prot: AxiProt.NONSECURE data: 3a
+#   1470.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0xe awaddr: 0x0000001e awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#   1490.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0xe awaddr: 0x0000001e awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#   1510.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0xe bresp: AxiResp.OKAY
+#   1510.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x0000001e prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# Writing: index=31, value=65, bytes=x41
+#   1510.00ns INFO     cocotb.axi_ram.axi                 Write start addr: 0x0000001f awid: 0xf prot: AxiProt.NONSECURE data: 41
+#   1510.00ns INFO     cocotb.axi_ram.axi                 Write burst start awid: 0xf awaddr: 0x0000001f awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#   1530.00ns INFO     cocotb.axi_ram.axi                 Write burst awid: 0xf awaddr: 0x0000001f awlen: 0 awsize: 6 awprot: AxiProt.NONSECURE
+#   1550.00ns INFO     cocotb.axi_ram.axi                 Write burst complete bid: 0xf bresp: AxiResp.OKAY
+#   1550.00ns INFO     cocotb.axi_ram.axi                 Write complete addr: 0x0000001f prot: AxiProt.NONSECURE resp: AxiResp.OKAY length: 1
+# Done writing
+# index=0, value=44, bytes=x2c
+#   1550.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x00000000 arid: 0x0 prot: AxiProt.NONSECURE
+#   1550.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0x0 araddr: 0x00000000 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   1570.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0x0 araddr: 0x00000000 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   1590.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0x0 rresp: AxiResp.OKAY
+#   1590.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x00000000 prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 2c
+# Done reading
+# Reading: index=0, value=44, bytes=x<built-in method hex of bytes object at 0x7fffc90c73f0>
+# index=1, value=47, bytes=x2f
+#   1590.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x00000001 arid: 0x1 prot: AxiProt.NONSECURE
+#   1590.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0x1 araddr: 0x00000001 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   1610.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0x1 araddr: 0x00000001 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   1630.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0x1 rresp: AxiResp.OKAY
+#   1630.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x00000001 prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 2f
+# Done reading
+# Reading: index=1, value=47, bytes=x<built-in method hex of bytes object at 0x7fffc8e030f0>
+# index=2, value=64, bytes=x40
+#   1630.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x00000002 arid: 0x2 prot: AxiProt.NONSECURE
+#   1630.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0x2 araddr: 0x00000002 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   1650.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0x2 araddr: 0x00000002 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   1670.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0x2 rresp: AxiResp.OKAY
+#   1670.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x00000002 prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 40
+# Done reading
+# Reading: index=2, value=64, bytes=x<built-in method hex of bytes object at 0x7fffc8e02ac0>
+# index=3, value=67, bytes=x43
+#   1670.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x00000003 arid: 0x3 prot: AxiProt.NONSECURE
+#   1670.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0x3 araddr: 0x00000003 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   1690.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0x3 araddr: 0x00000003 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   1710.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0x3 rresp: AxiResp.OKAY
+#   1710.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x00000003 prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 43
+# Done reading
+# Reading: index=3, value=67, bytes=x<built-in method hex of bytes object at 0x7fffc90c73f0>
+# index=4, value=67, bytes=x43
+#   1710.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x00000004 arid: 0x4 prot: AxiProt.NONSECURE
+#   1710.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0x4 araddr: 0x00000004 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   1730.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0x4 araddr: 0x00000004 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   1750.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0x4 rresp: AxiResp.OKAY
+#   1750.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x00000004 prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 43
+# Done reading
+# Reading: index=4, value=67, bytes=x<built-in method hex of bytes object at 0x7fffc8e030f0>
+# index=5, value=9, bytes=x09
+#   1750.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x00000005 arid: 0x5 prot: AxiProt.NONSECURE
+#   1750.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0x5 araddr: 0x00000005 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   1770.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0x5 araddr: 0x00000005 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   1790.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0x5 rresp: AxiResp.OKAY
+#   1790.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x00000005 prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 09
+# Done reading
+# Reading: index=5, value=9, bytes=x<built-in method hex of bytes object at 0x7fffc8e02ac0>
+# index=6, value=83, bytes=x53
+#   1790.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x00000006 arid: 0x6 prot: AxiProt.NONSECURE
+#   1790.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0x6 araddr: 0x00000006 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   1810.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0x6 araddr: 0x00000006 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   1830.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0x6 rresp: AxiResp.OKAY
+#   1830.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x00000006 prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 53
+# Done reading
+# Reading: index=6, value=83, bytes=x<built-in method hex of bytes object at 0x7fffc8e01710>
+# index=7, value=21, bytes=x15
+#   1830.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x00000007 arid: 0x7 prot: AxiProt.NONSECURE
+#   1830.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0x7 araddr: 0x00000007 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   1850.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0x7 araddr: 0x00000007 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   1870.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0x7 rresp: AxiResp.OKAY
+#   1870.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x00000007 prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 15
+# Done reading
+# Reading: index=7, value=21, bytes=x<built-in method hex of bytes object at 0x7fffc8e030f0>
+# index=8, value=36, bytes=x24
+#   1870.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x00000008 arid: 0x8 prot: AxiProt.NONSECURE
+#   1870.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0x8 araddr: 0x00000008 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   1890.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0x8 araddr: 0x00000008 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   1910.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0x8 rresp: AxiResp.OKAY
+#   1910.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x00000008 prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 24
+# Done reading
+# Reading: index=8, value=36, bytes=x<built-in method hex of bytes object at 0x7fffc8e02ac0>
+# index=9, value=87, bytes=x57
+#   1910.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x00000009 arid: 0x9 prot: AxiProt.NONSECURE
+#   1910.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0x9 araddr: 0x00000009 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   1930.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0x9 araddr: 0x00000009 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   1950.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0x9 rresp: AxiResp.OKAY
+#   1950.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x00000009 prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 57
+# Done reading
+# Reading: index=9, value=87, bytes=x<built-in method hex of bytes object at 0x7fffc8e01710>
+# index=10, value=70, bytes=x46
+#   1950.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x0000000a arid: 0xa prot: AxiProt.NONSECURE
+#   1950.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0xa araddr: 0x0000000a arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   1970.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0xa araddr: 0x0000000a arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   1990.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0xa rresp: AxiResp.OKAY
+#   1990.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x0000000a prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 46
+# Done reading
+# Reading: index=10, value=70, bytes=x<built-in method hex of bytes object at 0x7fffc8e030f0>
+# index=11, value=88, bytes=x58
+#   1990.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x0000000b arid: 0xb prot: AxiProt.NONSECURE
+#   1990.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0xb araddr: 0x0000000b arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2010.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0xb araddr: 0x0000000b arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2030.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0xb rresp: AxiResp.OKAY
+#   2030.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x0000000b prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 58
+# Done reading
+# Reading: index=11, value=88, bytes=x<built-in method hex of bytes object at 0x7fffc8e02ac0>
+# index=12, value=88, bytes=x58
+#   2030.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x0000000c arid: 0xc prot: AxiProt.NONSECURE
+#   2030.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0xc araddr: 0x0000000c arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2050.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0xc araddr: 0x0000000c arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2070.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0xc rresp: AxiResp.OKAY
+#   2070.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x0000000c prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 58
+# Done reading
+# Reading: index=12, value=88, bytes=x<built-in method hex of bytes object at 0x7fffc8e01710>
+# index=13, value=12, bytes=x0c
+#   2070.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x0000000d arid: 0xd prot: AxiProt.NONSECURE
+#   2070.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0xd araddr: 0x0000000d arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2090.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0xd araddr: 0x0000000d arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2110.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0xd rresp: AxiResp.OKAY
+#   2110.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x0000000d prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 0c
+# Done reading
+# Reading: index=13, value=12, bytes=x<built-in method hex of bytes object at 0x7fffc8e030f0>
+# index=14, value=58, bytes=x3a
+#   2110.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x0000000e arid: 0xe prot: AxiProt.NONSECURE
+#   2110.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0xe araddr: 0x0000000e arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2130.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0xe araddr: 0x0000000e arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2150.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0xe rresp: AxiResp.OKAY
+#   2150.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x0000000e prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 3a
+# Done reading
+# Reading: index=14, value=58, bytes=x<built-in method hex of bytes object at 0x7fffc8e02ac0>
+# index=15, value=65, bytes=x41
+#   2150.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x0000000f arid: 0xf prot: AxiProt.NONSECURE
+#   2150.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0xf araddr: 0x0000000f arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2170.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0xf araddr: 0x0000000f arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2190.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0xf rresp: AxiResp.OKAY
+#   2190.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x0000000f prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 41
+# Done reading
+# Reading: index=15, value=65, bytes=x<built-in method hex of bytes object at 0x7fffc8e01710>
+# index=16, value=44, bytes=x2c
+#   2190.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x00000010 arid: 0x0 prot: AxiProt.NONSECURE
+#   2190.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0x0 araddr: 0x00000010 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2210.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0x0 araddr: 0x00000010 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2230.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0x0 rresp: AxiResp.OKAY
+#   2230.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x00000010 prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 2c
+# Done reading
+# Reading: index=16, value=44, bytes=x<built-in method hex of bytes object at 0x7fffc8e2b0c0>
+# index=17, value=47, bytes=x2f
+#   2230.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x00000011 arid: 0x1 prot: AxiProt.NONSECURE
+#   2230.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0x1 araddr: 0x00000011 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2250.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0x1 araddr: 0x00000011 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2270.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0x1 rresp: AxiResp.OKAY
+#   2270.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x00000011 prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 2f
+# Done reading
+# Reading: index=17, value=47, bytes=x<built-in method hex of bytes object at 0x7fffc8e29710>
+# index=18, value=64, bytes=x40
+#   2270.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x00000012 arid: 0x2 prot: AxiProt.NONSECURE
+#   2270.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0x2 araddr: 0x00000012 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2290.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0x2 araddr: 0x00000012 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2310.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0x2 rresp: AxiResp.OKAY
+#   2310.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x00000012 prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 40
+# Done reading
+# Reading: index=18, value=64, bytes=x<built-in method hex of bytes object at 0x7fffc8e28de0>
+# index=19, value=67, bytes=x43
+#   2310.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x00000013 arid: 0x3 prot: AxiProt.NONSECURE
+#   2310.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0x3 araddr: 0x00000013 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2330.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0x3 araddr: 0x00000013 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2350.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0x3 rresp: AxiResp.OKAY
+#   2350.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x00000013 prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 43
+# Done reading
+# Reading: index=19, value=67, bytes=x<built-in method hex of bytes object at 0x7fffc8e2ad90>
+# index=20, value=67, bytes=x43
+#   2350.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x00000014 arid: 0x4 prot: AxiProt.NONSECURE
+#   2350.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0x4 araddr: 0x00000014 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2370.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0x4 araddr: 0x00000014 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2390.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0x4 rresp: AxiResp.OKAY
+#   2390.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x00000014 prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 43
+# Done reading
+# Reading: index=20, value=67, bytes=x<built-in method hex of bytes object at 0x7fffc8e2b600>
+# index=21, value=9, bytes=x09
+#   2390.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x00000015 arid: 0x5 prot: AxiProt.NONSECURE
+#   2390.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0x5 araddr: 0x00000015 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2410.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0x5 araddr: 0x00000015 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2430.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0x5 rresp: AxiResp.OKAY
+#   2430.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x00000015 prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 09
+# Done reading
+# Reading: index=21, value=9, bytes=x<built-in method hex of bytes object at 0x7fffc8e2bba0>
+# index=22, value=83, bytes=x53
+#   2430.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x00000016 arid: 0x6 prot: AxiProt.NONSECURE
+#   2430.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0x6 araddr: 0x00000016 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2450.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0x6 araddr: 0x00000016 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2470.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0x6 rresp: AxiResp.OKAY
+#   2470.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x00000016 prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 53
+# Done reading
+# Reading: index=22, value=83, bytes=x<built-in method hex of bytes object at 0x7fffc8e2af10>
+# index=23, value=21, bytes=x15
+#   2470.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x00000017 arid: 0x7 prot: AxiProt.NONSECURE
+#   2470.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0x7 araddr: 0x00000017 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2490.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0x7 araddr: 0x00000017 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2510.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0x7 rresp: AxiResp.OKAY
+#   2510.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x00000017 prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 15
+# Done reading
+# Reading: index=23, value=21, bytes=x<built-in method hex of bytes object at 0x7fffc8e299b0>
+# index=24, value=36, bytes=x24
+#   2510.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x00000018 arid: 0x8 prot: AxiProt.NONSECURE
+#   2510.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0x8 araddr: 0x00000018 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2530.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0x8 araddr: 0x00000018 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2550.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0x8 rresp: AxiResp.OKAY
+#   2550.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x00000018 prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 24
+# Done reading
+# Reading: index=24, value=36, bytes=x<built-in method hex of bytes object at 0x7fffc8e29bc0>
+# index=25, value=87, bytes=x57
+#   2550.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x00000019 arid: 0x9 prot: AxiProt.NONSECURE
+#   2550.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0x9 araddr: 0x00000019 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2570.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0x9 araddr: 0x00000019 arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2590.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0x9 rresp: AxiResp.OKAY
+#   2590.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x00000019 prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 57
+# Done reading
+# Reading: index=25, value=87, bytes=x<built-in method hex of bytes object at 0x7fffc8e2a3d0>
+# index=26, value=70, bytes=x46
+#   2590.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x0000001a arid: 0xa prot: AxiProt.NONSECURE
+#   2590.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0xa araddr: 0x0000001a arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2610.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0xa araddr: 0x0000001a arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2630.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0xa rresp: AxiResp.OKAY
+#   2630.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x0000001a prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 46
+# Done reading
+# Reading: index=26, value=70, bytes=x<built-in method hex of bytes object at 0x7fffc8e2aaf0>
+# index=27, value=88, bytes=x58
+#   2630.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x0000001b arid: 0xb prot: AxiProt.NONSECURE
+#   2630.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0xb araddr: 0x0000001b arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2650.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0xb araddr: 0x0000001b arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2670.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0xb rresp: AxiResp.OKAY
+#   2670.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x0000001b prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 58
+# Done reading
+# Reading: index=27, value=88, bytes=x<built-in method hex of bytes object at 0x7fffc8e2b9f0>
+# index=28, value=88, bytes=x58
+#   2670.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x0000001c arid: 0xc prot: AxiProt.NONSECURE
+#   2670.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0xc araddr: 0x0000001c arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2690.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0xc araddr: 0x0000001c arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2710.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0xc rresp: AxiResp.OKAY
+#   2710.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x0000001c prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 58
+# Done reading
+# Reading: index=28, value=88, bytes=x<built-in method hex of bytes object at 0x7fffc8e2b870>
+# index=29, value=12, bytes=x0c
+#   2710.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x0000001d arid: 0xd prot: AxiProt.NONSECURE
+#   2710.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0xd araddr: 0x0000001d arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2730.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0xd araddr: 0x0000001d arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2750.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0xd rresp: AxiResp.OKAY
+#   2750.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x0000001d prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 0c
+# Done reading
+# Reading: index=29, value=12, bytes=x<built-in method hex of bytes object at 0x7fffc8e2a4f0>
+# index=30, value=58, bytes=x3a
+#   2750.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x0000001e arid: 0xe prot: AxiProt.NONSECURE
+#   2750.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0xe araddr: 0x0000001e arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2770.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0xe araddr: 0x0000001e arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2790.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0xe rresp: AxiResp.OKAY
+#   2790.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x0000001e prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 3a
+# Done reading
+# Reading: index=30, value=58, bytes=x<built-in method hex of bytes object at 0x7fffc8e28b40>
+# index=31, value=65, bytes=x41
+#   2790.00ns INFO     cocotb.axi_ram.axi                 Read start addr: 0x0000001f arid: 0xf prot: AxiProt.NONSECURE
+#   2790.00ns INFO     cocotb.axi_ram.axi                 Read burst start arid: 0xf araddr: 0x0000001f arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2810.00ns INFO     cocotb.axi_ram.axi                 Read burst arid: 0xf araddr: 0x0000001f arlen: 0 arsize: 6 arprot: AxiProt.NONSECURE
+#   2830.00ns INFO     cocotb.axi_ram.axi                 Read burst complete rid: 0xf rresp: AxiResp.OKAY
+#   2830.00ns INFO     cocotb.axi_ram.axi                 Read complete addr: 0x0000001f prot: AxiProt.NONSECURE resp: AxiResp.OKAY data: 41
+# Done reading
+# Reading: index=31, value=65, bytes=x<built-in method hex of bytes object at 0x7fffc8e2b480>
+# Done writing and reading
+# Done writing
+#   2930.00ns INFO     cocotb.regression                  graph_test passed
+#   2930.00ns INFO     cocotb.regression                  **************************************************************************************
+#                                                         ** TEST                          STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
+#                                                         **************************************************************************************
+#                                                         ** runner.graph_test              PASS        2930.00           0.19      15802.57  **
+#                                                         **************************************************************************************
+#                                                         ** TESTS=1 PASS=1 FAIL=0 SKIP=0               2930.00           4.71        621.93  **
+#                                                         **************************************************************************************
+#                                                         
+# ** Note: $finish
+#    Time: 2930001 ps  Iteration: 0  Instance: /top
+# End time: 11:12:09 on Jan 01,2024, Elapsed time: 0:00:40
+# Errors: 0, Warnings: 26
+make[1]: Leaving directory `/home/thw20/FYP/systolic_array/hw/sim/cocotb'

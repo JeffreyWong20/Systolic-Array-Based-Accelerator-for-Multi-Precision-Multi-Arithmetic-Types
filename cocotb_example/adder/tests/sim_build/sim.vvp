@@ -1,0 +1,44 @@
+#! /opt/homebrew/Cellar/icarus-verilog/12.0/bin/vvp
+:ivl_version "12.0 (stable)";
+:ivl_delay_selection "TYPICAL";
+:vpi_time_precision - 12;
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/12.0/lib/ivl/system.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/12.0/lib/ivl/vhdl_sys.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/12.0/lib/ivl/vhdl_textio.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/12.0/lib/ivl/v2005_math.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/12.0/lib/ivl/va_math.vpi";
+:vpi_module "/opt/homebrew/Cellar/icarus-verilog/12.0/lib/ivl/v2009.vpi";
+S_0x11d609c90 .scope package, "$unit" "$unit" 2 1;
+ .timescale -9 -12;
+S_0x11d609e00 .scope module, "adder" "adder" 3 6;
+ .timescale -9 -12;
+    .port_info 0 /INPUT 4 "A";
+    .port_info 1 /INPUT 4 "B";
+    .port_info 2 /OUTPUT 5 "X";
+P_0x11d6092f0 .param/l "DATA_WIDTH" 0 3 7, +C4<00000000000000000000000000000100>;
+o0x120040010 .functor BUFZ 4, C4<zzzz>; HiZ drive
+v0x11d60a080_0 .net "A", 3 0, o0x120040010;  0 drivers
+o0x120040040 .functor BUFZ 4, C4<zzzz>; HiZ drive
+v0x11d61a080_0 .net "B", 3 0, o0x120040040;  0 drivers
+v0x11d61a120_0 .net "X", 4 0, L_0x11d61a780;  1 drivers
+v0x11d61a1d0_0 .net *"_ivl_0", 4 0, L_0x11d61a500;  1 drivers
+L_0x120078010 .functor BUFT 1, C4<0>, C4<0>, C4<0>, C4<0>;
+v0x11d61a280_0 .net *"_ivl_3", 0 0, L_0x120078010;  1 drivers
+v0x11d61a370_0 .net *"_ivl_4", 4 0, L_0x11d61a640;  1 drivers
+L_0x120078058 .functor BUFT 1, C4<0>, C4<0>, C4<0>, C4<0>;
+v0x11d61a420_0 .net *"_ivl_7", 0 0, L_0x120078058;  1 drivers
+L_0x11d61a500 .concat [ 4 1 0 0], o0x120040010, L_0x120078010;
+L_0x11d61a640 .concat [ 4 1 0 0], o0x120040040, L_0x120078058;
+L_0x11d61a780 .arith/sum 5, L_0x11d61a500, L_0x11d61a640;
+    .scope S_0x11d609e00;
+T_0 ;
+    %vpi_call/w 3 18 "$dumpfile", "dump.vcd" {0 0 0};
+    %vpi_call/w 3 19 "$dumpvars", 32'sb00000000000000000000000000000001, S_0x11d609e00 {0 0 0};
+    %end;
+    .thread T_0;
+# The file index is used to find the file name in the following table.
+:file_names 4;
+    "N/A";
+    "<interactive>";
+    "-";
+    "/Users/jeffreywong/Desktop/cocotb/examples/adder/tests/../hdl/adder.sv";

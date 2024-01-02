@@ -1,0 +1,26 @@
+$date
+	Wed Nov  8 09:36:53 2023
+$end
+$version
+	Icarus Verilog
+$end
+$timescale
+	1ps
+$end
+$scope module adder $end
+$var wire 4 ! A [3:0] $end
+$var wire 4 " B [3:0] $end
+$var wire 5 # X [4:0] $end
+$var parameter 32 $ DATA_WIDTH $end
+$upscope $end
+$enddefinitions $end
+$comment Show the parameter values. $end
+$dumpall
+b100 $
+$end
+#0
+$dumpvars
+bx #
+bz "
+bz !
+$end
