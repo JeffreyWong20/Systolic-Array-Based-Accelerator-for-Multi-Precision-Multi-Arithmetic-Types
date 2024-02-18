@@ -355,4 +355,56 @@ prefetcher prefetcher_i (
 // end
 
 
+// ====================================================================================
+// AXI Memory 
+// ====================================================================================
+axi_interface axi_ram (
+    .clk                        (clk),
+    .rst                        (rst),
+
+    .axi_awid                   (prefetcher_weight_bank_rm_axi_interconnect_axi_awid),
+    .axi_awaddr                 (prefetcher_weight_bank_rm_axi_interconnect_axi_awaddr),
+    .axi_awlen                  (prefetcher_weight_bank_rm_axi_interconnect_axi_awlen),
+    .axi_awsize                 (prefetcher_weight_bank_rm_axi_interconnect_axi_awsize),
+    .axi_awburst                (prefetcher_weight_bank_rm_axi_interconnect_axi_awburst),
+    .axi_awlock                 (prefetcher_weight_bank_rm_axi_interconnect_axi_awlock),
+    .axi_awcache                (prefetcher_weight_bank_rm_axi_interconnect_axi_awcache),
+    .axi_awprot                 (prefetcher_weight_bank_rm_axi_interconnect_axi_awprot),
+    .axi_awqos                  (prefetcher_weight_bank_rm_axi_interconnect_axi_awqos),
+    .axi_awregion               (), // not used
+    .axi_awvalid                (prefetcher_weight_bank_rm_axi_interconnect_axi_awvalid),
+    .axi_awready                (prefetcher_weight_bank_rm_axi_interconnect_axi_awready),
+    .axi_wdata                  (prefetcher_weight_bank_rm_axi_interconnect_axi_wdata),
+    .axi_wstrb                  (prefetcher_weight_bank_rm_axi_interconnect_axi_wstrb),
+    .axi_wlast                  (prefetcher_weight_bank_rm_axi_interconnect_axi_wlast),
+    .axi_wvalid                 (prefetcher_weight_bank_rm_axi_interconnect_axi_wvalid),
+    .axi_wready                 (prefetcher_weight_bank_rm_axi_interconnect_axi_wready),
+    .axi_bid                    (prefetcher_weight_bank_rm_axi_interconnect_axi_bid),
+    .axi_bresp                  (prefetcher_weight_bank_rm_axi_interconnect_axi_bresp),
+    .axi_bvalid                 (prefetcher_weight_bank_rm_axi_interconnect_axi_bvalid),
+    .axi_bready                 (prefetcher_weight_bank_rm_axi_interconnect_axi_bready),
+    .axi_arid                   (prefetcher_weight_bank_rm_axi_interconnect_axi_arid),
+    .axi_araddr                 (prefetcher_weight_bank_rm_axi_interconnect_axi_araddr),
+    .axi_arlen                  (prefetcher_weight_bank_rm_axi_interconnect_axi_arlen),
+    .axi_arsize                 (prefetcher_weight_bank_rm_axi_interconnect_axi_arsize),
+    .axi_arburst                (prefetcher_weight_bank_rm_axi_interconnect_axi_arburst),
+    .axi_arlock                 (prefetcher_weight_bank_rm_axi_interconnect_axi_arlock),
+    .axi_arcache                (prefetcher_weight_bank_rm_axi_interconnect_axi_arcache),
+    .axi_arprot                 (prefetcher_weight_bank_rm_axi_interconnect_axi_arprot),
+    .axi_arqos                  (prefetcher_weight_bank_rm_axi_interconnect_axi_arqos),
+    .axi_arregion               (), // not used
+    .axi_arvalid                (prefetcher_weight_bank_rm_axi_interconnect_axi_arvalid),
+    .axi_arready                (prefetcher_weight_bank_rm_axi_interconnect_axi_arready),
+    .axi_rid                    (prefetcher_weight_bank_rm_axi_interconnect_axi_rid),
+    .axi_rdata                  (prefetcher_weight_bank_rm_axi_interconnect_axi_rdata),
+    .axi_rresp                  (prefetcher_weight_bank_rm_axi_interconnect_axi_rresp),
+    .axi_rlast                  (prefetcher_weight_bank_rm_axi_interconnect_axi_rlast),
+    .axi_rvalid                 (prefetcher_weight_bank_rm_axi_interconnect_axi_rvalid),
+    .axi_rready                 (prefetcher_weight_bank_rm_axi_interconnect_axi_rready)
+);
+
+
+
+
+
 endmodule

@@ -133,17 +133,38 @@ VERILOG_SOURCES = \
 VERILOG_SOURCES += \
 	$(FYP_DIR)/hw/ip/include/top_pkg.sv
 
+VHDL_SOURCES = \
+	$(FYP_DIR)/hw/build/project_1.srcs/sources_1/ip/fp_mult/sim/fp_mult.vhd \
+	$(FYP_DIR)/hw/build/project_1.srcs/sources_1/ip/fp_add/sim/fp_add.vhd \
+
+# IP: Lib
+VERILOG_SOURCES += \
+	$(FYP_DIR)/hw/ip/lib/axi/axi_read_master.sv \
+	$(FYP_DIR)/hw/ip/lib/axi/axi_write_master.sv \
+	$(FYP_DIR)/hw/ip/lib/base_components/binary_to_onehot.sv \
+	$(FYP_DIR)/hw/ip/lib/base_components/count_ones.sv \
+	$(FYP_DIR)/hw/ip/lib/base_components/onehot_to_binary_comb.sv \
+	$(FYP_DIR)/hw/ip/lib/base_components/rr_arbiter.sv \
+	$(FYP_DIR)/hw/ip/lib/arithmetic/fixed_point_mac.sv \
+	$(FYP_DIR)/hw/ip/lib/arithmetic/float_mac.sv \
+	$(FYP_DIR)/hw/ip/lib/arithmetic/mac.sv \
+	$(FYP_DIR)/hw/ip/lib/systolic_modules/activation_core.sv \
+	$(FYP_DIR)/hw/ip/lib/systolic_modules/processing_element.sv \
+	$(FYP_DIR)/hw/ip/lib/systolic_modules/systolic_module.sv \
+
 # IP
 VERILOG_SOURCES	+= \
 	$(FYP_DIR)/hw/ip/rtl/prefetcher.sv \
 	$(FYP_DIR)/hw/ip/rtl/prefetcher_weight_bank.sv \
 	$(FYP_DIR)/hw/ip/lib/buffer/ultraram.v \
 	$(FYP_DIR)/hw/ip/lib/buffer/ultraram_fifo.sv \
-	$(FYP_DIR)/hw/ip/lib/axi/axi_read_master.sv \
 	$(FYP_DIR)/hw/ip/lib/axi/axi_interface.sv \
 	$(FYP_DIR)/hw/ip/lib/axi/axi_ram.sv \
 	$(FYP_DIR)/hw/ip/top/top.sv \
-	$(FYP_DIR)/imports/verilog-axi/rtl/axi_ram.v
+	$(FYP_DIR)/imports/verilog-axi/rtl/axi_ram.v \
+	$(FYP_DIR)/hw/build/project_1.srcs/sources_1/ip/axi_interconnect_0/sim/axi_interconnect_0.v \
+	$(FYP_DIR)/hw/ip/transformation_engine/rtl/feature_transformation_core.sv \
+	$(FYP_DIR)/hw/ip/transformation_engine/rtl/feature_transformation_engine.sv \
 
 VSIM_LIBS = \
 	axi_infrastructure_v1_1_0 \

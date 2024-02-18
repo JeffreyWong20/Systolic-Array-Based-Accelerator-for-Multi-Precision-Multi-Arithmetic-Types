@@ -165,10 +165,22 @@ typedef struct packed {
 } WEIGHT_CHANNEL_REQ_t;
 
 typedef struct packed {
+    // Check request payloads match NSB payloads
+    logic [$clog2(MAX_FEATURE_COUNT):0]    in_features;
+    logic [$clog2(MAX_FEATURE_COUNT):0]    out_features;
+} FEATURE_CHANNEL_REQ_t;
+
+typedef struct packed {
     logic [MAX_FEATURE_COUNT-1:0] [31:0] data;
     logic [MAX_FEATURE_COUNT-1:0] valid_mask;
     logic                         done;
 } WEIGHT_CHANNEL_RESP_t;
+
+typedef struct packed {
+    logic [MAX_FEATURE_COUNT-1:0] [31:0] data;
+    logic [MAX_FEATURE_COUNT-1:0] valid_mask;
+    logic                         done;
+} FEATURE_CHANNEL_RESP_t;
 
 typedef struct packed {
     logic [$clog2(MAX_NODESLOT_COUNT)-1:0] nodeslot;

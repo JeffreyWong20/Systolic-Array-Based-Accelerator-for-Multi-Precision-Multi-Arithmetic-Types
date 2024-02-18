@@ -88,31 +88,41 @@ class RamTester:
         # self.axi_master = AxiMaster(AxiBus.from_prefix(dut, "s_axi"), dut.clk, dut.rst)
         self.axi_ram = AxiRam(AxiBus.from_prefix(dut, "axi"), dut.clk, dut.rst, size=2**16)
         self.mlp = MLP()
+        self.max_in_features = 16 # each row can store 16 features
+        self.each_feature_size = 4 # each feature is 4 bytes
+        self.each_row_size = self.max_in_features * self.each_feature_size
+        # --------------------------------------------------
+        # |         |           |           |           | ... in total 16 features
+        # |f1*0*0*0 |   f2      |   f3      |   f4      | ... in total 16 features
+        # |         |           |           |           | ... in total 16 features
+        # |         |           |           |           | ... in total 16 features
+        # --------------------------------------------------
 
     async def initialize(self):
         await cycle_reset(self.dut)
 
-    async def write_to_ram(self, data):
+    async def write_to_ram(self, data, start_address=0):
+        in_features = data.shape[0]    
         data = data.detach().numpy().astype(np.int8)
+        # self.axi_ram.write(2, struct.pack('b', 99))
         for idx, val in enumerate(data.flatten()):
+            idx = (idx // in_features) * self.each_row_size + (idx % in_features) * self.each_feature_size
+            idx += start_address
             byte_val = struct.pack('b', val)
             print(f"Writing: index={idx}, value={val}, bytes=x{byte_val.hex()}")
-            # await self.axi_master.write(idx, byte_val)
             self.axi_ram.write(idx, byte_val)
-            print("Done writing")
-
-    async def read_from_ram_and_verify(self, data):
+    
+    async def read_from_ram_and_verify(self, data, start_address=0):
+        in_features = data.shape[0]
         data = data.detach().numpy().astype(np.int8)
         for idx, val in enumerate(data.flatten()):
+            idx = (idx // in_features) * self.each_row_size + (idx % in_features) * self.each_feature_size
+            idx += start_address
             expected_bytes = struct.pack('b', val)
             print(f"index={idx}, value={val}, bytes=x{expected_bytes.hex()}")
-            # read_data = await self.axi_master.read(idx, 1)
             read_data = self.axi_ram.read(idx, 1)
             print("Done reading")
-            # print(f"Reading: index={idx}, value={val}, bytes=x{read_data.data.hex}")
             print(f"Reading: index={idx}, value={val}, bytes=x{read_data}")
-            # assert read_data.data == expected_bytes, f"Data mismatch at index {idx}: " \
-            #                                      f"read={read_data.data.hex()}, expected={expected_bytes.hex()}"
             assert read_data == expected_bytes, f"Data mismatch at index {idx}: " \
                                                  f"read={read_data.hex()}, expected={expected_bytes.hex()}"
 
@@ -163,20 +173,38 @@ def debug_state(dut, state):
             ) = ({}
             )""".format(
             state,
-            dut.nsb_prefetcher_req_valid.value,
+            dut.weight_prefetcher_req_valid.value,
         )
     )
 
 def reset_nsb_prefetcher(dut):
-    dut.nsb_prefetcher_req_valid.value = 0                  # enable the prefetcher
-    dut.nsb_prefetcher_req.req_opcode.value   = 0                 # 00 is for weight bank requests
-    dut.nsb_prefetcher_req.start_address.value  = 0x0000            # start address of the weight bank
-    dut.nsb_prefetcher_req.in_features.value  = 0                 # number of input features
-    dut.nsb_prefetcher_req.out_features.value = 0                 # number of output features
-    dut.nsb_prefetcher_req.nodeslot.value     = 0                 # not used for weight bank requests
-    dut.nsb_prefetcher_req.nodeslot_precision.value = 0                 # 01 is for fixed 8-bit precision
-    dut.nsb_prefetcher_req.neighbour_count.value = 0                 # not used for weight bank requests
+    dut.weight_prefetcher_req_valid.value = 0                        # enable the prefetcher
+    dut.weight_prefetcher_req.req_opcode.value   = 0                 # 00 is for weight bank requests
+    dut.weight_prefetcher_req.start_address.value  = 0x0000          # start address of the weight bank
+    dut.weight_prefetcher_req.in_features.value  = 0                 # number of input features
+    dut.weight_prefetcher_req.out_features.value = 0                 # number of output features
+    dut.weight_prefetcher_req.nodeslot.value     = 0                 # not used for weight bank requests
+    dut.weight_prefetcher_req.nodeslot_precision.value = 0           # 01 is for fixed 8-bit precision
+    dut.weight_prefetcher_req.neighbour_count.value = 0              # not used for weight bank requests
+    dut.feature_prefetcher_req_valid.value = 0                        # enable the prefetcher
+    dut.feature_prefetcher_req.req_opcode.value   = 0                 # 00 is for weight bank requests
+    dut.feature_prefetcher_req.start_address.value  = 0x0000          # start address of the weight bank
+    dut.feature_prefetcher_req.in_features.value  = 0                 # number of input features
+    dut.feature_prefetcher_req.out_features.value = 0                 # number of output features
+    dut.feature_prefetcher_req.nodeslot.value     = 0                 # not used for weight bank requests
+    dut.feature_prefetcher_req.nodeslot_precision.value = 0           # 01 is for fixed 8-bit precision
+    dut.feature_prefetcher_req.neighbour_count.value = 0              # not used for weight bank requests
 
+def reset_fte(dut):
+    # input   logic                                                nsb_fte_req_valid,
+    # output  logic                                                nsb_fte_req_ready,
+    # input   NSB_FTE_REQ_t                                        nsb_fte_req,
+    # output  logic                                                nsb_fte_resp_valid, // valid only for now
+    # output  NSB_FTE_RESP_t                                       nsb_fte_resp,
+    dut.nsb_fte_req_valid.value = 0
+    dut.nsb_fte_req.precision.value = 0
+    dut.nsb_fte_req.nodeslots.value = 0
+    
 def reset_all_axi_input_signals(dut):    
     dut.axi_awid.value = 0
     dut.axi_awaddr.value = 0
@@ -232,6 +260,7 @@ async def mlp_test(dut):
     await Timer(20, units="ns")
     dut.rst.value = 1
     reset_nsb_prefetcher(dut)
+    reset_fte(dut)
     await Timer(100, units="ns")
     dut.rst.value = 0
     
@@ -239,11 +268,16 @@ async def mlp_test(dut):
     # This code does not work
     ram_tester = RamTester(dut.axi_ram)
     await ram_tester.initialize()
-    data = ram_tester.mlp.fc1.w_quantizer(ram_tester.mlp.fc1.weight)
-    data = torch.cat((data, data), dim=0)
-    await ram_tester.write_to_ram(data)
-    await ram_tester.read_from_ram_and_verify(data)
-    print("Done writing and reading")
+    # write weights to RAM
+    weight = ram_tester.mlp.fc1.w_quantizer(ram_tester.mlp.fc1.weight)
+    await ram_tester.write_to_ram(weight)
+    await ram_tester.read_from_ram_and_verify(weight)
+    # write data to RAM
+    weigth_address_range = ram_tester.mlp.fc1.weight.shape[0] * 16 * 4 # TODO: hardcode 16 and 4, assuming input channel is less than 16.
+    data = torch.randn((4,4))
+    await ram_tester.write_to_ram(data, start_address=weigth_address_range)
+    await ram_tester.read_from_ram_and_verify(data, start_address=weigth_address_range)
+    print("Done writing and finish verification")
     
     """
     typedef struct packed {
@@ -267,29 +301,29 @@ async def mlp_test(dut):
     # nodeslot =            dut.nsb_prefetcher_req.value[59:63]
     # nodeslot_precision =  dut.nsb_prefetcher_req.value[64:65]
     # neighbour_count =     dut.nsb_prefetcher_req.value[66:75]
-    """
-    # await cycle_reset(dut)
-
-    # dut.nsb_prefetcher_req_valid.value = 1                  # enable the prefetcher
-    # dut.nsb_prefetcher_req.value[0:2]   = 0                 # 00 is for weight bank requests
-    # dut.nsb_prefetcher_req.value[3:36]  = 0x0000            # start address of the weight bank
-    # dut.nsb_prefetcher_req.value[37:47] = 4                 # number of input features
-    # dut.nsb_prefetcher_req.value[48:58] = 4                 # number of output features
-    # dut.nsb_prefetcher_req.value[59:63] = 0                 # not used for weight bank requests
-    # dut.nsb_prefetcher_req.value[64:65] = 1                 # 01 is for fixed 8-bit precision
-    # dut.nsb_prefetcher_req.value[66:75] = 0                 # not used for weight bank requests
-    # print("Done writing")
-    # reset_all_axi_input_signals(dut.axi_ram)
-    
-    dut.nsb_prefetcher_req_valid.value = 1                      # enable the prefetcher
-    dut.nsb_prefetcher_req.req_opcode.value   = 0               # 00 is for weight bank requests
-    dut.nsb_prefetcher_req.start_address.value  = 0x0000        # start address of the weight bank
-    dut.nsb_prefetcher_req.in_features.value  = 4               # number of input features
-    dut.nsb_prefetcher_req.out_features.value = 4               # number of output features
-    dut.nsb_prefetcher_req.nodeslot.value     = 0               # not used for weight bank requests
-    dut.nsb_prefetcher_req.nodeslot_precision.value = 1         # 01 is for fixed 8-bit precision
-    dut.nsb_prefetcher_req.neighbour_count.value = 0            # not used for weight bank requests
-    print("Done writing")
+    """  
+    # --------------------------------------------------
+    dut.weight_prefetcher_req_valid.value = 1                               # enable the prefetcher
+    dut.weight_prefetcher_req.req_opcode.value   = 0                        # 00 is for weight bank requests
+    dut.weight_prefetcher_req.start_address.value  = 0x0000                 # start address of the weight bank
+    dut.weight_prefetcher_req.in_features.value  = 4                        # number of input features
+    dut.weight_prefetcher_req.out_features.value = 4                        # number of output features
+    dut.weight_prefetcher_req.nodeslot.value     = 0                        # not used for weight bank requests
+    dut.weight_prefetcher_req.nodeslot_precision.value = 1                  # 01 is for fixed 8-bit precision
+    dut.weight_prefetcher_req.neighbour_count.value = 0                     # not used for weight bank requests
+    # --------------------------------------------------
+    dut.feature_prefetcher_req_valid.value = 1                              # enable the prefetcher
+    dut.feature_prefetcher_req.req_opcode.value   = 0                       # 00 is for weight bank requests
+    dut.feature_prefetcher_req.start_address.value  = weigth_address_range  # start address of the weight bank
+    dut.feature_prefetcher_req.in_features.value  = 4                       # number of input features
+    dut.feature_prefetcher_req.out_features.value = 4                       # number of output features
+    dut.feature_prefetcher_req.nodeslot.value     = 0                       # not used for weight bank requests
+    dut.feature_prefetcher_req.nodeslot_precision.value = 1                 # 01 is for fixed 8-bit precision
+    dut.feature_prefetcher_req.neighbour_count.value = 0                    # not used for weight bank requests
+    # --------------------------------------------------
+    dut.nsb_fte_req_valid.value = 1                             # enable the fte
+    dut.nsb_fte_req.precision.value = 1                         # 01 is for fixed 8-bit precision
+    print("Done instructing fte")
     
     # Create a binary string with the specified bit values
     # binary_value = (
@@ -304,7 +338,26 @@ async def mlp_test(dut):
     # # Convert the binary string to an integer
     # dut.nsb_prefetcher_req.value = int(binary_value, 2)
     # debug_state(dut, "Pre-clk")
-    await Timer(1000, units="ns")
+    await Timer(2000, units="ns")
+    dut._log.info("Finished writing")
+    
+    # i=0
+    # while(True):
+    #     await FallingEdge(dut.clk)
+    #     # weight_waiting_state = dut.prefetcher_i.weight_bank_fixed_i.weight_bank_state_n.value
+    #     weight_waiting_state = dut.nsb_prefetcher_req_valid.value
+    #     # dut._log.info("Post-clk")
+    #     # print(dut.prefetcher_i.weight_bank_fixed_i.weight_bank_state_n.value)
+    #     # empty_mask = await test.driver.axil_driver.axil_read(test.driver.nsb_regs["status_nodeslots_empty_mask_lsb"])
+    #     # if (weight_waiting_state == 4):
+    #     #     break
+    #     if i==100:
+    #         break
+    #     i+=1
+    
+    # dut._log.info("Finished waiting")
+    # dut.weight_channel_req_valid.value = 1
+        
     # print("first clock")
     # # debug_state(dut, "Post-clk")
     # # debug_state(dut, "Pre-clk")

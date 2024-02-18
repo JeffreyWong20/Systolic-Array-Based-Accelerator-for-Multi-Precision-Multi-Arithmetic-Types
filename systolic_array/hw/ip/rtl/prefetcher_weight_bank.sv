@@ -124,7 +124,7 @@ for (genvar row = 0; row < MAX_FEATURE_COUNT; row++) begin
         .pop            (row_fifo_pop       [row]),
         .reset_read_ptr (reset_weights),
         .out_valid  (row_fifo_out_valid [row]),
-        .out_data   (row_fifo_out_data  [row]),
+        .out_data   (row_fifo_out_data  [row]), // row_fifo_out_data is a 2D array. row_fifo_out_data[row][31:0] is the data for the row FIFO of row "row"
         
         .count      (row_fifo_count     [row]),
         .empty      (row_fifo_empty     [row]),
