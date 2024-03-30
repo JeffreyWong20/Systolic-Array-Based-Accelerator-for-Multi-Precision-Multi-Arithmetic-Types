@@ -16,7 +16,6 @@ from cocotb.runner import get_runner
 from cocotb.triggers import Timer, FallingEdge
 from cocotbext.axi import AxiBus, AxiMaster, AxiRam
 
-
 import torch
 import torch.nn as nn
 import logging
@@ -29,6 +28,7 @@ sys.path.append(
         "..",
     )
 )
+from systolic_array.tb.software.ram import RamTester, cycle_reset
 from systolic_array.tb.software.linear import LinearInteger
 
 np.random.seed(0)
@@ -67,100 +67,6 @@ class MLP(torch.nn.Module):
         x = torch.flatten(x, start_dim=1, end_dim=-1)
         x = torch.nn.functional.relu(self.fc1(x))
         return x
-
-async def cycle_reset(dut):
-    """Reset the dut for one clock cycle"""
-    dut.rst.setimmediatevalue(0)
-    await RisingEdge(dut.clk)
-    await RisingEdge(dut.clk)
-    dut.rst.value = 1
-    await RisingEdge(dut.clk)
-    await RisingEdge(dut.clk)
-    dut.rst.value = 0
-    await RisingEdge(dut.clk)
-    await RisingEdge(dut.clk)
-
-
-class RamTester:
-    """Helper class to test the RAM module"""
-    def __init__(self, dut):
-        self.dut = dut
-        # self.axi_master = AxiMaster(AxiBus.from_prefix(dut, "s_axi"), dut.clk, dut.rst)
-        self.axi_ram = AxiRam(AxiBus.from_prefix(dut, "axi"), dut.clk, dut.rst, size=2**16)
-        self.mlp = MLP()
-        self.max_in_features = 16 # each row can store 16 features
-        self.each_feature_size = 4 # each feature is 4 bytes
-        self.each_row_size = self.max_in_features * self.each_feature_size
-        # --------------------------------------------------
-        # |         |           |           |           | ... in total 16 features
-        # |f1*0*0*0 |   f2      |   f3      |   f4      | ... in total 16 features
-        # |         |           |           |           | ... in total 16 features
-        # |         |           |           |           | ... in total 16 features
-        # --------------------------------------------------
-
-    async def initialize(self):
-        await cycle_reset(self.dut)
-
-    async def write_to_ram(self, data, start_address=0):
-        in_features = data.shape[0]    
-        data = data.detach().numpy().astype(np.int8)
-        # self.axi_ram.write(2, struct.pack('b', 99))
-        for idx, val in enumerate(data.flatten()):
-            idx = (idx // in_features) * self.each_row_size + (idx % in_features) * self.each_feature_size
-            idx += start_address
-            byte_val = struct.pack('b', val)
-            print(f"Writing: index={idx}, value={val}, bytes=x{byte_val.hex()}")
-            self.axi_ram.write(idx, byte_val)
-    
-    async def read_from_ram_and_verify(self, data, start_address=0):
-        in_features = data.shape[0]
-        data = data.detach().numpy().astype(np.int8)
-        for idx, val in enumerate(data.flatten()):
-            idx = (idx // in_features) * self.each_row_size + (idx % in_features) * self.each_feature_size
-            idx += start_address
-            expected_bytes = struct.pack('b', val)
-            print(f"index={idx}, value={val}, bytes=x{expected_bytes.hex()}")
-            read_data = self.axi_ram.read(idx, 1)
-            print("Done reading")
-            print(f"Reading: index={idx}, value={val}, bytes=x{read_data}")
-            assert read_data == expected_bytes, f"Data mismatch at index {idx}: " \
-                                                 f"read={read_data.hex()}, expected={expected_bytes.hex()}"
-
-async def test_ram_operations(dut):
-    ram_tester = RamTester(dut.axi_ram)
-    await ram_tester.initialize()
-
-    # Generate data or retrieve it from somewhere (replace this line with your actual data)
-    data = ram_tester.mlp.fc1.w_quantizer(ram_tester.mlp.fc1.weight)
-    
-    await ram_tester.write_to_ram(data)
-    await ram_tester.read_from_ram_and_verify(data)
-    print("Done complete")
-    # await ram_tester.read_from_ram_and_verify(data)
-
-
-# @cocotb.test()
-async def simple_ram_test(dut):
-    dut = dut.axi_ram
-    cocotb.start_soon(Clock(dut.clk, 2, units="ns").start())
-    
-    axi_master = AxiMaster(AxiBus.from_prefix(dut, "axi"), dut.clk, dut.rst)
-    axi_ram = AxiRam(AxiBus.from_prefix(dut, "axi"), dut.clk, dut.rst, size=2**16)
-
-    await cycle_reset(dut)
-    
-    print("Writing to address 0x0000")
-    # await axi_master.write(0x0000, b'test')
-    print("Reading from address 0x0000")
-    data = await axi_master.read(0x0000, 4)
-    print("Data read: ", data)
-    # axi_master.init_write(0x0000, b'test')
-    axi_ram.write(0x0000, b'test')
-    data = axi_ram.read(0x0000, 4)
-    axi_ram.hexdump(0x0000, 8, prefix="RAM")
-    
-    assert data == b'test'
-
 
 # --------------------------------------------------
 #  Helper functions
@@ -246,8 +152,29 @@ def reset_all_axi_input_signals(dut):
     # dut.axi_rvalid.value = 0
     dut.axi_rready.value = 0
     
-# @cocotb.test()
+
+# --------------------------------------------------
+#  Actual test
+# --------------------------------------------------
 async def mlp_test(dut):
+    
+    mlp = MLP()
+    # Input data
+    input_data = torch.tensor(
+        [[91, 30, 46, 20],
+        [71, 57, 41, 71],
+        [45, 42,  0, 12],
+        [23, 47,  1, 31]], dtype=torch.float32)
+
+    # Set weights for fc1 layer
+    mlp.fc1.weight.data = torch.tensor(
+        [[ 15, 107,  64,  46],
+        [123, 116,   5,  85],
+        [ 28,  12, 125,  88],
+        [ 24,  75,  18,  29]], dtype=torch.float32)
+    
+    
+    
     # Create a 10ns-period clock on port clk
     clock = Clock(dut.clk, 10, units="ns")
     # Start the clock
@@ -258,25 +185,23 @@ async def mlp_test(dut):
     cocotb.start_soon(clock.start())
     # Reset cycle
     await Timer(20, units="ns")
-    dut.rst.value = 1
+    dut.rst.value = 1 
     reset_nsb_prefetcher(dut)
     reset_fte(dut)
     await Timer(100, units="ns")
     dut.rst.value = 0
     
     
-    # This code does not work
     ram_tester = RamTester(dut.axi_ram)
     await ram_tester.initialize()
     # write weights to RAM
-    weight = ram_tester.mlp.fc1.w_quantizer(ram_tester.mlp.fc1.weight)
+    weight = mlp.fc1.w_quantizer(mlp.fc1.weight)
     await ram_tester.write_to_ram(weight)
     await ram_tester.read_from_ram_and_verify(weight)
-    # write data to RAM
-    weigth_address_range = ram_tester.mlp.fc1.weight.shape[0] * 16 * 4 # TODO: hardcode 16 and 4, assuming input channel is less than 16.
-    data = torch.randn((4,4))
-    await ram_tester.write_to_ram(data, start_address=weigth_address_range)
-    await ram_tester.read_from_ram_and_verify(data, start_address=weigth_address_range)
+    # write input data to RAM
+    weigth_address_range = mlp.fc1.weight.shape[0] * 16 * 4 # TODO: hardcode 16 and 4, assuming input channel is less than 16.
+    await ram_tester.write_to_ram(input_data, start_address=weigth_address_range)
+    await ram_tester.read_from_ram_and_verify(input_data, start_address=weigth_address_range)
     print("Done writing and finish verification")
     
     """
@@ -325,94 +250,33 @@ async def mlp_test(dut):
     dut.nsb_fte_req.precision.value = 1                         # 01 is for fixed 8-bit precision
     print("Done instructing fte")
     
-    # Create a binary string with the specified bit values
-    # binary_value = (
-    #     '000'                       # 0 is for weight bank requests
-    #     + '0000'                    # Start address of the weight bank
-    #     + bin(4)[2:].zfill(11)      # Number of input features      remove the 0b prefix and pad with 0s to 11 bits
-    #     + bin(4)[2:].zfill(11)      # Number of output features
-    #     + '0' * 5                   # Not used for weight bank requests
-    #     + '01'                      # 01 is for fixed 8-bit precision
-    #     + '0' * 10                  # Not used for weight bank requests
-    # )
-    # # Convert the binary string to an integer
-    # dut.nsb_prefetcher_req.value = int(binary_value, 2)
-    # debug_state(dut, "Pre-clk")
-    await Timer(2000, units="ns")
-    dut._log.info("Finished writing")
-    
-    # i=0
-    # while(True):
-    #     await FallingEdge(dut.clk)
-    #     # weight_waiting_state = dut.prefetcher_i.weight_bank_fixed_i.weight_bank_state_n.value
-    #     weight_waiting_state = dut.nsb_prefetcher_req_valid.value
-    #     # dut._log.info("Post-clk")
-    #     # print(dut.prefetcher_i.weight_bank_fixed_i.weight_bank_state_n.value)
-    #     # empty_mask = await test.driver.axil_driver.axil_read(test.driver.nsb_regs["status_nodeslots_empty_mask_lsb"])
-    #     # if (weight_waiting_state == 4):
-    #     #     break
-    #     if i==100:
-    #         break
-    #     i+=1
-    
-    # dut._log.info("Finished waiting")
-    # dut.weight_channel_req_valid.value = 1
+    i = 0
+    while True:
+        await FallingEdge(dut.clk)
+        await Timer(10, units="ns")
+        if dut.nsb_fte_resp_valid.value == 1:
+            done = True
+            break
         
-    # print("first clock")
-    # # debug_state(dut, "Post-clk")
-    # # debug_state(dut, "Pre-clk")
-    # await FallingEdge(dut.clk)
-    # print("first clock")
-    # debug_state(dut, "Post-clk")
-
-    # # done = False
-    # # # Set a timeout to avoid deadlock
-    # for i in range(100):
-    #     print("first clock", i)
-    #     await RisingEdge(dut.clk)
-    #     await Timer(1, units="ns")
-    #     await Timer(1, units="ns")
+        if i==1000:
+            done = False
+            break
+        i+=1
         
-    #     # debug_state(dut, "Post-clk")
-    #     # dut.weight_valid.value = test_case.weight.pre_compute()
-    #     # dut.bias_valid.value = test_case.bias.pre_compute()
-    #     # dut.data_in_valid.value = test_case.data_in.pre_compute()
-    #     # await Timer(1, units="ns")
-    #     # dut.data_out_ready.value = test_case.outputs.pre_compute(
-    #     #     dut.data_out_valid.value
-    #     # )
-    #     # await Timer(1, units="ns")
-    #     # debug_state(dut, "Post-clk")
-
-    #     # dut.bias_valid.value, dut.bias.value = test_case.bias.compute(
-    #     #     dut.bias_ready.value
-    #     # )
-    #     # dut.weight_valid.value, dut.weight.value = test_case.weight.compute(
-    #     #     dut.weight_ready.value
-    #     # )
-    #     # dut.data_in_valid.value, dut.data_in.value = test_case.data_in.compute(
-    #     #     dut.data_in_ready.value
-    #     # )
-    #     # await Timer(1, units="ns")
-    #     # dut.data_out_ready.value = test_case.outputs.compute(
-    #     #     dut.data_out_valid.value, dut.data_out.value
-    #     # )
-    #     debug_state(dut, "Pre-clk")
-    #     if (
-    #         i==19
-    #     ):
-    #         done = True
-    #         break
-    # completed = True
-    # assert (
-    #     done
-    # ), "Deadlock detected or the simulation reaches the maximum cycle limit (fixed it by adjusting the loop trip count)"
-
-
+    result_matrix = [[0]*4 for _ in range(4)]  # Initialize a 4x4 matrix with zeros
+    for r in range(4):
+        for c in range(4):
+            print(ram_tester.axi_ram.read(0x200000000 + r*64 + c, 1).hex())
+            result_matrix[r][c] = int(ram_tester.axi_ram.read(0x200000000 + r*64 + c, 1).hex(),16)
+    print("Result matrix:", result_matrix)
+    
+    assert (
+        done
+    ), "Deadlock detected or the simulation reaches the maximum cycle limit (fixed it by adjusting the loop trip count)"
+    
 
 def test_axi_runner():
     """Simulate the adder example using the Python runner.
-
     This file can be run directly or via pytest discovery.
     """
     # sim = os.getenv("SIM", "verilator")
@@ -430,15 +294,7 @@ def test_axi_runner():
     sim = "icarus"
     extra_args = []
     wave_args = []
-    # extra_args = [
-    #     "--timescale",
-    #     "1ps/1ps",
-    # ]
-
-    # wave_args = [
-    #     "WAVE=1"
-    # ]
-
+    
     proj_path = Path(__file__).resolve().parent
     # equivalent to setting the PYTHONPATH environment variable
 
@@ -465,6 +321,57 @@ def test_axi_runner():
 
 
 if __name__ == "__main__":
-    test_axi_runner()
-    # test_ram_operations()
-    MLP = MLP()
+    # test_axi_runner()
+    fc = MLP()
+    
+    input_data = torch.tensor(
+        [[91, 30, 46, 20],
+        [71, 57, 41, 71],
+        [45, 42,  0, 12],
+        [23, 47,  1, 31]], dtype=torch.float32)
+
+    # Set weights for fc1 layer
+    fc.fc1.weight.data = torch.tensor(
+        [[ 15, 107,  64,  46],
+        [123, 116,   5,  85],
+        [ 28,  12, 125,  88],
+        [ 24,  75,  18,  29]], dtype=torch.float32)
+
+    # Quantize weights and input data
+    quantized_weight = fc.fc1.w_quantizer(fc.fc1.weight.data)
+    quantized_data = fc.fc1.w_quantizer(input_data)
+    weight, data = quantized_weight.numpy().astype(np.int8), quantized_data.numpy().astype(np.int8)
+
+    # Print quantized weights in hex format
+    print("Quantized Weights:")
+    for row in weight:
+        hex_row = [hex(value) for value in row]
+        print(hex_row)
+
+    # Print quantized input data in hex format
+    print("\nTransposed Quantized Input Data:")
+    transposed_data = data.transpose()
+    for row in transposed_data:
+        hex_row = [hex(value) for value in row]
+        print(hex_row)
+
+    # Calculate and print linear operation result
+    result = torch.nn.functional.linear(input_data, fc.fc1.weight.data).numpy().astype(np.int64)
+    print("\nLinear Operation Result:")
+    for row in result:
+        hex_row = [hex(value)[-2:] for value in row]
+        print(hex_row)
+    
+    for row in result:
+        hex_row = [int(hex(value)[-2:],16) for value in row]
+        print(hex_row)
+        
+    
+    # Calculate the matrix multiplication result
+    result = np.matmul(data, weight)
+    print("\nMatrix Multiplication Result:")
+    for row in result:
+        hex_row = [hex(value)[-2:] for value in row]
+        print(hex_row)
+
+            
