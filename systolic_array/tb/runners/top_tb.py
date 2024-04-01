@@ -172,9 +172,7 @@ async def mlp_test(dut):
         [123, 116,   5,  85],
         [ 28,  12, 125,  88],
         [ 24,  75,  18,  29]], dtype=torch.float32)
-    
-    
-    
+
     # Create a 10ns-period clock on port clk
     clock = Clock(dut.clk, 10, units="ns")
     # Start the clock
@@ -205,20 +203,6 @@ async def mlp_test(dut):
     print("Done writing and finish verification")
     
     """
-    typedef struct packed {
-        NSB_PREF_OPCODE_e                      req_opcode;          // 3 bits
-        logic [AXI_ADDRESS_WIDTH-1:0]          start_address;       // 34 bits
-
-        // Weight bank requests 
-        logic [$clog2(MAX_FEATURE_COUNT):0]    in_features;         // 11 bits
-        logic [$clog2(MAX_FEATURE_COUNT):0]    out_features;        // 11 bits
-
-        // For feature bank requests
-        logic [$clog2(MAX_NODESLOT_COUNT)-1:0] nodeslot;            // 5 bits
-        NODE_PRECISION_e                       nodeslot_precision;  // 2 bits
-        logic [$clog2(MAX_NEIGHBOURS)-1:0]     neighbour_count;     // 10 bits
-    } NSB_PREF_REQ_t;
-
     # req_opcode =          dut.nsb_prefetcher_req.value[0:2]  
     # start_address =       dut.nsb_prefetcher_req.value[3:36]
     # in_features =         dut.nsb_prefetcher_req.value[37:47]
@@ -246,8 +230,9 @@ async def mlp_test(dut):
     dut.feature_prefetcher_req.nodeslot_precision.value = 1                 # 01 is for fixed 8-bit precision
     dut.feature_prefetcher_req.neighbour_count.value = 0                    # not used for weight bank requests
     # --------------------------------------------------
-    dut.nsb_fte_req_valid.value = 1                             # enable the fte
-    dut.nsb_fte_req.precision.value = 1                         # 01 is for fixed 8-bit precision
+    dut.nsb_fte_req_valid.value = 1                                         # enable the fte
+    dut.nsb_fte_req.precision.value = 1                                     # 01 is for fixed 8-bit precision
+    # --------------------------------------------------
     print("Done instructing fte")
     
     i = 0
@@ -361,7 +346,6 @@ if __name__ == "__main__":
     for row in result:
         hex_row = [hex(value)[-2:] for value in row]
         print(hex_row)
-    
     for row in result:
         hex_row = [int(hex(value)[-2:],16) for value in row]
         print(hex_row)
@@ -373,5 +357,3 @@ if __name__ == "__main__":
     for row in result:
         hex_row = [hex(value)[-2:] for value in row]
         print(hex_row)
-
-            

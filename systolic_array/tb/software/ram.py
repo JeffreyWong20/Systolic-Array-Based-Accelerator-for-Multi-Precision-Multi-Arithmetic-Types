@@ -22,6 +22,22 @@ import torch.nn as nn
 import logging
 import numpy as np
 
+
+def partitioner(data, ultra_ram_size, systolic_array_size):
+    # We assume the matrix is not being transposed
+    # This partitioner will partition the data into chunks that can be processed by the systolic array
+    # Data block will then be written in the memory in a row_major fashion
+    row_size = data.shape[1]
+    num_iteration_per_row = row_size // ultra_ram_size
+    
+    col_size = data.shape[0]
+    num_iteration_per_col = col_size // systolic_array_size
+    
+    for i in range(num_iteration_per_col):
+        for j in range(num_iteration_per_row):
+            yield data[i*systolic_array_size:(i+1)*systolic_array_size, j*ultra_ram_size:(j+1)*ultra_ram_size]
+    
+    
 async def cycle_reset(dut):
     """Reset the dut for one clock cycle"""
     dut.rst.setimmediatevalue(0)
