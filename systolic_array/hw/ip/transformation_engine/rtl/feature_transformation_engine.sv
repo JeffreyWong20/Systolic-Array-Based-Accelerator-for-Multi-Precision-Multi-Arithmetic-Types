@@ -61,11 +61,11 @@ module feature_transformation_engine #(
     // Feature Channels: FTE -> Prefetcher Feature Bank (REQ)
     output logic                 [top_pkg::PRECISION_COUNT-1:0] feature_channel_req_valid,
     input  logic                 [top_pkg::PRECISION_COUNT-1:0] feature_channel_req_ready,
-    output FEATURE_CHANNEL_REQ_t [top_pkg::PRECISION_COUNT-1:0] feature_channel_req,
+    output WEIGHT_CHANNEL_REQ_t  [top_pkg::PRECISION_COUNT-1:0] feature_channel_req,
 
     input  logic                 [top_pkg::PRECISION_COUNT-1:0] feature_channel_resp_valid,
     output logic                 [top_pkg::PRECISION_COUNT-1:0] feature_channel_resp_ready,
-    input  FEATURE_CHANNEL_REQ_t [top_pkg::PRECISION_COUNT-1:0] feature_channel_resp,
+    input  WEIGHT_CHANNEL_RESP_t [top_pkg::PRECISION_COUNT-1:0] feature_channel_resp,
 
     // // Transformation Buffer Interface
     // output logic [top_pkg::PRECISION_COUNT-1:0] [TRANSFORMATION_BUFFER_SLOTS-1:0]                                                    transformation_buffer_write_enable,
@@ -310,18 +310,18 @@ for (genvar precision = 0; precision < top_pkg::PRECISION_COUNT; precision++) be
         .axi_write_master_data                                      (transformation_core_axi_write_master_data              [precision]),
 
         .axi_write_master_resp_valid                                (transformation_core_axi_write_master_resp_valid        [precision]),
-        .axi_write_master_resp_ready                                (transformation_core_axi_write_master_resp_ready        [precision]),
+        .axi_write_master_resp_ready                                (transformation_core_axi_write_master_resp_ready        [precision])
 
         // Layer configuration
-        .layer_config_in_features_count                             (layer_config_in_features_count),
-        .layer_config_out_features_count                            (layer_config_out_features_count),
-        .layer_config_out_features_address_msb_value                (layer_config_out_features_address_msb_value),
-        .layer_config_out_features_address_lsb_value                (layer_config_out_features_address_lsb_value),
-        .layer_config_bias_value                                    (layer_config_bias_value),
-        .layer_config_activation_function_value                     (layer_config_activation_function_value),
-        .layer_config_leaky_relu_alpha_value                        (layer_config_leaky_relu_alpha_value),
-        .ctrl_buffering_enable_value                                (ctrl_buffering_enable_value),
-        .ctrl_writeback_enable_value                                (ctrl_writeback_enable_value)
+        // .layer_config_in_features_count                             (layer_config_in_features_count),
+        // .layer_config_out_features_count                            (layer_config_out_features_count),
+        // .layer_config_out_features_address_msb_value                (layer_config_out_features_address_msb_value),
+        // .layer_config_out_features_address_lsb_value                (layer_config_out_features_address_lsb_value),
+        // .layer_config_bias_value                                    (layer_config_bias_value),
+        // .layer_config_activation_function_value                     (layer_config_activation_function_value),
+        // .layer_config_leaky_relu_alpha_value                        (layer_config_leaky_relu_alpha_value),
+        // .ctrl_buffering_enable_value                                (ctrl_buffering_enable_value),
+        // .ctrl_writeback_enable_value                                (ctrl_writeback_enable_value)
     );
 end
 

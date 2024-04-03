@@ -194,7 +194,7 @@ ceildiv = lambda a, b: -(-a // b)
 # --------------------------------------------------
 async def mlp_test(dut):
     input_matrix_size = (4, 128)
-    weight_matrix_size = (4, 128)
+    weight_matrix_size = (8, 128)
     
     mlp = MLP()
     # Input data
@@ -272,7 +272,7 @@ async def mlp_test(dut):
             done = True
             break
         
-        if i==10000:
+        if i==100000:
             done = False
             break
         i+=1

@@ -40,11 +40,11 @@ module feature_transformation_core #(
     // Feature Channels: FTE -> Prefetcher Feature Bank (REQ)
     output logic                                                                                      feature_channel_req_valid,
     input  logic                                                                                      feature_channel_req_ready,
-    output FEATURE_CHANNEL_REQ_t                                                                      feature_channel_req,
+    output WEIGHT_CHANNEL_REQ_t                                                                       feature_channel_req,
                                                                 
     input  logic                                                                                      feature_channel_resp_valid,
     output logic                                                                                      feature_channel_resp_ready,
-    input  FEATURE_CHANNEL_RESP_t                                                                     feature_channel_resp,
+    input  WEIGHT_CHANNEL_RESP_t                                                                      feature_channel_resp,
 
     // AXI Write Master Interface
     output logic                                                                                      axi_write_master_req_valid,
@@ -57,39 +57,66 @@ module feature_transformation_core #(
     output logic [511:0]                                                                              axi_write_master_data,
 
     input  logic                                                                                      axi_write_master_resp_valid,
-    output logic                                                                                      axi_write_master_resp_ready,
+    output logic                                                                                      axi_write_master_resp_ready
 
     // Layer configuration
-    input  logic [9:0]                                                                                layer_config_in_features_count,
-    input  logic [9:0]                                                                                layer_config_out_features_count,
-    input  logic [1:0]                                                                                layer_config_out_features_address_msb_value,
-    input  logic [31:0]                                                                               layer_config_out_features_address_lsb_value,
-    input  logic [31:0]                                                                               layer_config_bias_value,
-    input  logic [1:0]                                                                                layer_config_activation_function_value,
-    input  logic [31:0]                                                                               layer_config_leaky_relu_alpha_value,
-    input  logic [0:0]                                                                                ctrl_buffering_enable_value,
-    input  logic [0:0]                                                                                ctrl_writeback_enable_value
+    // input  logic [9:0]                                                                                layer_config_in_features_count,
+    // input  logic [9:0]                                                                                layer_config_out_features_count,  # the number of feature in a row of the systolic array output
+    // input  logic [1:0]                                                                                layer_config_out_features_address_msb_value,
+    // input  logic [31:0]                                                                               layer_config_out_features_address_lsb_value,
+    // input  logic [31:0]                                                                               layer_config_bias_value,
+    // input  logic [1:0]                                                                                layer_config_activation_function_value,
+    // input  logic [31:0]                                                                               layer_config_leaky_relu_alpha_value,
+    // input  logic [0:0]                                                                                ctrl_buffering_enable_value,
+    // input  logic [0:0]                                                                                ctrl_writeback_enable_value
 );
 
 parameter SYS_MODULES_PER_BEAT = 512 / (MATRIX_N * FLOAT_WIDTH);
 parameter MAX_WRITEBACK_BEATS_PER_NODESLOT = SYSTOLIC_MODULE_COUNT / SYS_MODULES_PER_BEAT;
 
 typedef enum logic [3:0] {
-    FTE_FSM_IDLE, FTE_FSM_REQ_WC, FTE_FSM_MULT_SLOW, FTE_FSM_MULT_FAST, FTE_FSM_BIAS, FTE_FSM_ACTIVATION, FTE_FSM_BUFFER, FTE_FSM_WRITEBACK_REQ, FTE_FSM_WRITEBACK_RESP, FTE_FSM_SHIFT, FTE_FSM_NSB_RESP
+    FTE_FSM_IDLE, FTE_FSM_REQ, FTE_FSM_REQ_WC, FTE_FSM_REQ_FC, FTE_FSM_MULT_SLOW, FTE_FSM_MULT_FAST, FTE_FSM_BIAS, FTE_FSM_ACTIVATION, FTE_FSM_BUFFER, FTE_FSM_WRITEBACK_REQ, FTE_FSM_WRITEBACK_RESP, FTE_FSM_SHIFT, FTE_FSM_NSB_RESP
 } FTE_FSM_e;
+
+
+// ==================================================================================================================================================
+// Write Back Logic
+// ==================================================================================================================================================
+// Layer configuration
+logic [9:0]                                                                                layer_config_out_channel_count;
+logic [9:0]                                                                                layer_config_out_features_count;
+logic [1:0]                                                                                layer_config_out_features_address_msb_value;
+logic [31:0]                                                                               layer_config_out_features_address_lsb_value;
+logic [31:0]                                                                               layer_config_bias_value;
+logic [1:0]                                                                                layer_config_activation_function_value;
+logic [31:0]                                                                               layer_config_leaky_relu_alpha_value;
+logic [0:0]                                                                                ctrl_buffering_enable_value;
+logic [0:0]                                                                                ctrl_writeback_enable_value;
+
+assign layer_config_out_features_count =  10'd16; // top_pkg::MAX_FEATURE_COUNT;
+assign layer_config_out_channel_count = 10'd4; // e.g. If output matrix is 4 X 8, the number of channel is 4. 
+assign layer_config_out_features_address_msb_value = 2'b10;
+assign layer_config_out_features_address_lsb_value = 32'd0; 
+assign layer_config_bias_value = 32'd0;                     // no bias
+assign layer_config_activation_function_value = 2'b00;      // no activation
+assign layer_config_leaky_relu_alpha_value = 32'd0;
+assign ctrl_buffering_enable_value = 1'b0;                  // no buffering (We don't need this)
+assign ctrl_writeback_enable_value = 1'b1;
 
 // ==================================================================================================================================================
 // Declarations
 // ==================================================================================================================================================
 
 FTE_FSM_e fte_state, fte_state_n;
-logic last_weight_resp_received;
+logic last_weight_resp_received, last_feature_resp_received;
 
 // NSB requests
-logic [top_pkg::MAX_NODESLOT_COUNT-1:0]         nsb_req_nodeslots_q;
-logic [$clog2(top_pkg::MAX_NODESLOT_COUNT)-1:0] nodeslot_count;
-logic [$clog2(top_pkg::MAX_NODESLOT_COUNT)-1:0] nodeslots_to_buffer;
-logic [$clog2(top_pkg::MAX_NODESLOT_COUNT)-1:0] nodeslots_to_writeback;
+// logic [top_pkg::MAX_NODESLOT_COUNT-1:0]         nsb_req_nodeslots_q;
+// logic [$clog2(top_pkg::MAX_NODESLOT_COUNT)-1:0] nodeslot_count;
+// logic [$clog2(top_pkg::MAX_NODESLOT_COUNT)-1:0] nodeslots_to_buffer;
+// logic [$clog2(top_pkg::MAX_NODESLOT_COUNT)-1:0] nodeslots_to_writeback;
+logic [$clog2(top_pkg::MAX_NODESLOT_COUNT)-1:0] output_row_to_writeback;
+logic [$clog2(top_pkg::MAX_NODESLOT_COUNT)-1:0] total_row_to_writeback;
 
 // Systolic modules
 // -------------------------------------------------------------------------------------
@@ -109,7 +136,7 @@ logic [SYSTOLIC_MODULE_COUNT-1:0]                                               
 
 logic [SYSTOLIC_MODULE_COUNT-1:0] [MATRIX_N:0] [MATRIX_N-1:0] [DATA_WIDTH-1:0]  sys_module_pe_acc;
 
-logic [SYSTOLIC_MODULE_COUNT-1:0]                                               shift_sys_module;
+logic                                                                           shift_sys_module;
 logic                                                                           bias_valid;
 logic                                                                           activation_valid;
 
@@ -129,7 +156,7 @@ logic                                                 pulse_systolic_module;
 // Writeback logic
 logic [$clog2(MAX_WRITEBACK_BEATS_PER_NODESLOT):0]   sent_writeback_beats;
 logic [$clog2(MAX_WRITEBACK_BEATS_PER_NODESLOT):0]   writeback_required_beats;
-logic [MATRIX_N:0] [top_pkg::NODE_ID_WIDTH-1:0]      sys_module_node_id_snapshot;
+// logic [MATRIX_N:0] [top_pkg::NODE_ID_WIDTH-1:0]      sys_module_node_id_snapshot;
 logic [$clog2(top_pkg::MAX_FEATURE_COUNT * 4) - 1:0] out_features_required_bytes;
 
 logic [$clog2(MATRIX_N-1)-1:0]                       fast_pulse_counter;
@@ -190,7 +217,7 @@ for (genvar sys_module = 0; sys_module < SYSTOLIC_MODULE_COUNT; sys_module++) be
         .activation_valid                    (activation_valid),
         .activation                          (layer_config_activation_function_value),
 
-        .shift_valid                         (shift_sys_module         [sys_module]),
+        .shift_valid                         (shift_sys_module),
 
         .sys_module_pe_acc                   (sys_module_pe_acc        [sys_module]),
 
@@ -257,11 +284,22 @@ always_comb begin
     case(fte_state)
 
         FTE_FSM_IDLE: begin
-            fte_state_n = nsb_fte_req_valid ? FTE_FSM_REQ_WC : FTE_FSM_IDLE;
+            fte_state_n = nsb_fte_req_valid ? FTE_FSM_REQ : FTE_FSM_IDLE;
+        end
+
+        FTE_FSM_REQ: begin
+            fte_state_n = weight_channel_req_ready && feature_channel_req_ready ? FTE_FSM_MULT_SLOW 
+                        : weight_channel_req_ready ? FTE_FSM_REQ_FC
+                        : feature_channel_req_ready ? FTE_FSM_REQ_WC
+                        : FTE_FSM_REQ;
         end
 
         FTE_FSM_REQ_WC: begin
             fte_state_n = weight_channel_req_ready ? FTE_FSM_MULT_SLOW : FTE_FSM_REQ_WC;
+        end
+
+        FTE_FSM_REQ_FC: begin
+            fte_state_n = feature_channel_req_ready ? FTE_FSM_MULT_SLOW : FTE_FSM_REQ_FC;
         end
 
         FTE_FSM_MULT_SLOW: begin
@@ -293,8 +331,7 @@ always_comb begin
         FTE_FSM_WRITEBACK_RESP: begin
             fte_state_n =
                         // Sending last beat for last nodeslot
-                        (nodeslots_to_writeback == 'd1) && (sent_writeback_beats == writeback_required_beats) && axi_write_master_resp_valid ? FTE_FSM_NSB_RESP
-
+                        (output_row_to_writeback == 'd1) && (sent_writeback_beats == writeback_required_beats) && axi_write_master_resp_valid ? FTE_FSM_NSB_RESP
                         // Sending last beat, more nodeslots to go
                         : (sent_writeback_beats == writeback_required_beats) && axi_write_master_resp_valid ? FTE_FSM_SHIFT
                         : FTE_FSM_WRITEBACK_RESP;
@@ -374,11 +411,11 @@ end
 
 always_comb begin
     // Begin feature dump when weight channel request accepted
-    begin_feature_dump = (fte_state == FTE_FSM_REQ_WC) && (fte_state_n == FTE_FSM_MULT_SLOW);
+    begin_feature_dump = ((fte_state == FTE_FSM_REQ) || (fte_state == FTE_FSM_REQ_WC) || (fte_state == FTE_FSM_REQ_FC)) && (fte_state_n == FTE_FSM_MULT_SLOW);
 
     // Pulse module when features ready in aggregation buffer and weights ready in weight channel
     // pulse_systolic_module = ((fte_state_n == FTE_FSM_MULT_SLOW) && &transformation_core_aggregation_buffer_out_feature_valid && weight_channel_resp_valid) || fte_state == FTE_FSM_MULT_FAST;
-    pulse_systolic_module = ((fte_state_n == FTE_FSM_MULT_SLOW) && weight_channel_resp_valid) || fte_state == FTE_FSM_MULT_FAST; // && feature_channel_resp_valid
+    pulse_systolic_module = ((fte_state_n == FTE_FSM_MULT_SLOW) && (weight_channel_resp_valid || feature_channel_resp_valid)) || fte_state == FTE_FSM_MULT_FAST; // && feature_channel_resp_valid
 
     // TO DO: we need to change here too
     // Drive systolic module from aggregation buffer (on the left)
@@ -464,7 +501,7 @@ always_comb begin
     // Request
     axi_write_master_req_valid = (fte_state == FTE_FSM_WRITEBACK_REQ);
     axi_write_master_req_start_address = {layer_config_out_features_address_msb_value, layer_config_out_features_address_lsb_value}
-                                            + sys_module_node_id_snapshot[0] * out_features_required_bytes;
+                                            + (total_row_to_writeback-output_row_to_writeback) * out_features_required_bytes;
 
     axi_write_master_req_len = writeback_required_beats - 1'b1;
 
@@ -484,12 +521,13 @@ end
 
 always_ff @(posedge core_clk or negedge resetn) begin
     if (!resetn) begin
-        nodeslots_to_writeback <= '0;
+        output_row_to_writeback <= '0;
         sent_writeback_beats <= '0;
 
-        // Accepting NSB request
+    // Accepting NSB request
     end else if (nsb_fte_req_valid && nsb_fte_req_ready) begin
-        nodeslots_to_writeback <= ctrl_writeback_enable_value ? nodeslot_count : nodeslots_to_writeback;
+        total_row_to_writeback <= ctrl_writeback_enable_value ? layer_config_out_channel_count : output_row_to_writeback; // TODO: hardcored to 4
+        output_row_to_writeback <= ctrl_writeback_enable_value ? layer_config_out_channel_count : output_row_to_writeback; // TODO: hardcored to 4
         sent_writeback_beats <= '0;
 
     // Accepting AXI Write Master request
@@ -502,7 +540,7 @@ always_ff @(posedge core_clk or negedge resetn) begin
 
     // Accepting write response
     end else if (fte_state == FTE_FSM_WRITEBACK_RESP && axi_write_master_resp_valid && sent_writeback_beats == writeback_required_beats) begin
-        nodeslots_to_writeback <= nodeslots_to_writeback - 1'b1;
+        output_row_to_writeback <= output_row_to_writeback - 1'b1;
     end
 end
 
@@ -514,14 +552,14 @@ always_comb begin
     
     // TO DO: NSB resp
     nsb_fte_resp_valid          = (fte_state == FTE_FSM_NSB_RESP);
-    nsb_fte_resp.nodeslots      = nsb_req_nodeslots_q;
+    // nsb_fte_resp.nodeslots      = nsb_req_nodeslots_q;
 end
 
 // Weight Channel Interface
 // -------------------------------------------------------------------------------------
 
 always_comb begin
-    weight_channel_req_valid  = (fte_state == FTE_FSM_REQ_WC);
+    weight_channel_req_valid  = (fte_state == FTE_FSM_REQ) || (fte_state == FTE_FSM_REQ_WC);
 
     // Feature counts aren't used by weight bank
     weight_channel_req.in_features  = top_pkg::MAX_FEATURE_COUNT;
@@ -535,7 +573,7 @@ end
 // -------------------------------------------------------------------------------------
 
 always_comb begin
-    feature_channel_req_valid  = (fte_state == FTE_FSM_REQ_WC);
+    feature_channel_req_valid  = (fte_state == FTE_FSM_REQ) || (fte_state == FTE_FSM_REQ_FC);
 
     // Feature counts aren't used by weight bank
     feature_channel_req.in_features  = top_pkg::MAX_FEATURE_COUNT;
@@ -546,7 +584,7 @@ always_comb begin
 end
 
 // Raise flag as pre-condition for transitioning from MULT state 
-// TO DO: assume that the feature and weight channel responses the same way
+// TO DO: assume that the feature and weight channel responses the same way. So when the last weight resp received means the last feature resp received too.
 always_ff @(posedge core_clk or negedge resetn) begin
     if (!resetn) begin
         last_weight_resp_received <= '0;

@@ -135,7 +135,9 @@ end
 // -------------------------------------------------------------
 
 activation_core activation_core_i (
-    .sel_activation   (activation),
+    .core_clk                            (core_clk),
+    .resetn                              (resetn),
+    .sel_activation                      (activation),
 
     .in_feature_valid (activation_valid),
     .in_feature       (pe_acc),
