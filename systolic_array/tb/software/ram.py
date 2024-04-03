@@ -50,18 +50,19 @@ async def cycle_reset(dut):
     await RisingEdge(dut.clk)
     await RisingEdge(dut.clk)
 
+ceildiv = lambda a, b: -(-a // b)
+
 class RamTester:
     """This is a ram class that also contains helper function to write and verify its functionality"""
-    def __init__(self, dut, max_in_features=16, each_feature_size=4):
+    def __init__(self, dut, padding_aligment=64, each_feature_size=4):
         """_summary_
         :param max_in_features: max number of feature stored in a row of the feature bank
         :param each_feature_size: size of each feature in bytes
         """
         self.dut = dut
         self.axi_ram = AxiRam(AxiBus.from_prefix(dut, "axi"), dut.clk, dut.rst, size=2**34)
-        self.max_in_features = max_in_features # each row can store 16 features
         self.each_feature_size = each_feature_size # each feature is 4 bytes
-        self.each_row_size = self.max_in_features * self.each_feature_size
+        self.padding_aligment = padding_aligment # 64 bytes alignment
         # --------------------------------------------------
         # |         |           |           |           | ... in total 16 features
         # |f1*0*0*0 |   f2      |   f3      |   f4      | ... in total 16 features
@@ -75,11 +76,12 @@ class RamTester:
         
     async def write_to_ram(self, data, start_address=0):
         data = np.asarray(data.detach().numpy(), dtype=np.int8)
-        num_features = data.shape[0]
+        num_features_in_a_row = data.shape[1]
+        self.each_row_size = ceildiv(num_features_in_a_row * self.each_feature_size, self.padding_aligment) * self.padding_aligment
         
         for idx, val in enumerate(data.flatten()):
-            row_idx = (idx // num_features) * self.each_row_size
-            feature_idx = (idx % num_features) * self.each_feature_size
+            row_idx = (idx // num_features_in_a_row) * self.each_row_size
+            feature_idx = (idx % num_features_in_a_row) * self.each_feature_size
             idx = row_idx + feature_idx + start_address
             
             byte_val = struct.pack('b', val)
@@ -89,11 +91,12 @@ class RamTester:
         
     async def read_from_ram_and_verify(self, data, start_address=0):
         data = np.asarray(data.detach().numpy(), dtype=np.int8)
-        num_features = data.shape[0]
+        num_features_in_a_row = data.shape[1]
+        self.each_row_size = ceildiv(num_features_in_a_row * self.each_feature_size, self.padding_aligment) * self.padding_aligment
         
         for idx, val in enumerate(data.flatten()):
-            row_idx = (idx // num_features) * self.each_row_size
-            feature_idx = (idx % num_features) * self.each_feature_size
+            row_idx = (idx // num_features_in_a_row) * self.each_row_size
+            feature_idx = (idx % num_features_in_a_row) * self.each_feature_size
             idx = row_idx + feature_idx + start_address
             
             expected_bytes = struct.pack('b', val)            

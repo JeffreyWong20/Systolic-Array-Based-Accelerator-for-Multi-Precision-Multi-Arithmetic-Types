@@ -69,6 +69,42 @@ class MLP(torch.nn.Module):
         return x
 
 # --------------------------------------------------
+#  Software groundtruth
+# --------------------------------------------------
+def compute_quantize(input_data, weight_data, debug=False):
+    """
+    Compute the quantized result of the matrix multiplication between the input data and the weight data
+    """
+    fc = MLP()
+    fc.fc1.weight.data = weight_data
+    quantized_weight = fc.fc1.w_quantizer(fc.fc1.weight.data)
+    quantized_data = fc.fc1.w_quantizer(input_data)
+    weight, data = quantized_weight.numpy().astype(np.int8), quantized_data.numpy().astype(np.int8)
+    result = torch.nn.functional.linear(input_data, fc.fc1.weight.data).numpy().astype(np.int64)
+    # cast the result to int8
+    int_8_result = result.astype(np.uint8)
+    if debug:
+        print("Quantized Weights:")
+        for row in weight:
+            hex_row = [hex(value) for value in row]
+            print(hex_row)
+        print("\nTransposed Quantized Input Data:")
+        transposed_data = data.transpose()
+        for row in transposed_data:
+            hex_row = [hex(value) for value in row]
+            print(hex_row)
+        print("\nLinear Operation Result:")
+        for row in result:
+            hex_row = [hex(value)[-2:] for value in row]
+            print(hex_row)
+        print("\nMatrix Multiplication Result:")
+        for row in int_8_result:
+            hex_row = [hex(value) for value in row]
+            print(hex_row)
+    return data, weight, int_8_result
+    
+
+# --------------------------------------------------
 #  Helper functions
 # --------------------------------------------------
 def debug_state(dut, state):
@@ -151,27 +187,20 @@ def reset_all_axi_input_signals(dut):
     # dut.axi_rlast.value = 0
     # dut.axi_rvalid.value = 0
     dut.axi_rready.value = 0
-    
 
+ceildiv = lambda a, b: -(-a // b)
 # --------------------------------------------------
 #  Actual test
 # --------------------------------------------------
 async def mlp_test(dut):
+    input_matrix_size = (4, 128)
+    weight_matrix_size = (4, 128)
     
     mlp = MLP()
     # Input data
-    input_data = torch.tensor(
-        [[91, 30, 46, 20],
-        [71, 57, 41, 71],
-        [45, 42,  0, 12],
-        [23, 47,  1, 31]], dtype=torch.float32)
-
+    input_data = torch.randint(0, 128, size=input_matrix_size, dtype=torch.float32)
     # Set weights for fc1 layer
-    mlp.fc1.weight.data = torch.tensor(
-        [[ 15, 107,  64,  46],
-        [123, 116,   5,  85],
-        [ 28,  12, 125,  88],
-        [ 24,  75,  18,  29]], dtype=torch.float32)
+    mlp.fc1.weight.data = torch.randint(0, 128, size=weight_matrix_size, dtype=torch.float32)
 
     # Create a 10ns-period clock on port clk
     clock = Clock(dut.clk, 10, units="ns")
@@ -197,7 +226,8 @@ async def mlp_test(dut):
     await ram_tester.write_to_ram(weight)
     await ram_tester.read_from_ram_and_verify(weight)
     # write input data to RAM
-    weigth_address_range = mlp.fc1.weight.shape[0] * 16 * 4 # TODO: hardcode 16 and 4, assuming input channel is less than 16.
+    # A single row has to be multiple of 64 bytes and hence the start address has to be aligned to 64 bytes
+    weigth_address_range = ceildiv(mlp.fc1.weight.shape[1] * 4, 64) * 64 * mlp.fc1.weight.shape[0]
     await ram_tester.write_to_ram(input_data, start_address=weigth_address_range)
     await ram_tester.read_from_ram_and_verify(input_data, start_address=weigth_address_range)
     print("Done writing and finish verification")
@@ -215,8 +245,8 @@ async def mlp_test(dut):
     dut.weight_prefetcher_req_valid.value = 1                               # enable the prefetcher
     dut.weight_prefetcher_req.req_opcode.value   = 0                        # 00 is for weight bank requests
     dut.weight_prefetcher_req.start_address.value  = 0x0000                 # start address of the weight bank
-    dut.weight_prefetcher_req.in_features.value  = 4                        # number of input features
-    dut.weight_prefetcher_req.out_features.value = 4                        # number of output features
+    dut.weight_prefetcher_req.in_features.value  = weight_matrix_size[1]     # number of input features                     
+    dut.weight_prefetcher_req.out_features.value = weight_matrix_size[0]     # number of output features
     dut.weight_prefetcher_req.nodeslot.value     = 0                        # not used for weight bank requests
     dut.weight_prefetcher_req.nodeslot_precision.value = 1                  # 01 is for fixed 8-bit precision
     dut.weight_prefetcher_req.neighbour_count.value = 0                     # not used for weight bank requests
@@ -224,8 +254,8 @@ async def mlp_test(dut):
     dut.feature_prefetcher_req_valid.value = 1                              # enable the prefetcher
     dut.feature_prefetcher_req.req_opcode.value   = 0                       # 00 is for weight bank requests
     dut.feature_prefetcher_req.start_address.value  = weigth_address_range  # start address of the weight bank
-    dut.feature_prefetcher_req.in_features.value  = 4                       # number of input features
-    dut.feature_prefetcher_req.out_features.value = 4                       # number of output features
+    dut.feature_prefetcher_req.in_features.value  = input_matrix_size[1]    # number of input features
+    dut.feature_prefetcher_req.out_features.value = input_matrix_size[0]    # number of output features
     dut.feature_prefetcher_req.nodeslot.value     = 0                       # not used for weight bank requests
     dut.feature_prefetcher_req.nodeslot_precision.value = 1                 # 01 is for fixed 8-bit precision
     dut.feature_prefetcher_req.neighbour_count.value = 0                    # not used for weight bank requests
@@ -234,7 +264,6 @@ async def mlp_test(dut):
     dut.nsb_fte_req.precision.value = 1                                     # 01 is for fixed 8-bit precision
     # --------------------------------------------------
     print("Done instructing fte")
-    
     i = 0
     while True:
         await FallingEdge(dut.clk)
@@ -243,46 +272,34 @@ async def mlp_test(dut):
             done = True
             break
         
-        if i==1000:
+        if i==10000:
             done = False
             break
         i+=1
         
-    result_matrix = [[0]*4 for _ in range(4)]  # Initialize a 4x4 matrix with zeros
-    for r in range(4):
-        for c in range(4):
-            print(ram_tester.axi_ram.read(0x200000000 + r*64 + c, 1).hex())
-            result_matrix[r][c] = int(ram_tester.axi_ram.read(0x200000000 + r*64 + c, 1).hex(),16)
-    print("Result matrix:", result_matrix)
+    software_result_matrix = compute_quantize(input_data, mlp.fc1.weight.data, debug=True)[2]
+    hardware_result_matrix = np.zeros(software_result_matrix.shape)
+    for r in range(software_result_matrix.shape[0]):
+        for c in range(software_result_matrix.shape[1]):
+            hardware_result_matrix[r][c] = int(ram_tester.axi_ram.read(0x200000000 + r*64 + c, 1).hex(),16)
+    print("Hardware matrix:", hardware_result_matrix)
+    print("Software matrix:", software_result_matrix)
     
     assert (
         done
     ), "Deadlock detected or the simulation reaches the maximum cycle limit (fixed it by adjusting the loop trip count)"
     
-
+    
 def test_axi_runner():
     """Simulate the adder example using the Python runner.
     This file can be run directly or via pytest discovery.
     """
-    # sim = os.getenv("SIM", "verilator")
-    # extra_args = [
-    #     "--timescale",
-    #     "1ps/1ps",
-    #     "-Wno-WIDTH",
-    #     "-Wno-CASEINCOMPLETE"
-    # ]
-    # wave_args = [
-    #     "--trace-fst",
-    #     "--trace-structs"
-    # ]
-
     sim = "icarus"
-    extra_args = []
-    wave_args = []
+    extra_args = [] #  "--timescale", "1ps/1ps", "-Wno-WIDTH", "-Wno-CASEINCOMPLETE"
+    wave_args = []  #  "--trace-fst", "--trace-structs"
     
-    proj_path = Path(__file__).resolve().parent
     # equivalent to setting the PYTHONPATH environment variable
-
+    proj_path = Path(__file__).resolve().parent
     verilog_sources = [
         proj_path / "include" / "top_pkg.sv",
         proj_path / "rtl" / "prefetcher.sv",
