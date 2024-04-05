@@ -193,7 +193,7 @@ ceildiv = lambda a, b: -(-a // b)
 #  Actual test
 # --------------------------------------------------
 async def mlp_test(dut):
-    input_matrix_size = (4, 128)
+    input_matrix_size = (8, 128)
     weight_matrix_size = (4, 128)
     systolic_array_size = (4, 128)
     result_start_address = 0x200000000 
@@ -232,6 +232,85 @@ async def mlp_test(dut):
     await ram_tester.read_from_ram_and_verify(input_data, start_address=weigth_address_range)
     print("Done writing and finish verification")
     
+    # Instruct the core
+    input_matrix_iteration = ceildiv(input_matrix_size[0], systolic_array_size[0])  # number channel blocks
+    weight_matrix_iteration = ceildiv(weight_matrix_size[0], systolic_array_size[1]) # number of iteration to produce one output channel blocks
+    
+    byte_per_weight_block = ceildiv(mlp.fc1.weight.shape[1] * 4, 64) * 64 * systolic_array_size[1]
+    byte_per_input_block = ceildiv(input_matrix_size[1] * 4, 64) * 64 * systolic_array_size[0]
+    
+    
+    # for i, (writeback_address, offset) in enumerate(writeback_address_generator(start_address=result_start_address, input_matrix_size=input_matrix_size, weight_matrix_size=weight_matrix_size,systolic_array_size=(4,128))):
+    #     print(f"Start address: {hex(writeback_address)}, Offset: {offset}, Load weight from: {hex(byte_per_weight_block * (i % input_matrix_size[0]))}, Load input from: {hex(weigth_address_range + byte_per_input_block * (i // weight_matrix_size[0]))}")
+    #     dut.rst.value = 1 
+    #     await Timer(10, units="ns")
+    #     dut.rst.value = 0
+    #     # --------------------------------------------------
+    #     dut.weight_prefetcher_req_valid.value = 1                               # enable the prefetcher
+    #     dut.weight_prefetcher_req.req_opcode.value   = 0                        # 00 is for weight bank requests
+    #     dut.weight_prefetcher_req.start_address.value = byte_per_weight_block * (i % weight_matrix_iteration)   # start address of the weight bank
+    #     dut.weight_prefetcher_req.in_features.value  = weight_matrix_size[1]    # number of input features                     
+    #     dut.weight_prefetcher_req.out_features.value = weight_matrix_size[0]    # number of output features
+    #     dut.weight_prefetcher_req.nodeslot.value     = 0                        # not used for weight bank requests
+    #     dut.weight_prefetcher_req.nodeslot_precision.value = 1                  # 01 is for fixed 8-bit precision
+    #     dut.weight_prefetcher_req.neighbour_count.value = 0                     # not used for weight bank requests
+    #     # --------------------------------------------------
+    #     dut.feature_prefetcher_req_valid.value = 1                              # enable the prefetcher
+    #     dut.feature_prefetcher_req.req_opcode.value   = 0                       # 00 is for weight bank requests
+    #     dut.feature_prefetcher_req.start_address.value  = weigth_address_range + byte_per_input_block * (i // weight_matrix_iteration)   # start address of the feature bank
+    #     dut.feature_prefetcher_req.in_features.value  = input_matrix_size[1]    # number of input features
+    #     dut.feature_prefetcher_req.out_features.value = input_matrix_size[0]    # number of output features
+    #     dut.feature_prefetcher_req.nodeslot.value     = 0                       # not used for weight bank requests
+    #     dut.feature_prefetcher_req.nodeslot_precision.value = 1                 # 01 is for fixed 8-bit precision
+    #     dut.feature_prefetcher_req.neighbour_count.value = 0                    # not used for weight bank requests
+    #     # --------------------------------------------------
+    #     await Timer(10, units="ns")
+    #     p = 0
+    #     fetched_weight, fetched_input = False, False
+    #     while True:
+    #         await RisingEdge(dut.clk)
+    #         await Timer(10, units="ns")
+    #         if dut.weight_prefetcher_resp_valid.value == 1:
+    #             fetched_weight = True
+    #         if dut.feature_prefetcher_resp_valid.value == 1:
+    #             fetched_input = True
+    #         if fetched_weight and fetched_input:
+    #             break
+    #         elif p==1000000:
+    #             raise ValueError("Deadlock detected: weight_prefetcher_req_ready and feature_prefetcher_req_ready are not ready")
+    #         p+=1
+    #     reset_nsb_prefetcher(dut)
+    #     # --------------------------------------------------
+    #     dut.nsb_fte_req_valid.value = 1                                         # enable the fte
+    #     dut.nsb_fte_req.precision.value = 1                                     # 01 is for fixed 8-bit precision
+    #     dut.layer_config_out_channel_count.value = input_matrix_size[0]         # here we used the first dimension of the input matrix as output channel count
+    #     dut.layer_config_out_features_count.value = weight_matrix_size[0]       # here we used the first dimension of the weight matrix as output features count       
+    #     dut.layer_config_out_features_address_msb_value.value = (writeback_address >> 32) & 0b11        # 2 is for the msb of 34 bits address
+    #     dut.layer_config_out_features_address_lsb_value.value = writeback_address & 0xFFFFFFFF          # 0 for the rest of the address
+    #     dut.writeback_offset.value = offset                                     # 0 for the writeback offset
+    #     #---------------------------------------------------
+    #     print("Done instructing fte")
+    #     i = 0
+    #     while True:
+    #         await RisingEdge(dut.clk)
+    #         await Timer(10, units="ns")
+    #         if dut.nsb_fte_resp_valid.value == 1:
+    #             done = True
+    #             break
+            
+    #         if i==1000000:
+    #             done = False
+    #             break
+    #         i+=1
+    #     reset_fte(dut)
+    
+    
+    
+    
+    
+    # Unroll the loop
+    writeback_address_result = writeback_address_generator(start_address=result_start_address, input_matrix_size=input_matrix_size, weight_matrix_size=weight_matrix_size,systolic_array_size=(4,128))
+    (writeback_address, offset) = next(writeback_address_result)
     dut.weight_prefetcher_req_valid.value = 1                               # enable the prefetcher
     dut.weight_prefetcher_req.req_opcode.value   = 0                        # 00 is for weight bank requests
     dut.weight_prefetcher_req.start_address.value  = 0x0000                 # start address of the weight bank
@@ -258,6 +337,50 @@ async def mlp_test(dut):
     dut.layer_config_out_features_address_msb_value.value = 0b10            # 2 is for the msb of 34 bits address
     dut.layer_config_out_features_address_lsb_value.value = 0b0             # TODO # 0 for the rest of the address
     dut.writeback_offset.value = 0                                          # 0 for the writeback offset
+    i = 0
+    while True:
+        await FallingEdge(dut.clk)
+        await Timer(10, units="ns")
+        if dut.nsb_fte_resp_valid.value == 1:
+            done = True
+            break
+        
+        if i==100000:
+            done = False
+            break
+        i+=1
+    
+    dut.rst.value = 1 
+    await Timer(10, units="ns")
+    dut.rst.value = 0
+    
+    (writeback_address, offset) = next(writeback_address_result)
+    dut.weight_prefetcher_req_valid.value = 1                               # enable the prefetcher
+    dut.weight_prefetcher_req.req_opcode.value   = 0                        # 00 is for weight bank requests
+    dut.weight_prefetcher_req.start_address.value  = 0x0000                 # start address of the weight bank
+    dut.weight_prefetcher_req.in_features.value  = weight_matrix_size[1]    # number of input features                     
+    dut.weight_prefetcher_req.out_features.value = weight_matrix_size[0]    # number of output features
+    dut.weight_prefetcher_req.nodeslot.value     = 0                        # not used for weight bank requests
+    dut.weight_prefetcher_req.nodeslot_precision.value = 1                  # 01 is for fixed 8-bit precision
+    dut.weight_prefetcher_req.neighbour_count.value = 0                     # not used for weight bank requests
+    # --------------------------------------------------
+    dut.feature_prefetcher_req_valid.value = 1                              # enable the prefetcher
+    dut.feature_prefetcher_req.req_opcode.value   = 0                       # 00 is for weight bank requests
+    dut.feature_prefetcher_req.start_address.value  = weigth_address_range + byte_per_input_block * (1 // weight_matrix_iteration)   # start address of the weight bank
+    dut.feature_prefetcher_req.in_features.value  = input_matrix_size[1]    # number of input features
+    dut.feature_prefetcher_req.out_features.value = input_matrix_size[0]    # number of output features
+    dut.feature_prefetcher_req.nodeslot.value     = 0                       # not used for weight bank requests
+    dut.feature_prefetcher_req.nodeslot_precision.value = 1                 # 01 is for fixed 8-bit precision
+    dut.feature_prefetcher_req.neighbour_count.value = 0                    # not used for weight bank requests
+    # --------------------------------------------------
+    dut.nsb_fte_req_valid.value = 1                                         # enable the fte
+    dut.nsb_fte_req.precision.value = 1                                     # 01 is for fixed 8-bit precision
+    # --------------------------------------------------
+    dut.layer_config_out_channel_count.value = input_matrix_size[0]         # here we used the first dimension of the input matrix as output channel count
+    dut.layer_config_out_features_count.value = weight_matrix_size[0]       # here we used the first dimension of the weight matrix as output features count       
+    dut.layer_config_out_features_address_msb_value.value = (writeback_address >> 32) & 0b11        # 2 is for the msb of 34 bits address
+    dut.layer_config_out_features_address_lsb_value.value = writeback_address & 0xFFFFFFFF          # 0 for the rest of the address
+    dut.writeback_offset.value = offset                                          # 0 for the writeback offset
     i = 0
     while True:
         await FallingEdge(dut.clk)
