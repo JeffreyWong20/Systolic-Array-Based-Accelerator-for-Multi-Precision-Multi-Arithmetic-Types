@@ -28,6 +28,7 @@ sys.path.append(
         "..",
     )
 )
+from systolic_array.tb.software.instruction import load_feature_block_instruction, load_weight_block_instruction, calculate_linear_and_writeback, reset_fte, reset_nsb_prefetcher
 from systolic_array.tb.software.ram import RamTester, writeback_address_generator, cycle_reset, partitioner
 from systolic_array.tb.software.linear import LinearInteger
 
@@ -102,52 +103,7 @@ def compute_quantize(input_data, weight_data, debug=False):
             hex_row = [hex(value) for value in row]
             print(hex_row)
     return data, weight, int_8_result
-    
 
-# --------------------------------------------------
-#  Helper functions
-# --------------------------------------------------
-def debug_state(dut, state):
-    logger.debug(
-        """ (
-            {} State: (
-            nsb_prefetcher_req_valid,
-            ) = ({}
-            )""".format(
-            state,
-            dut.weight_prefetcher_req_valid.value,
-        )
-    )
-
-def reset_nsb_prefetcher(dut):
-    dut.weight_prefetcher_req_valid.value = 0                        # enable the prefetcher
-    dut.weight_prefetcher_req.req_opcode.value   = 0                 # 00 is for weight bank requests
-    dut.weight_prefetcher_req.start_address.value  = 0x0000          # start address of the weight bank
-    dut.weight_prefetcher_req.in_features.value  = 0                 # number of input features
-    dut.weight_prefetcher_req.out_features.value = 0                 # number of output features
-    dut.weight_prefetcher_req.nodeslot.value     = 0                 # not used for weight bank requests
-    dut.weight_prefetcher_req.nodeslot_precision.value = 0           # 01 is for fixed 8-bit precision
-    dut.weight_prefetcher_req.neighbour_count.value = 0              # not used for weight bank requests
-    dut.feature_prefetcher_req_valid.value = 0                        # enable the prefetcher
-    dut.feature_prefetcher_req.req_opcode.value   = 0                 # 00 is for weight bank requests
-    dut.feature_prefetcher_req.start_address.value  = 0x0000          # start address of the weight bank
-    dut.feature_prefetcher_req.in_features.value  = 0                 # number of input features
-    dut.feature_prefetcher_req.out_features.value = 0                 # number of output features
-    dut.feature_prefetcher_req.nodeslot.value     = 0                 # not used for weight bank requests
-    dut.feature_prefetcher_req.nodeslot_precision.value = 0           # 01 is for fixed 8-bit precision
-    dut.feature_prefetcher_req.neighbour_count.value = 0              # not used for weight bank requests
-
-def reset_fte(dut):
-    # input   logic                                                nsb_fte_req_valid,
-    # output  logic                                                nsb_fte_req_ready,
-    # input   NSB_FTE_REQ_t                                        nsb_fte_req,
-    # output  logic                                                nsb_fte_resp_valid, // valid only for now
-    # output  NSB_FTE_RESP_t                                       nsb_fte_resp,
-    dut.nsb_fte_req_valid.value = 0
-    dut.nsb_fte_req.precision.value = 0
-    dut.nsb_fte_req.nodeslots.value = 0
-    
-def reset_all_axi_input_signals(dut):    
     dut.axi_awid.value = 0
     dut.axi_awaddr.value = 0
     dut.axi_awlen.value = 0
@@ -305,38 +261,12 @@ async def mlp_test(dut):
     #     reset_fte(dut)
     
     
-    
-    
-    
     # Unroll the loop
     writeback_address_result = writeback_address_generator(start_address=result_start_address, input_matrix_size=input_matrix_size, weight_matrix_size=weight_matrix_size,systolic_array_size=(4,128))
     (writeback_address, offset) = next(writeback_address_result)
-    dut.weight_prefetcher_req_valid.value = 1                               # enable the prefetcher
-    dut.weight_prefetcher_req.req_opcode.value   = 0                        # 00 is for weight bank requests
-    dut.weight_prefetcher_req.start_address.value  = 0x0000                 # start address of the weight bank
-    dut.weight_prefetcher_req.in_features.value  = weight_matrix_size[1]    # number of input features                     
-    dut.weight_prefetcher_req.out_features.value = weight_matrix_size[0]    # number of output features
-    dut.weight_prefetcher_req.nodeslot.value     = 0                        # not used for weight bank requests
-    dut.weight_prefetcher_req.nodeslot_precision.value = 1                  # 01 is for fixed 8-bit precision
-    dut.weight_prefetcher_req.neighbour_count.value = 0                     # not used for weight bank requests
-    # --------------------------------------------------
-    dut.feature_prefetcher_req_valid.value = 1                              # enable the prefetcher
-    dut.feature_prefetcher_req.req_opcode.value   = 0                       # 00 is for weight bank requests
-    dut.feature_prefetcher_req.start_address.value  = weigth_address_range  # start address of the weight bank
-    dut.feature_prefetcher_req.in_features.value  = input_matrix_size[1]    # number of input features
-    dut.feature_prefetcher_req.out_features.value = input_matrix_size[0]    # number of output features
-    dut.feature_prefetcher_req.nodeslot.value     = 0                       # not used for weight bank requests
-    dut.feature_prefetcher_req.nodeslot_precision.value = 1                 # 01 is for fixed 8-bit precision
-    dut.feature_prefetcher_req.neighbour_count.value = 0                    # not used for weight bank requests
-    # --------------------------------------------------
-    dut.nsb_fte_req_valid.value = 1                                         # enable the fte
-    dut.nsb_fte_req.precision.value = 1                                     # 01 is for fixed 8-bit precision
-    # --------------------------------------------------
-    dut.layer_config_out_channel_count.value = input_matrix_size[0]         # here we used the first dimension of the input matrix as output channel count
-    dut.layer_config_out_features_count.value = weight_matrix_size[0]       # here we used the first dimension of the weight matrix as output features count       
-    dut.layer_config_out_features_address_msb_value.value = 0b10            # 2 is for the msb of 34 bits address
-    dut.layer_config_out_features_address_lsb_value.value = 0b0             # TODO # 0 for the rest of the address
-    dut.writeback_offset.value = 0                                          # 0 for the writeback offset
+    load_weight_block_instruction(dut, start_address=0x0000, weight_block_size=weight_matrix_size)
+    load_feature_block_instruction(dut, start_address=weigth_address_range, input_block_size=input_matrix_size)
+    calculate_linear_and_writeback(dut, writeback_address=writeback_address, offset=offset, output_matrix_size=(input_matrix_size[0], weight_matrix_size[0]))
     i = 0
     while True:
         await FallingEdge(dut.clk)
@@ -355,32 +285,9 @@ async def mlp_test(dut):
     dut.rst.value = 0
     
     (writeback_address, offset) = next(writeback_address_result)
-    dut.weight_prefetcher_req_valid.value = 1                               # enable the prefetcher
-    dut.weight_prefetcher_req.req_opcode.value   = 0                        # 00 is for weight bank requests
-    dut.weight_prefetcher_req.start_address.value  = 0x0000                 # start address of the weight bank
-    dut.weight_prefetcher_req.in_features.value  = weight_matrix_size[1]    # number of input features                     
-    dut.weight_prefetcher_req.out_features.value = weight_matrix_size[0]    # number of output features
-    dut.weight_prefetcher_req.nodeslot.value     = 0                        # not used for weight bank requests
-    dut.weight_prefetcher_req.nodeslot_precision.value = 1                  # 01 is for fixed 8-bit precision
-    dut.weight_prefetcher_req.neighbour_count.value = 0                     # not used for weight bank requests
-    # --------------------------------------------------
-    dut.feature_prefetcher_req_valid.value = 1                              # enable the prefetcher
-    dut.feature_prefetcher_req.req_opcode.value   = 0                       # 00 is for weight bank requests
-    dut.feature_prefetcher_req.start_address.value  = weigth_address_range + byte_per_input_block * (1 // weight_matrix_iteration)   # start address of the weight bank
-    dut.feature_prefetcher_req.in_features.value  = input_matrix_size[1]    # number of input features
-    dut.feature_prefetcher_req.out_features.value = input_matrix_size[0]    # number of output features
-    dut.feature_prefetcher_req.nodeslot.value     = 0                       # not used for weight bank requests
-    dut.feature_prefetcher_req.nodeslot_precision.value = 1                 # 01 is for fixed 8-bit precision
-    dut.feature_prefetcher_req.neighbour_count.value = 0                    # not used for weight bank requests
-    # --------------------------------------------------
-    dut.nsb_fte_req_valid.value = 1                                         # enable the fte
-    dut.nsb_fte_req.precision.value = 1                                     # 01 is for fixed 8-bit precision
-    # --------------------------------------------------
-    dut.layer_config_out_channel_count.value = input_matrix_size[0]         # here we used the first dimension of the input matrix as output channel count
-    dut.layer_config_out_features_count.value = weight_matrix_size[0]       # here we used the first dimension of the weight matrix as output features count       
-    dut.layer_config_out_features_address_msb_value.value = (writeback_address >> 32) & 0b11        # 2 is for the msb of 34 bits address
-    dut.layer_config_out_features_address_lsb_value.value = writeback_address & 0xFFFFFFFF          # 0 for the rest of the address
-    dut.writeback_offset.value = offset                                          # 0 for the writeback offset
+    load_weight_block_instruction(dut, start_address=0x0000, weight_block_size=weight_matrix_size)
+    load_feature_block_instruction(dut, start_address=weigth_address_range+byte_per_input_block * (1 // weight_matrix_iteration) , input_block_size=input_matrix_size)
+    calculate_linear_and_writeback(dut, writeback_address=writeback_address, offset=offset, output_matrix_size=(input_matrix_size[0], weight_matrix_size[0]))
     i = 0
     while True:
         await FallingEdge(dut.clk)

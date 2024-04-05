@@ -1,22 +1,150 @@
+from cocotb.triggers import RisingEdge, Timer
 # --------------------------------------------------
 # Instruction
 # --------------------------------------------------
-def load_weight_instruction(dut, start_address=0x0000, weight_matrix_size=(4, 128), precision=1):
+def load_weight_block_instruction(dut, start_address=0x0000, weight_block_size=(4, 128), precision=1):
     dut.weight_prefetcher_req_valid.value           = 1                         # enable the prefetcher
     dut.weight_prefetcher_req.req_opcode.value      = 0                         # 00 is for weight bank requests
     dut.weight_prefetcher_req.start_address.value   = start_address             # start address of the weight bank
-    dut.weight_prefetcher_req.in_features.value     = weight_matrix_size[1]     # number of input features                     
-    dut.weight_prefetcher_req.out_features.value    = weight_matrix_size[0]     # number of output features
+    dut.weight_prefetcher_req.in_features.value     = weight_block_size[1]     # number of input features                     
+    dut.weight_prefetcher_req.out_features.value    = weight_block_size[0]     # number of output features
     dut.weight_prefetcher_req.nodeslot.value        = 0                         # not used for weight bank requests
     dut.weight_prefetcher_req.nodeslot_precision.value = precision              # 01 is for fixed 8-bit precision
     dut.weight_prefetcher_req.neighbour_count.value = 0                         # not used for weight bank requests
 
-def load_feature_instruction(dut, start_address=0x0000, input_matrix_size=(8, 128), precision=1):
+def load_feature_block_instruction(dut, start_address=0x0000, input_block_size=(8, 128), precision=1):
     dut.feature_prefetcher_req_valid.value          = 1                         # enable the prefetcher
     dut.feature_prefetcher_req.req_opcode.value     = 0                         # 00 is for weight bank requests
     dut.feature_prefetcher_req.start_address.value  = start_address             # start address of the feature bank
-    dut.feature_prefetcher_req.in_features.value    = input_matrix_size[1]      # number of input features
-    dut.feature_prefetcher_req.out_features.value   = input_matrix_size[0]      # number of output features
+    dut.feature_prefetcher_req.in_features.value    = input_block_size[1]      # number of input features
+    dut.feature_prefetcher_req.out_features.value   = input_block_size[0]      # number of output features
     dut.feature_prefetcher_req.nodeslot.value       = 0                         # not used for weight bank requests
     dut.feature_prefetcher_req.nodeslot_precision.value = precision             # 01 is for fixed 8-bit precision
     dut.feature_prefetcher_req.neighbour_count.value = 0                        # not used for weight bank requests
+    
+def calculate_linear_and_writeback(dut, writeback_address=0x200000000, output_matrix_size=(8, 8), offset=0, precision=1):
+    dut.nsb_fte_req_valid.value = 1                                             # enable the fte
+    dut.nsb_fte_req.precision.value = 1                                         # 01 is for fixed 8-bit precision
+    dut.layer_config_out_channel_count.value = output_matrix_size[0]            # here we used the first dimension of the input matrix as output channel count
+    dut.layer_config_out_features_count.value = output_matrix_size[1]           # here we used the first dimension of the weight matrix as output features count       
+    dut.layer_config_out_features_address_msb_value.value = (writeback_address >> 32) & 0b11        # 2 is for the msb of 34 bits address
+    dut.layer_config_out_features_address_lsb_value.value = writeback_address & 0xFFFFFFFF          # 0 for the rest of the address
+    dut.writeback_offset.value = offset                                         # 0 for the writeback offset
+    
+    
+# --------------------------------------------------
+# reset prefetcher
+# --------------------------------------------------
+def reset_nsb_prefetcher(dut):
+    dut.weight_prefetcher_req_valid.value = 0                        # enable the prefetcher
+    dut.weight_prefetcher_req.req_opcode.value   = 0                 # 00 is for weight bank requests
+    dut.weight_prefetcher_req.start_address.value  = 0x0000          # start address of the weight bank
+    dut.weight_prefetcher_req.in_features.value  = 0                 # number of input features
+    dut.weight_prefetcher_req.out_features.value = 0                 # number of output features
+    dut.weight_prefetcher_req.nodeslot.value     = 0                 # not used for weight bank requests
+    dut.weight_prefetcher_req.nodeslot_precision.value = 0           # 01 is for fixed 8-bit precision
+    dut.weight_prefetcher_req.neighbour_count.value = 0              # not used for weight bank requests
+    dut.feature_prefetcher_req_valid.value = 0                        # enable the prefetcher
+    dut.feature_prefetcher_req.req_opcode.value   = 0                 # 00 is for weight bank requests
+    dut.feature_prefetcher_req.start_address.value  = 0x0000          # start address of the weight bank
+    dut.feature_prefetcher_req.in_features.value  = 0                 # number of input features
+    dut.feature_prefetcher_req.out_features.value = 0                 # number of output features
+    dut.feature_prefetcher_req.nodeslot.value     = 0                 # not used for weight bank requests
+    dut.feature_prefetcher_req.nodeslot_precision.value = 0           # 01 is for fixed 8-bit precision
+    dut.feature_prefetcher_req.neighbour_count.value = 0              # not used for weight bank requests
+
+def reset_weight_prefetcher(dut):
+    dut.weight_prefetcher_req_valid.value = 0                        # enable the prefetcher
+    dut.weight_prefetcher_req.req_opcode.value   = 0                 # 00 is for weight bank requests
+    dut.weight_prefetcher_req.start_address.value  = 0x0000          # start address of the weight bank
+    dut.weight_prefetcher_req.in_features.value  = 0                 # number of input features
+    dut.weight_prefetcher_req.out_features.value = 0                 # number of output features
+    dut.weight_prefetcher_req.nodeslot.value     = 0                 # not used for weight bank requests
+    dut.weight_prefetcher_req.nodeslot_precision.value = 0           # 01 is for fixed 8-bit precision
+    dut.weight_prefetcher_req.neighbour_count.value = 0              # not used for weight bank requests
+
+def reset_feature_prefetcher(dut):
+    dut.feature_prefetcher_req_valid.value = 0                        # enable the prefetcher
+    dut.feature_prefetcher_req.req_opcode.value   = 0                 # 00 is for weight bank requests
+    dut.feature_prefetcher_req.start_address.value  = 0x0000          # start address of the weight bank
+    dut.feature_prefetcher_req.in_features.value  = 0                 # number of input features
+    dut.feature_prefetcher_req.out_features.value = 0                 # number of output features
+    dut.feature_prefetcher_req.nodeslot.value     = 0                 # not used for weight bank requests
+    dut.feature_prefetcher_req.nodeslot_precision.value = 0           # 01 is for fixed 8-bit precision
+    dut.feature_prefetcher_req.neighbour_count.value = 0              # not used for weight bank requests
+    
+# --------------------------------------------------
+# reset fte
+# --------------------------------------------------
+def reset_fte(dut):
+    dut.nsb_fte_req_valid.value = 0
+    dut.nsb_fte_req.precision.value = 0
+    dut.nsb_fte_req.nodeslots.value = 0
+    
+# --------------------------------------------------
+# Blocking Instruction
+# --------------------------------------------------
+async def load_weight_block_instruction_b(dut, start_address=0x0000, weight_block_size=(4, 128), precision=1, blocking=True):
+    dut.weight_prefetcher_req_valid.value           = 1                         # enable the prefetcher
+    dut.weight_prefetcher_req.req_opcode.value      = 0                         # 00 is for weight bank requests
+    dut.weight_prefetcher_req.start_address.value   = start_address             # start address of the weight bank
+    dut.weight_prefetcher_req.in_features.value     = weight_block_size[1]     # number of input features                     
+    dut.weight_prefetcher_req.out_features.value    = weight_block_size[0]     # number of output features
+    dut.weight_prefetcher_req.nodeslot.value        = 0                         # not used for weight bank requests
+    dut.weight_prefetcher_req.nodeslot_precision.value = precision              # 01 is for fixed 8-bit precision
+    dut.weight_prefetcher_req.neighbour_count.value = 0                         # not used for weight bank requests
+    if blocking:
+        await Timer(10, units="ns")
+        p = 0
+        while True:
+            await RisingEdge(dut.clk)
+            await Timer(10, units="ns")
+            if dut.weight_prefetcher_resp_valid.value == 1:
+                break
+            elif p==1000000:
+                raise ValueError("Deadlock detected: weight_prefetcher_req_ready are not ready")
+            p+=1
+        reset_weight_prefetcher(dut)
+        
+async def load_feature_block_instruction_b(dut, start_address=0x0000, input_block_size=(8, 128), precision=1, blocking=True):
+    dut.feature_prefetcher_req_valid.value          = 1                         # enable the prefetcher
+    dut.feature_prefetcher_req.req_opcode.value     = 0                         # 00 is for weight bank requests
+    dut.feature_prefetcher_req.start_address.value  = start_address             # start address of the feature bank
+    dut.feature_prefetcher_req.in_features.value    = input_block_size[1]      # number of input features
+    dut.feature_prefetcher_req.out_features.value   = input_block_size[0]      # number of output features
+    dut.feature_prefetcher_req.nodeslot.value       = 0                         # not used for weight bank requests
+    dut.feature_prefetcher_req.nodeslot_precision.value = precision             # 01 is for fixed 8-bit precision
+    dut.feature_prefetcher_req.neighbour_count.value = 0                        # not used for weight bank requests
+    if blocking:
+        await Timer(10, units="ns")
+        p = 0
+        while True:
+            await RisingEdge(dut.clk)
+            await Timer(10, units="ns")
+            if dut.feature_prefetcher_resp_valid.value == 1:
+                break
+            elif p==1000000:
+                raise ValueError("Deadlock detected: feature_prefetcher_req_ready are not ready")
+            p+=1
+        reset_feature_prefetcher(dut)
+        
+async def calculate_linear_and_writeback_b(dut, writeback_address=0x200000000, output_matrix_size=(8, 8), offset=0, precision=1, blocking=True):
+    dut.nsb_fte_req_valid.value = 1                                             # enable the fte
+    dut.nsb_fte_req.precision.value = 1                                         # 01 is for fixed 8-bit precision
+    dut.layer_config_out_channel_count.value = output_matrix_size[0]            # here we used the first dimension of the input matrix as output channel count
+    dut.layer_config_out_features_count.value = output_matrix_size[1]           # here we used the first dimension of the weight matrix as output features count       
+    dut.layer_config_out_features_address_msb_value.value = (writeback_address >> 32) & 0b11        # 2 is for the msb of 34 bits address
+    dut.layer_config_out_features_address_lsb_value.value = writeback_address & 0xFFFFFFFF          # 0 for the rest of the address
+    dut.writeback_offset.value = offset                                         # 0 for the writeback offset
+    if blocking:
+        await Timer(10, units="ns")
+        p = 0
+        while True:
+            await RisingEdge(dut.clk)
+            await Timer(10, units="ns")
+            if dut.nsb_fte_resp_valid.value == 1:
+                break
+            elif p==1000000:
+                raise ValueError("Deadlock detected: nsb_fte_req_ready are not ready")
+            p+=1
+        reset_fte(dut)
