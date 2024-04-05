@@ -28,7 +28,7 @@ sys.path.append(
         "..",
     )
 )
-from systolic_array.tb.software.ram import RamTester, cycle_reset
+from systolic_array.tb.software.ram import RamTester, writeback_address_generator, cycle_reset, partitioner
 from systolic_array.tb.software.linear import LinearInteger
 
 np.random.seed(0)
@@ -194,30 +194,31 @@ ceildiv = lambda a, b: -(-a // b)
 # --------------------------------------------------
 async def mlp_test(dut):
     input_matrix_size = (4, 128)
-    weight_matrix_size = (8, 128)
+    weight_matrix_size = (4, 128)
+    systolic_array_size = (4, 128)
+    result_start_address = 0x200000000 
+    weight_start_address = 0x000000000
     
     mlp = MLP()
-    # Input data
     input_data = torch.randint(0, 128, size=input_matrix_size, dtype=torch.float32)
-    # Set weights for fc1 layer
     mlp.fc1.weight.data = torch.randint(0, 128, size=weight_matrix_size, dtype=torch.float32)
 
-    # Create a 10ns-period clock on port clk
+    # Create a 10ns-period clock on port clk and reset port rst
     clock = Clock(dut.clk, 10, units="ns")
-    # Start the clock
     cocotb.start_soon(clock.start())
-    await Timer(100, units="ns")
-    clock = Clock(dut.clk, 10, units="ns")
-    # Start the clock
-    cocotb.start_soon(clock.start())
-    # Reset cycle
-    await Timer(20, units="ns")
+
+    #reset everything
+    dut.rst.value = 0
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
     dut.rst.value = 1 
     reset_nsb_prefetcher(dut)
     reset_fte(dut)
-    await Timer(100, units="ns")
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
     dut.rst.value = 0
-    
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
     
     ram_tester = RamTester(dut.axi_ram)
     await ram_tester.initialize()
@@ -226,27 +227,16 @@ async def mlp_test(dut):
     await ram_tester.write_to_ram(weight)
     await ram_tester.read_from_ram_and_verify(weight)
     # write input data to RAM
-    # A single row has to be multiple of 64 bytes and hence the start address has to be aligned to 64 bytes
-    weigth_address_range = ceildiv(mlp.fc1.weight.shape[1] * 4, 64) * 64 * mlp.fc1.weight.shape[0]
+    weigth_address_range = ceildiv(mlp.fc1.weight.shape[1] * 4, 64) * 64 * mlp.fc1.weight.shape[0] # A single row has to be multiple of 64 bytes and hence the start address has to be aligned to 64 bytes
     await ram_tester.write_to_ram(input_data, start_address=weigth_address_range)
     await ram_tester.read_from_ram_and_verify(input_data, start_address=weigth_address_range)
     print("Done writing and finish verification")
     
-    """
-    # req_opcode =          dut.nsb_prefetcher_req.value[0:2]  
-    # start_address =       dut.nsb_prefetcher_req.value[3:36]
-    # in_features =         dut.nsb_prefetcher_req.value[37:47]
-    # out_features =        dut.nsb_prefetcher_req.value[48:58]
-    # nodeslot =            dut.nsb_prefetcher_req.value[59:63]
-    # nodeslot_precision =  dut.nsb_prefetcher_req.value[64:65]
-    # neighbour_count =     dut.nsb_prefetcher_req.value[66:75]
-    """  
-    # --------------------------------------------------
     dut.weight_prefetcher_req_valid.value = 1                               # enable the prefetcher
     dut.weight_prefetcher_req.req_opcode.value   = 0                        # 00 is for weight bank requests
     dut.weight_prefetcher_req.start_address.value  = 0x0000                 # start address of the weight bank
-    dut.weight_prefetcher_req.in_features.value  = weight_matrix_size[1]     # number of input features                     
-    dut.weight_prefetcher_req.out_features.value = weight_matrix_size[0]     # number of output features
+    dut.weight_prefetcher_req.in_features.value  = weight_matrix_size[1]    # number of input features                     
+    dut.weight_prefetcher_req.out_features.value = weight_matrix_size[0]    # number of output features
     dut.weight_prefetcher_req.nodeslot.value     = 0                        # not used for weight bank requests
     dut.weight_prefetcher_req.nodeslot_precision.value = 1                  # 01 is for fixed 8-bit precision
     dut.weight_prefetcher_req.neighbour_count.value = 0                     # not used for weight bank requests
@@ -263,7 +253,11 @@ async def mlp_test(dut):
     dut.nsb_fte_req_valid.value = 1                                         # enable the fte
     dut.nsb_fte_req.precision.value = 1                                     # 01 is for fixed 8-bit precision
     # --------------------------------------------------
-    print("Done instructing fte")
+    dut.layer_config_out_channel_count.value = input_matrix_size[0]         # here we used the first dimension of the input matrix as output channel count
+    dut.layer_config_out_features_count.value = weight_matrix_size[0]       # here we used the first dimension of the weight matrix as output features count       
+    dut.layer_config_out_features_address_msb_value.value = 0b10            # 2 is for the msb of 34 bits address
+    dut.layer_config_out_features_address_lsb_value.value = 0b0             # TODO # 0 for the rest of the address
+    dut.writeback_offset.value = 0                                          # 0 for the writeback offset
     i = 0
     while True:
         await FallingEdge(dut.clk)

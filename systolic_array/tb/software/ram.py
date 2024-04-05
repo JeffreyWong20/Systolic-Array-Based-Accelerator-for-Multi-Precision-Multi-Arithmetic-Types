@@ -22,20 +22,71 @@ import torch.nn as nn
 import logging
 import numpy as np
 
+ceildiv = lambda a, b: -(-a // b)
 
-def partitioner(data, ultra_ram_size, systolic_array_size):
+def partitioner(data, ultra_ram_size=1024, systolic_array_size=(4,128), systolic_forward=True):
     # We assume the matrix is not being transposed
     # This partitioner will partition the data into chunks that can be processed by the systolic array
     # Data block will then be written in the memory in a row_major fashion
     row_size = data.shape[1]
-    num_iteration_per_row = row_size // ultra_ram_size
-    
+    num_iteration_per_row = ceildiv(row_size, ultra_ram_size)
+    feeded_systolic_array_dim = systolic_array_size[0] if systolic_forward else systolic_array_size[1]
     col_size = data.shape[0]
-    num_iteration_per_col = col_size // systolic_array_size
+    num_iteration_per_col = ceildiv(col_size, feeded_systolic_array_dim)
+
+        
+    print(f"num_iteration_per_row={num_iteration_per_row}, num_iteration_per_col={num_iteration_per_col}")
     
     for i in range(num_iteration_per_col):
         for j in range(num_iteration_per_row):
-            yield data[i*systolic_array_size:(i+1)*systolic_array_size, j*ultra_ram_size:(j+1)*ultra_ram_size]
+            yield data[i*feeded_systolic_array_dim:(i+1)*feeded_systolic_array_dim, j*ultra_ram_size:(j+1)*ultra_ram_size]            
+
+def offset_generator(weight_matrix_size, ultra_ram_size, systolic_array_size, byte_per_feature=4):
+    """
+    generate the writebakc offset with in different iterations to produce the result row
+    """
+    output_feature = weight_matrix_size[0]
+    iteration_per_result_row = ceildiv(output_feature, systolic_array_size[1])
+    for i in range(iteration_per_result_row):
+        yield i * systolic_array_size[1] * byte_per_feature
+        
+     
+def writeback_address_generator(start_address, input_matrix_size, weight_matrix_size, ultra_ram_size=1024, systolic_array_size=(4,128), byte_per_feature=4):
+    """
+    generate the start address for write back to the memory in different iterations and also offset
+    input_matrix: input matrix
+    """
+    output_channel = input_matrix_size[0]
+    output_feature = weight_matrix_size[0]
+    block_channel_size = systolic_array_size[0]
+    block_feature_size = systolic_array_size[1]
+    
+    byte_per_row = ceildiv(output_feature * byte_per_feature, 64) * 64 # 64 bytes alignment
+    byte_per_channel_block = block_channel_size * byte_per_row
+    
+    iteration_per_channel= ceildiv(output_channel, systolic_array_size[0])
+    for i in range(iteration_per_channel):
+        for offset in offset_generator(weight_matrix_size, ultra_ram_size, systolic_array_size, byte_per_feature):
+            yield start_address + i * byte_per_channel_block, offset
+        
+
+def load_address_generator(start_address, input_matrix_size, weight_matrix_size, ultra_ram_size=1024, systolic_array_size=(4,128), byte_per_feature=4):
+    """
+    generate the start address for loading the input matrix in different iterations
+    input_matrix: input matrix
+    """
+    input_channel = input_matrix_size[0]
+    input_feature = input_matrix_size[1]
+    block_channel_size = systolic_array_size[0]
+    block_feature_size = systolic_array_size[1]
+    
+    byte_per_row = ceildiv(input_feature * byte_per_feature, 64) * 64 # 64 bytes alignment
+    byte_per_channel_block = block_channel_size * byte_per_row
+    
+    iteration_per_channel= ceildiv(input_channel, systolic_array_size[0])
+    for i in range(iteration_per_channel):
+        yield start_address + i * byte_per_channel_block
+    
     
     
 async def cycle_reset(dut):
@@ -49,8 +100,6 @@ async def cycle_reset(dut):
     dut.rst.value = 0
     await RisingEdge(dut.clk)
     await RisingEdge(dut.clk)
-
-ceildiv = lambda a, b: -(-a // b)
 
 class RamTester:
     """This is a ram class that also contains helper function to write and verify its functionality"""
