@@ -6,6 +6,9 @@ module feature_transformation_core #(
     parameter FLOAT_WIDTH = 32,
     parameter DATA_WIDTH = 32,
 
+    parameter AXI_ADDRESS_WIDTH = 32,
+    parameter AXI_DATA_WIDTH = 512,
+
     parameter MATRIX_N = top_pkg::TRANSFORMATION_ROWS,
     parameter SYSTOLIC_MODULE_COUNT = 32
 ) (
@@ -49,26 +52,27 @@ module feature_transformation_core #(
     // AXI Write Master Interface
     output logic                                                                                      axi_write_master_req_valid,
     input  logic                                                                                      axi_write_master_req_ready,
-    output logic [33:0]                                                                               axi_write_master_req_start_address,
+    output logic [AXI_ADDRESS_WIDTH-1:0]                                                              axi_write_master_req_start_address,
     output logic [7:0]                                                                                axi_write_master_req_len,
 
     input  logic                                                                                      axi_write_master_pop,
     output logic                                                                                      axi_write_master_data_valid,
-    output logic [511:0]                                                                              axi_write_master_data,
+    output logic [AXI_DATA_WIDTH-1:0]                                                                 axi_write_master_data,
 
     input  logic                                                                                      axi_write_master_resp_valid,
-    output logic                                                                                      axi_write_master_resp_ready
+    output logic                                                                                      axi_write_master_resp_ready,
 
     // Layer configuration
-    // input  logic [9:0]                                                                                layer_config_in_features_count,
-    // input  logic [9:0]                                                                                layer_config_out_features_count,  # the number of feature in a row of the systolic array output
-    // input  logic [1:0]                                                                                layer_config_out_features_address_msb_value,
-    // input  logic [31:0]                                                                               layer_config_out_features_address_lsb_value,
-    // input  logic [31:0]                                                                               layer_config_bias_value,
-    // input  logic [1:0]                                                                                layer_config_activation_function_value,
-    // input  logic [31:0]                                                                               layer_config_leaky_relu_alpha_value,
-    // input  logic [0:0]                                                                                ctrl_buffering_enable_value,
-    // input  logic [0:0]                                                                                ctrl_writeback_enable_value
+    input  logic [AXI_ADDRESS_WIDTH-1:0]                                                              writeback_offset, // offset is used to indicate the current block to write back 
+    input  logic [31:0]                                                                               layer_config_out_channel_count,
+    input  logic [31:0]                                                                               layer_config_out_features_count,  // the number of feature in a row of the systolic array output
+    input  logic [1:0]                                                                                layer_config_out_features_address_msb_value,
+    input  logic [AXI_ADDRESS_WIDTH-2:0]                                                              layer_config_out_features_address_lsb_value,
+    input  logic [31:0]                                                                               layer_config_bias_value,
+    input  logic [1:0]                                                                                layer_config_activation_function_value,
+    input  logic [31:0]                                                                               layer_config_leaky_relu_alpha_value,
+    input  logic [0:0]                                                                                ctrl_buffering_enable_value,
+    input  logic [0:0]                                                                                ctrl_writeback_enable_value
 );
 
 parameter SYS_MODULES_PER_BEAT = 512 / (MATRIX_N * FLOAT_WIDTH);
@@ -83,25 +87,15 @@ typedef enum logic [3:0] {
 // Write Back Logic
 // ==================================================================================================================================================
 // Layer configuration
-logic [9:0]                                                                                layer_config_out_channel_count;
-logic [9:0]                                                                                layer_config_out_features_count;
-logic [1:0]                                                                                layer_config_out_features_address_msb_value;
-logic [31:0]                                                                               layer_config_out_features_address_lsb_value;
-logic [31:0]                                                                               layer_config_bias_value;
-logic [1:0]                                                                                layer_config_activation_function_value;
-logic [31:0]                                                                               layer_config_leaky_relu_alpha_value;
-logic [0:0]                                                                                ctrl_buffering_enable_value;
-logic [0:0]                                                                                ctrl_writeback_enable_value;
-
-assign layer_config_out_features_count =  10'd16; // top_pkg::MAX_FEATURE_COUNT;
-assign layer_config_out_channel_count = 10'd4; // e.g. If output matrix is 4 X 8, the number of channel is 4. 
-assign layer_config_out_features_address_msb_value = 2'b10;
-assign layer_config_out_features_address_lsb_value = 32'd0; 
-assign layer_config_bias_value = 32'd0;                     // no bias
-assign layer_config_activation_function_value = 2'b00;      // no activation
-assign layer_config_leaky_relu_alpha_value = 32'd0;
-assign ctrl_buffering_enable_value = 1'b0;                  // no buffering (We don't need this)
-assign ctrl_writeback_enable_value = 1'b1;
+// assign layer_config_out_features_count =  10'd16; // top_pkg::MAX_FEATURE_COUNT;
+// assign layer_config_out_channel_count = 10'd4; // e.g. If output matrix is 4 X 8, the number of channel is 4. 
+// assign layer_config_out_features_address_msb_value = 2'b10;
+// assign layer_config_out_features_address_lsb_value = 32'd0; 
+// assign layer_config_bias_value = 32'd0;                     // no bias
+// assign layer_config_activation_function_value = 2'b00;      // no activation
+// assign layer_config_leaky_relu_alpha_value = 32'd0;
+// assign ctrl_buffering_enable_value = 1'b0;                  // no buffering (We don't need this)
+// assign ctrl_writeback_enable_value = 1'b1;
 
 // ==================================================================================================================================================
 // Declarations
@@ -155,14 +149,15 @@ logic                                                 pulse_systolic_module;
 
 // Writeback logic
 logic [$clog2(MAX_WRITEBACK_BEATS_PER_NODESLOT):0]   sent_writeback_beats;
+logic [$clog2(top_pkg::MAX_FEATURE_COUNT/16):0]      writeback_required_beats_intermediate;
 logic [$clog2(MAX_WRITEBACK_BEATS_PER_NODESLOT):0]   writeback_required_beats;
 // logic [MATRIX_N:0] [top_pkg::NODE_ID_WIDTH-1:0]      sys_module_node_id_snapshot;
 logic [$clog2(top_pkg::MAX_FEATURE_COUNT * 4) - 1:0] out_features_required_bytes;
 
 logic [$clog2(MATRIX_N-1)-1:0]                       fast_pulse_counter;
 
-logic [SYSTOLIC_MODULE_COUNT-1:0] [MATRIX_N-1:0] [MATRIX_N-1:0] [31:0] debug_update_counter;
-logic [SYSTOLIC_MODULE_COUNT-1:0] [MATRIX_N-1:0] [MATRIX_N-1:0] [31:0] debug_update_counter_inv;
+logic [SYSTOLIC_MODULE_COUNT-1:0] [MATRIX_N-1:0] [MATRIX_N-1:0] [DATA_WIDTH-1:0] debug_update_counter;
+logic [SYSTOLIC_MODULE_COUNT-1:0] [MATRIX_N-1:0] [MATRIX_N-1:0] [DATA_WIDTH-1:0] debug_update_counter_inv;
 
 assign debug_update_counter_inv = ~debug_update_counter;
 
@@ -490,18 +485,19 @@ end
 
 // Writeback Logic
 // -------------------------------------------------------------------------------------
-
 always_comb begin
     out_features_required_bytes = layer_config_out_features_count * 4; // 4 bytes per feature
-    out_features_required_bytes = {out_features_required_bytes[$clog2(top_pkg::MAX_FEATURE_COUNT * 4) - 1 : 6], 6'd0} + (out_features_required_bytes[5:0] ? 'd64 : 1'b0); // nearest multiple of 64
+    out_features_required_bytes = {out_features_required_bytes[$clog2(top_pkg::MAX_FEATURE_COUNT * 4) - 1 : 6], 6'd0} + (out_features_required_bytes[5:0] ? 'd64 : 1'b0); // nearest multiple of 64, a row of the whole output matrix
+
     // Div feautre count by 16, round up
-    writeback_required_beats = (layer_config_out_features_count >> 4) + (layer_config_out_features_count[3:0] ? 1'b1 : 1'b0);
+    writeback_required_beats_intermediate = (layer_config_out_features_count >> 4) + (layer_config_out_features_count[3:0] ? 1'b1 : 1'b0); // intermediate value with a larger width to capture the occurance of number greater than 32
+    writeback_required_beats = (writeback_required_beats_intermediate >= 'd32)? 'd32: writeback_required_beats_intermediate; // For now, we only write back 8 beats because the systolic array has a size of 128 width 128*4/(16 feature per transcation) = 32 (each beat is 64 byte)
 
     // TO DO: we need to change here too sys_module_node_id_snapshot
     // Request
     axi_write_master_req_valid = (fte_state == FTE_FSM_WRITEBACK_REQ);
     axi_write_master_req_start_address = {layer_config_out_features_address_msb_value, layer_config_out_features_address_lsb_value}
-                                            + (total_row_to_writeback-output_row_to_writeback) * out_features_required_bytes;
+                                            + (total_row_to_writeback-output_row_to_writeback) * out_features_required_bytes + writeback_offset;
 
     axi_write_master_req_len = writeback_required_beats - 1'b1;
 
@@ -512,6 +508,29 @@ always_comb begin
                             sys_module_pe_acc  [SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd1][0],
                             sys_module_pe_acc  [SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd0][0]
                         };
+
+    // writing the same rows of four different systolic modules following the memory layout with each feature taking up 4 bytes
+    axi_write_master_data = {
+        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd3][0][3],
+        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd3][0][2],
+        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd3][0][1],
+        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd3][0][0],
+
+        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd2][0][3],
+        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd2][0][2],
+        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd2][0][1],
+        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd2][0][0],
+
+        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd1][0][3],
+        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd1][0][2],
+        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd1][0][1],
+        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd1][0][0],
+
+        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd0][0][3],
+        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd0][0][2],
+        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd0][0][1],
+        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd0][0][0]
+    };
 
     // logic [SYSTOLIC_MODULE_COUNT-1:0] [MATRIX_N:0] [MATRIX_N-1:0] [DATA_WIDTH-1:0]  sys_module_pe_acc;
     // Response
@@ -552,7 +571,6 @@ always_comb begin
     
     // TO DO: NSB resp
     nsb_fte_resp_valid          = (fte_state == FTE_FSM_NSB_RESP);
-    // nsb_fte_resp.nodeslots      = nsb_req_nodeslots_q;
 end
 
 // Weight Channel Interface

@@ -15,7 +15,7 @@ package top_pkg;
 parameter MAX_NODES = 1024*1024; // 1M
 parameter MAX_NODESLOT_COUNT = 32;
 parameter MAX_NEIGHBOURS = 1024;
-parameter MAX_FEATURE_COUNT = 1024;
+parameter MAX_FEATURE_COUNT = 2048;
 
 parameter NODE_ID_WIDTH = $clog2(MAX_NODES); // 20
 
@@ -56,6 +56,7 @@ parameter AGGREGATION_BUFFER_READ_WIDTH = 32;
 
 parameter TRANSFORMATION_ROWS = 4;
 parameter SYSTOLIC_MODULE_COUNT = 128;
+parameter SYSTOLIC_MODULE_HEIGHT = 4;
 
 // Transformation Buffer
 parameter TRANSFORMATION_BUFFER_SLOTS = 16;

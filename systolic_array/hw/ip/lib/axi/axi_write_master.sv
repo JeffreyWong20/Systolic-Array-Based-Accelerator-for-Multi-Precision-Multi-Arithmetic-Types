@@ -1,22 +1,26 @@
 
-module axi_write_master (
+module axi_write_master  #(
+    parameter MAX_BYTE_COUNT = 1000000000,
+    parameter AXI_ADDRESS_WIDTH = 32,
+    parameter AXI_DATA_WIDTH = 512
+) (
     input  logic                              core_clk,
     input  logic                              resetn,
 
     input  logic                              axi_write_master_req_valid,
     output logic                              axi_write_master_req_ready,
-    input  logic [33:0]                       axi_write_master_req_start_address,
+    input  logic [AXI_ADDRESS_WIDTH-1:0]      axi_write_master_req_start_address,
     input  logic [7:0]                        axi_write_master_req_len,
 
     output logic                              data_queue_pop,
     input  logic                              data_queue_data_valid,
-    input  logic [511:0]                      data_queue_data,
+    input  logic [AXI_DATA_WIDTH-1:0]         data_queue_data,
 
     output logic                              axi_write_master_resp_valid,
     input  logic                              axi_write_master_resp_ready,
 
     // AXI Write Master -> AXI Interconnect
-    output logic [33:0]                       axi_awaddr,
+    output logic [AXI_ADDRESS_WIDTH-1:0]      axi_awaddr,
     output logic [1:0]                        axi_awburst,
     output logic [3:0]                        axi_awcache,
     output logic [3:0]                        axi_awid,
@@ -28,7 +32,7 @@ module axi_write_master (
     output logic [2:0]                        axi_awsize,
     output logic                              axi_awvalid,
 
-    output logic [511:0]                      axi_wdata,
+    output logic [AXI_DATA_WIDTH-1:0]         axi_wdata,
     output logic                              axi_wlast,
     input  logic                              axi_wready,
     output logic [63:0]                       axi_wstrb,
@@ -39,7 +43,7 @@ module axi_write_master (
     input  logic [1:0]                        axi_bresp,
     input  logic                              axi_bvalid,
 
-    output logic [33:0]                       axi_araddr,
+    output logic [AXI_ADDRESS_WIDTH-1:0]      axi_araddr,
     output logic [1:0]                        axi_arburst,
     output logic [3:0]                        axi_arcache,
     output logic [3:0]                        axi_arid,
@@ -51,7 +55,7 @@ module axi_write_master (
     output logic                              axi_arvalid,
     input  logic                              axi_arready,
 
-    input  logic [511:0]                      axi_rdata,
+    input  logic [AXI_DATA_WIDTH-1:0]         axi_rdata,
     input  logic [3:0]                        axi_rid,
     input  logic                              axi_rlast,
     output logic                              axi_rready,
@@ -69,7 +73,7 @@ typedef enum logic [1:0] {
 
 AXI_WRITE_STATE_e                  axi_write_state, axi_write_state_n;
 
-logic [33:0]                       axi_write_master_req_start_address_q;
+logic [AXI_ADDRESS_WIDTH-1:0]      axi_write_master_req_start_address_q;
 logic [7:0]                        axi_write_master_req_len_q;
 logic [7:0]                        sent_beats;
 

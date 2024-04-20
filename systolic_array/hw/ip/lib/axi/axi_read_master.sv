@@ -13,7 +13,7 @@ This may be bottleneck - in the future, implement two separate state machines
 module axi_read_master #(
     parameter MAX_BYTE_COUNT = 1000000000,
     parameter AXI_ADDRESS_WIDTH = 34,
-    parameter DATA_WIDTH = 512
+    parameter AXI_DATA_WIDTH = 512
 ) (
     input logic core_clk,
     input logic resetn,
@@ -28,7 +28,7 @@ module axi_read_master #(
     output logic                                       fetch_resp_valid,
     input  logic                                       fetch_resp_ready,
     output logic                                       fetch_resp_last,
-    output logic [DATA_WIDTH-1:0]                      fetch_resp_data,
+    output logic [AXI_DATA_WIDTH-1:0]                  fetch_resp_data,
     output logic [3:0]                                 fetch_resp_axi_id,
 
     // AXI Read-Only Interface
@@ -44,7 +44,7 @@ module axi_read_master #(
 
     output logic                                       axi_arvalid, // Only valid when in AR state. It means that the master is ready to issue a read transaction
     input  logic                                       axi_arready, // Only ready when in AR state. It means that the slave is ready to accept a read transaction
-    input  logic [DATA_WIDTH-1:0]                      axi_rdata,   // Data read from the slave
+    input  logic [AXI_DATA_WIDTH-1:0]                  axi_rdata,   // Data read from the slave
     input  logic [3:0]                                 axi_rid,     // ID of the read transaction from the slave
     input  logic                                       axi_rlast,   // Indicates the last beat of the read transaction from the slave
     input  logic                                       axi_rvalid,  // Indicates that the data read from the slave is valid

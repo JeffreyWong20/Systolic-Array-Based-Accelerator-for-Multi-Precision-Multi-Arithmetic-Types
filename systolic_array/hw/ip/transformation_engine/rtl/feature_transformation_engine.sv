@@ -4,6 +4,8 @@ import top_pkg::*;
 module feature_transformation_engine #(
     parameter FLOAT_WIDTH = 32,
     parameter AXIL_ADDR_WIDTH = 32,
+    parameter AXI_ADDRESS_WIDTH = 32,
+    parameter AXI_DATA_WIDTH = 512,
     parameter MATRIX_N = top_pkg::TRANSFORMATION_ROWS,
     parameter SYSTOLIC_MODULE_COUNT = top_pkg::SYSTOLIC_MODULE_COUNT
 ) (
@@ -74,7 +76,7 @@ module feature_transformation_engine #(
     // input  logic [top_pkg::PRECISION_COUNT-1:0] [TRANSFORMATION_BUFFER_SLOTS-1:0]                                                    transformation_buffer_slot_free,
 
     // Feature Transformation Engine -> AXI Interconnect
-    output logic [33:0]                       transformation_engine_axi_interconnect_axi_araddr,
+    output logic [AXI_ADDRESS_WIDTH-1:0]                       transformation_engine_axi_interconnect_axi_araddr,
     output logic [1:0]                        transformation_engine_axi_interconnect_axi_arburst,
     output logic [3:0]                        transformation_engine_axi_interconnect_axi_arcache,
     output logic [3:0]                        transformation_engine_axi_interconnect_axi_arid,
@@ -93,7 +95,7 @@ module feature_transformation_engine #(
     input  logic [1:0]                        transformation_engine_axi_interconnect_axi_rresp,
     input  logic                              transformation_engine_axi_interconnect_axi_rvalid,
     
-    output logic [33:0]                       transformation_engine_axi_interconnect_axi_awaddr,
+    output logic [AXI_ADDRESS_WIDTH-1:0]                       transformation_engine_axi_interconnect_axi_awaddr,
     output logic [1:0]                        transformation_engine_axi_interconnect_axi_awburst,
     output logic [3:0]                        transformation_engine_axi_interconnect_axi_awcache,
     output logic [3:0]                        transformation_engine_axi_interconnect_axi_awid,
@@ -117,13 +119,14 @@ module feature_transformation_engine #(
     input  logic                              transformation_engine_axi_interconnect_axi_bvalid,
 
     // Layer configuration
-    input logic [9:0]  layer_config_in_features_count,
-    input logic [9:0]  layer_config_out_features_count,                                   
+    input logic [AXI_ADDRESS_WIDTH-1:0] writeback_offset, // Offset for writeback the current block
+    input logic [31:0]  layer_config_out_channel_count,  // Number of output channels
+    input logic [31:0]  layer_config_out_features_count, // Number of output features in a channel                                 
     input logic [1:0]  layer_config_activation_function_value,
     input logic [31:0] layer_config_bias_value,
     input logic [31:0] layer_config_leaky_relu_alpha_value,
     input logic [1:0]  layer_config_out_features_address_msb_value,
-    input logic [31:0] layer_config_out_features_address_lsb_value,
+    input logic [AXI_ADDRESS_WIDTH-2:0] layer_config_out_features_address_lsb_value,
     input logic [0:0]  ctrl_buffering_enable_value,
     input logic [0:0]  ctrl_writeback_enable_value
 );
@@ -164,7 +167,7 @@ module feature_transformation_engine #(
 
 logic                              axi_write_master_req_valid;
 logic                              axi_write_master_req_ready;
-logic [33:0]                       axi_write_master_req_start_address;
+logic [AXI_ADDRESS_WIDTH-1:0]      axi_write_master_req_start_address;
 logic [7:0]                        axi_write_master_req_len;
 
 logic                              axi_write_master_pop;
@@ -185,7 +188,7 @@ NSB_FTE_RESP_t [top_pkg::PRECISION_COUNT-1:0] transformation_core_resp;
 
 logic [top_pkg::PRECISION_COUNT-1:0]          transformation_core_axi_write_master_req_valid;
 logic [top_pkg::PRECISION_COUNT-1:0]          transformation_core_axi_write_master_req_ready;
-logic [top_pkg::PRECISION_COUNT-1:0] [33:0]   transformation_core_axi_write_master_req_start_address;
+logic [top_pkg::PRECISION_COUNT-1:0] [AXI_ADDRESS_WIDTH-1:0]   transformation_core_axi_write_master_req_start_address;
 logic [top_pkg::PRECISION_COUNT-1:0] [7:0]    transformation_core_axi_write_master_req_len;
 
 logic [top_pkg::PRECISION_COUNT-1:0]          transformation_core_axi_write_master_pop;
@@ -254,7 +257,8 @@ for (genvar precision = 0; precision < top_pkg::PRECISION_COUNT; precision++) be
         .PRECISION             (top_pkg::NODE_PRECISION_e'(precision)),
         .FLOAT_WIDTH           (FLOAT_WIDTH),
         .DATA_WIDTH            (top_pkg::bits_per_precision(top_pkg::NODE_PRECISION_e'(precision))),
-
+        .AXI_ADDRESS_WIDTH     (AXI_ADDRESS_WIDTH),
+        .AXI_DATA_WIDTH        (AXI_DATA_WIDTH),
         .MATRIX_N              (MATRIX_N),
         .SYSTOLIC_MODULE_COUNT (SYSTOLIC_MODULE_COUNT)
     ) feature_transformation_core_i (
@@ -310,25 +314,30 @@ for (genvar precision = 0; precision < top_pkg::PRECISION_COUNT; precision++) be
         .axi_write_master_data                                      (transformation_core_axi_write_master_data              [precision]),
 
         .axi_write_master_resp_valid                                (transformation_core_axi_write_master_resp_valid        [precision]),
-        .axi_write_master_resp_ready                                (transformation_core_axi_write_master_resp_ready        [precision])
+        .axi_write_master_resp_ready                                (transformation_core_axi_write_master_resp_ready        [precision]),
 
         // Layer configuration
-        // .layer_config_in_features_count                             (layer_config_in_features_count),
-        // .layer_config_out_features_count                            (layer_config_out_features_count),
-        // .layer_config_out_features_address_msb_value                (layer_config_out_features_address_msb_value),
-        // .layer_config_out_features_address_lsb_value                (layer_config_out_features_address_lsb_value),
-        // .layer_config_bias_value                                    (layer_config_bias_value),
-        // .layer_config_activation_function_value                     (layer_config_activation_function_value),
-        // .layer_config_leaky_relu_alpha_value                        (layer_config_leaky_relu_alpha_value),
-        // .ctrl_buffering_enable_value                                (ctrl_buffering_enable_value),
-        // .ctrl_writeback_enable_value                                (ctrl_writeback_enable_value)
+        .writeback_offset                                           (writeback_offset),
+        .layer_config_out_features_count                            (layer_config_out_features_count),
+        .layer_config_out_channel_count                             (layer_config_out_channel_count),
+        .layer_config_out_features_address_msb_value                (layer_config_out_features_address_msb_value),
+        .layer_config_out_features_address_lsb_value                (layer_config_out_features_address_lsb_value),
+        .layer_config_bias_value                                    (layer_config_bias_value),
+        .layer_config_activation_function_value                     (layer_config_activation_function_value),
+        .layer_config_leaky_relu_alpha_value                        (layer_config_leaky_relu_alpha_value),
+        .ctrl_buffering_enable_value                                (ctrl_buffering_enable_value),
+        .ctrl_writeback_enable_value                                (ctrl_writeback_enable_value)
     );
 end
 
 // AXI Write Master
 // -------------------------------------------------------------------------------------
 
-axi_write_master write_master_i (
+axi_write_master #(
+    .MAX_BYTE_COUNT(1000000000),
+    .AXI_ADDRESS_WIDTH(AXI_ADDRESS_WIDTH),
+    .AXI_DATA_WIDTH(AXI_DATA_WIDTH)
+) write_master_i (
     .core_clk                   (core_clk),
     .resetn                     (resetn),
 

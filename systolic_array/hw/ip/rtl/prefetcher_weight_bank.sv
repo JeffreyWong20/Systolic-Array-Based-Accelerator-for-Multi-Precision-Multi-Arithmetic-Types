@@ -10,10 +10,10 @@ Features to implement:
 
 module prefetcher_weight_bank #(
     parameter PRECISION = top_pkg::FLOAT_32,
-    parameter DATA_WIDTH = 32,
     parameter AXI_ADDRESS_WIDTH = 34,
     parameter AXI_DATA_WIDTH    = 512,
-    parameter MAX_FEATURE_COUNT = (top_pkg::MAX_FEATURE_COUNT)
+    parameter MAX_FEATURE_COUNT = (top_pkg::MAX_FEATURE_COUNT),
+    parameter MAX_FIFO_ROWS = (top_pkg::MAX_FEATURE_COUNT)
 ) (
     input logic                                               core_clk,
     input logic                                               resetn,
@@ -73,27 +73,27 @@ logic                                              accepting_weight_channel_resp
 // Weight Matrix row FIFOs
 // ----------------------------------------------------------------
 
-logic [MAX_FEATURE_COUNT-1:0]                               row_fifo_push;
+logic [MAX_FIFO_ROWS-1:0]                                   row_fifo_push;
 logic [31:0]                                                row_fifo_in_data;
 
-logic [MAX_FEATURE_COUNT-1:0]                               row_fifo_pop;
-logic [MAX_FEATURE_COUNT-1:0]                               row_fifo_out_valid;
-logic [MAX_FEATURE_COUNT-1:0] [31:0]                        row_fifo_out_data;
+logic [MAX_FIFO_ROWS-1:0]                                   row_fifo_pop;
+logic [MAX_FIFO_ROWS-1:0]                                   row_fifo_out_valid;
+logic [MAX_FIFO_ROWS-1:0] [31:0]                            row_fifo_out_data;
 
-logic [MAX_FEATURE_COUNT-1:0] [$clog2(MAX_FEATURE_COUNT):0] row_fifo_count;
-logic [MAX_FEATURE_COUNT-1:0]                               row_fifo_empty;
-logic [MAX_FEATURE_COUNT-1:0]                               row_fifo_full;
+logic [MAX_FIFO_ROWS-1:0] [$clog2(MAX_FEATURE_COUNT):0]     row_fifo_count;
+logic [MAX_FIFO_ROWS-1:0]                                   row_fifo_empty;
+logic [MAX_FIFO_ROWS-1:0]                                   row_fifo_full;
 
 // Fetching
 // ----------------------------------------------------------------
 
-logic [$clog2(MAX_FEATURE_COUNT):0]   features_written;
-logic [$clog2(MAX_FEATURE_COUNT):0]   rows_fetched;
-logic [$clog2(AXI_DATA_WIDTH/32)-1:0] feature_offset;
-logic [4:0]                           expected_responses;
-logic                                 weight_bank_axi_rm_fetch_resp_last_q;
-logic [AXI_DATA_WIDTH-1:0]            weight_bank_axi_rm_fetch_resp_data_q;
-logic [3:0]                           weight_bank_axi_rm_fetch_resp_axi_id_q;
+logic [$clog2(MAX_FEATURE_COUNT):0]     features_written;
+logic [$clog2(MAX_FIFO_ROWS):0]         rows_fetched;
+logic [$clog2(AXI_DATA_WIDTH/32)-1:0]   feature_offset;
+logic [4:0]                             expected_responses;
+logic                                   weight_bank_axi_rm_fetch_resp_last_q;
+logic [AXI_DATA_WIDTH-1:0]              weight_bank_axi_rm_fetch_resp_data_q;
+logic [3:0]                             weight_bank_axi_rm_fetch_resp_axi_id_q;
 
 
 logic [$clog2(MAX_FEATURE_COUNT*4)-1:0] bytes_per_row;
@@ -101,16 +101,16 @@ logic [$clog2(MAX_FEATURE_COUNT*4)-1:0] bytes_per_row_padded;
 
 // Driving weight channel responses
 logic [$clog2(MAX_FEATURE_COUNT)-1:0] required_pulses;
-logic [MAX_FEATURE_COUNT-1:0]                      row_pop_shift;
-logic [$clog2(MAX_FEATURE_COUNT):0]                row_counter;
+logic [MAX_FIFO_ROWS:0]               row_pop_shift; // TODO: I didn't -1 here because we need bigger capacity to determined the execution is called
+logic [$clog2(MAX_FEATURE_COUNT):0]   row_counter;
 
-logic reset_weights;
+logic reset_weights, reset_write_ptr;
 
 // ==================================================================================================================================================
 // Instances
 // ==================================================================================================================================================
 
-for (genvar row = 0; row < MAX_FEATURE_COUNT; row++) begin
+for (genvar row = 0; row < MAX_FIFO_ROWS; row++) begin
     ultraram_fifo #(
         .WIDTH (32),
         .DEPTH (MAX_FEATURE_COUNT)
@@ -123,6 +123,7 @@ for (genvar row = 0; row < MAX_FEATURE_COUNT; row++) begin
         
         .pop            (row_fifo_pop       [row]),
         .reset_read_ptr (reset_weights),
+        .reset_write_ptr (reset_write_ptr),
         .out_valid  (row_fifo_out_valid [row]),
         .out_data   (row_fifo_out_data  [row]), // row_fifo_out_data is a 2D array. row_fifo_out_data[row][31:0] is the data for the row FIFO of row "row"
         
@@ -168,9 +169,9 @@ always_comb begin
 
     WEIGHT_BANK_FSM_WRITE: begin
         weight_bank_state_n = 
-                            // Finished writing all features for entire matrix
-                            (feature_offset == 4'd15) && (rows_fetched == nsb_prefetcher_weight_bank_req_q.out_features) && (expected_responses == '0) ? WEIGHT_BANK_FSM_WEIGHTS_WAITING
-                            
+                            // Finished writing all features for entire matrix. ADD ows_fetched == MAX_FIFO_ROWS to avoid overflow. (Maybe we have better way to do this. Or maybe we don't need it at all if we cap the instruction size)
+                            (feature_offset == 4'd15) && (rows_fetched == nsb_prefetcher_weight_bank_req_q.out_features || rows_fetched == MAX_FIFO_ROWS) && (expected_responses == '0) ? WEIGHT_BANK_FSM_WEIGHTS_WAITING
+                        
                             // Finished writing all features for current row
                             : (feature_offset == 4'd15) && (expected_responses == '0) ? WEIGHT_BANK_FSM_FETCH_REQ
                             
@@ -186,7 +187,7 @@ always_comb begin
     end
 
     WEIGHT_BANK_FSM_DUMP_WEIGHTS: begin
-        weight_bank_state_n = weight_channel_resp_valid && weight_channel_resp_ready && weight_channel_resp.done ? WEIGHT_BANK_FSM_WEIGHTS_WAITING
+        weight_bank_state_n = weight_channel_resp_valid && weight_channel_resp_ready && weight_channel_resp.done ? WEIGHT_BANK_FSM_IDLE
                             : WEIGHT_BANK_FSM_DUMP_WEIGHTS;
     end
 
@@ -197,7 +198,7 @@ end
 // ----------------------------------------------------------------
 
 always_ff @(posedge core_clk or negedge resetn) begin
-    if (!resetn) begin
+    if (!resetn || reset_weights) begin
         nsb_prefetcher_weight_bank_req_q <= '0;
 
     // Receiving a request from the NSB
@@ -231,7 +232,7 @@ always_comb begin
 end
 
 always_ff @(posedge core_clk or negedge resetn) begin
-    if (!resetn) begin
+    if (!resetn || reset_weights) begin
         rows_fetched <= '0;
         expected_responses <= '0;
 
@@ -286,7 +287,7 @@ always_comb begin
 end
 
 always_ff @(posedge core_clk or negedge resetn) begin
-    if (!resetn) begin
+    if (!resetn || reset_weights) begin
         feature_offset <= '0;
         features_written <= '0;
 
@@ -303,9 +304,9 @@ end
 assign weight_channel_req_ready = (weight_bank_state == WEIGHT_BANK_FSM_WEIGHTS_WAITING);
 
 // Shift register to flush through weights matrix diagonally
-for (genvar row = 1; row < MAX_FEATURE_COUNT; row++) begin
+for (genvar row = 1; row < MAX_FIFO_ROWS+1; row++) begin // This +1 is strange here but it is needed to make the weight_channel_resp_valid work
     always_ff @(posedge core_clk or negedge resetn) begin
-        if (!resetn) begin
+        if (!resetn || reset_weights) begin
             row_pop_shift[row] <= '0;
 
         // Clear shift register when starting new weight dump
@@ -323,7 +324,7 @@ end
 assign required_pulses = {nsb_prefetcher_weight_bank_req_q.in_features[$clog2(MAX_FEATURE_COUNT)-1:4], 4'd0} + (|nsb_prefetcher_weight_bank_req_q.in_features[3:0] ? 'd16 : '0);
 
 always_ff @(posedge core_clk or negedge resetn) begin
-    if (!resetn) begin
+    if (!resetn || reset_weights) begin
         row_pop_shift[0] <= '0; // Head of shift register
         row_counter <= '0;
     
@@ -349,7 +350,7 @@ always_comb begin
     weight_channel_resp_valid = (weight_bank_state == WEIGHT_BANK_FSM_DUMP_WEIGHTS) && (&row_fifo_out_valid) && |row_pop_shift;
 
     weight_channel_resp.data       = row_fifo_out_data;
-    weight_channel_resp.valid_mask = row_pop_shift & ~row_fifo_empty;               // Only valid when row FIFO is not empty. width is [MAX_FEATURE_COUNT-1:0]
+    weight_channel_resp.valid_mask = row_pop_shift[MAX_FIFO_ROWS-1:0] & ~row_fifo_empty;               // Only valid when row FIFO is not empty. width is [MAX_FEATURE_COUNT-1:0]
     
     weight_channel_resp.done       = (weight_channel_resp.valid_mask == '0);
     
@@ -357,6 +358,7 @@ always_comb begin
 end
 
 // When finished dumping weights, reset read pointer so the same weights can be used for the next FTE pass
-assign reset_weights = (weight_bank_state == WEIGHT_BANK_FSM_DUMP_WEIGHTS) && (weight_bank_state_n == WEIGHT_BANK_FSM_WEIGHTS_WAITING);
+assign reset_weights = (weight_bank_state == WEIGHT_BANK_FSM_DUMP_WEIGHTS) && (weight_bank_state_n == WEIGHT_BANK_FSM_IDLE);
+assign reset_write_ptr = (weight_bank_state == WEIGHT_BANK_FSM_DUMP_WEIGHTS) && (weight_bank_state_n == WEIGHT_BANK_FSM_IDLE);
 
 endmodule

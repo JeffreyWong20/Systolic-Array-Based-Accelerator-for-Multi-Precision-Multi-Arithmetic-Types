@@ -58,15 +58,15 @@ module processing_element #(
 logic                   update_accumulator;
 
 logic                   overwrite_accumulator;
-logic [FLOAT_WIDTH-1:0] overwrite_data;
+logic [DATA_WIDTH-1:0]  overwrite_data;
 
 logic                   bias_out_valid_comb;
-logic [FLOAT_WIDTH-1:0] pe_acc_add_bias_comb;
+// logic [FLOAT_WIDTH-1:0] pe_acc_add_bias_comb; // TODO: The multi-precision system is messed up here
 logic                   bias_out_valid;
-logic [FLOAT_WIDTH-1:0] pe_acc_add_bias;
+logic [DATA_WIDTH-1:0]  pe_acc_add_bias; // TODO: The multi-precision system is messed up here
 
 logic                   activated_feature_valid;
-logic [FLOAT_WIDTH-1:0] activated_feature;
+logic [DATA_WIDTH-1:0]  activated_feature; // TODO: The multi-precision system is messed up here
 
 // ==================================================================================================================================================
 // Accumulator
@@ -134,7 +134,11 @@ end
 // Activations
 // -------------------------------------------------------------
 
-activation_core activation_core_i (
+activation_core #(
+    .PRECISION  (PRECISION),
+    .DATA_WIDTH (DATA_WIDTH),
+    .FLOAT_WIDTH(FLOAT_WIDTH)
+) activation_core_i (
     .core_clk                            (core_clk),
     .resetn                              (resetn),
     .sel_activation                      (activation),
