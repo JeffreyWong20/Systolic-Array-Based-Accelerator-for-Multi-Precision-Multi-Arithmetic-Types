@@ -1,20 +1,13 @@
 # This file offers a simple test for an AXI ram module
-import itertools
 import logging
 import os
-import random
-import struct
 import sys
 from pathlib import Path
 
 import cocotb
 from cocotb.clock import Clock
-from cocotb.triggers import RisingEdge, Timer
-
-import cocotb
+from cocotb.triggers import RisingEdge, Timer, ReadOnly
 from cocotb.runner import get_runner
-from cocotb.triggers import Timer, FallingEdge
-from cocotbext.axi import AxiBus, AxiMaster, AxiRam
 
 import torch
 import torch.nn as nn
@@ -28,8 +21,9 @@ sys.path.append(
         "..",
     )
 )
-from systolic_array.tb.software.instruction import load_feature_block_instruction, load_weight_block_instruction, calculate_linear_and_writeback, reset_fte, reset_nsb_prefetcher
-from systolic_array.tb.software.ram import RamTester, writeback_address_generator, cycle_reset, partitioner
+from systolic_array.tb.software.axi_driver import AXIDriver
+from systolic_array.tb.software.instruction import calculate_linear_and_writeback_b, load_feature_block_instruction_b, load_weight_block_instruction_b, clear_all
+from systolic_array.tb.software.ram import write_to_file, writeback_address_generator
 from systolic_array.tb.software.linear import LinearInteger
 
 np.random.seed(0)
@@ -104,58 +98,115 @@ def compute_quantize(input_data, weight_data, debug=False):
             print(hex_row)
     return data, weight, int_8_result
 
-    dut.axi_awid.value = 0
-    dut.axi_awaddr.value = 0
-    dut.axi_awlen.value = 0
-    dut.axi_awsize.value = 0
-    dut.axi_awburst.value = 0
-    dut.axi_awlock.value = 0
-    dut.axi_awcache.value = 0
-    dut.axi_awprot.value = 0
-    dut.axi_awqos.value = 0
-    dut.axi_awregion.value = 0
-    dut.axi_awvalid.value = 0
-    # dut.axi_awready.value = 0
-    dut.axi_wdata.value = 0
-    dut.axi_wstrb.value = 0
-    dut.axi_wlast.value = 0
-    dut.axi_wvalid.value = 0
-    # dut.axi_wready.value = 0
-    # dut.axi_bid.value = 0
-    # dut.axi_bresp.value = 0
-    # dut.axi_bvalid.value = 0
-    dut.axi_bready.value = 0
-    dut.axi_arid.value = 0
-    dut.axi_araddr.value = 0
-    dut.axi_arlen.value = 0
-    dut.axi_arsize.value = 0
-    dut.axi_arburst.value = 0
-    dut.axi_arlock.value = 0
-    dut.axi_arcache.value = 0
-    dut.axi_arprot.value = 0
-    dut.axi_arqos.value = 0
-    dut.axi_arregion.value = 0
-    dut.axi_arvalid.value = 0
-    # dut.axi_arready.value = 0
-    # dut.axi_rid.value = 0
-    # dut.axi_rdata.value = 0
-    # dut.axi_rresp.value = 0
-    # dut.axi_rlast.value = 0
-    # dut.axi_rvalid.value = 0
-    dut.axi_rready.value = 0
-
 ceildiv = lambda a, b: -(-a // b)
+
 # --------------------------------------------------
-#  Actual test
+#  Actual test ::: MAKE SURE TO RUN THIS SCRIPT 
 # --------------------------------------------------
+input_matrix_size = (4, 4)
+weight_matrix_size = (4, 4)
+systolic_array_size = (1*4, 128*4)
+byte_per_feature = 4
 async def mlp_test(dut):
-    input_matrix_size = (8, 128)
-    weight_matrix_size = (4, 128)
-    systolic_array_size = (4, 128)
-    result_start_address = 0x200000000 
-    weight_start_address = 0x000000000
+    result_start_address = 0x2000000 
+    weight_start_address = 0x0000000
+    precision = 8
+    torch.manual_seed(42)
     
     mlp = MLP()
+    input_data = torch.randint(0, 128, size=input_matrix_size, dtype=torch.float32)
+    mlp.fc1.weight.data = torch.randint(0, 128, size=weight_matrix_size, dtype=torch.float32)
+    weigth_address_range = ceildiv(mlp.fc1.weight.shape[1] * 4, 64) * 64 * mlp.fc1.weight.shape[0] # A single row has to be multiple of 64 bytes and hence the start address has to be aligned to 64 bytes
+
+
+    # Create a 10ns-period clock on port clk and reset port rst
+    clock = Clock(dut.clk, 10, units="ns")
+    cocotb.start_soon(clock.start())
+
+    #reset everything
+    dut.rst.value = 0
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+    dut.rst.value = 1 
+    await RisingEdge(dut.clk)
+    await RisingEdge(dut.clk)
+    dut.rst.value = 0
+    await clear_all(dut)
+    logger.info("Done clearing and reset")
+    
+    # write weights to RAM
+    axi_ram_driver = AXIDriver(dut.ram_model)
+    write_to_file(mlp.fc1.weight.data, "/home/thw20/FYP/systolic_array/hw/sim/cocotb/weight.mem", writing_mode='w',start_address=0, each_feature_size=4, padding_alignment=64)
+    write_to_file(input_data, "/home/thw20/FYP/systolic_array/hw/sim/cocotb/weight.mem", writing_mode='a', start_address=weigth_address_range, each_feature_size=4, padding_alignment=64)
+        
+    # Instruct the core
+    byte_per_weight_block = ceildiv(mlp.fc1.weight.shape[1] * 4, 64) * 64 * systolic_array_size[1]
+    byte_per_input_block = ceildiv(input_matrix_size[1] * 4, 64) * 64 * systolic_array_size[0]
+    input_matrix_iteration = ceildiv(input_matrix_size[0], systolic_array_size[0])  # number channel blocks
+    weight_matrix_iteration = ceildiv(weight_matrix_size[0], systolic_array_size[1]) # number of iteration to produce one output channel blocks
+
+    logger.info("Start executing instructions")
+    for i, (writeback_address, offset) in enumerate(writeback_address_generator(start_address=result_start_address, input_matrix_size=input_matrix_size, weight_matrix_size=weight_matrix_size, systolic_array_size=(4, 128))):
+        weight_start_address = byte_per_weight_block * (i % weight_matrix_iteration)
+        input_start_address = weigth_address_range + byte_per_input_block * (i // weight_matrix_iteration)
+        logger.info(f"Start address: {hex(writeback_address)}, Offset: {offset}, Load weight from: {hex(weight_start_address)}, Load input from: {hex(input_start_address)}")
+
+        await RisingEdge(dut.clk)
+        await load_weight_block_instruction_b(dut, start_address=weight_start_address, weight_block_size=weight_matrix_size)
+        logger.info("Done instructing weight prefetcher")
+
+        await RisingEdge(dut.clk)
+        await load_feature_block_instruction_b(dut, start_address=input_start_address, input_block_size=input_matrix_size)
+        logger.info("Done instructing feature prefetcher")
+
+        await RisingEdge(dut.clk)
+        await calculate_linear_and_writeback_b(dut, writeback_address=writeback_address, offset=offset, output_matrix_size=(input_matrix_size[0], weight_matrix_size[0]))
+        logger.info("Done instructing fte")
+
+        await RisingEdge(dut.clk)
+    
+    
+    # Read the result from the RAM and compare it with the software result
+    software_result_matrix = compute_quantize(input_data, mlp.fc1.weight.data, debug=True)[2]
+    byte_per_row = ceildiv(software_result_matrix.shape[1]*byte_per_feature, 64) * 64
+    line_per_row = ceildiv(software_result_matrix.shape[1]*byte_per_feature, 64)
+    hardware_result_matrix = np.zeros(software_result_matrix.shape)
+
+    # Iterate through each row and line, process data, and populate the hardware result matrix
+    for row in range(software_result_matrix.shape[0]):
+        for i in range(line_per_row):
+            data = await axi_ram_driver.axi_read(result_start_address + i*64 + row*byte_per_row)
+            data_hex = data.hex()[2:] 
+            data_hex = '0'*int((8*byte_per_feature-precision)/8)*2 + data_hex
+            if len(data_hex) % 2 != 0:
+                data_hex = '0' + data_hex
+            
+            for element in range(64//byte_per_feature):
+                idx = i*16 + element
+                if idx < software_result_matrix.shape[1]:
+                    max_idx = min((i+1)*16-1,software_result_matrix.shape[1]-1)
+                    hardware_result_matrix[row][max_idx-element] = int(data_hex[element*byte_per_feature*2:element*byte_per_feature*2+byte_per_feature*2], 16)
+
+    # Logging results
+    logger.info("Hardware matrix:")
+    logger.info(hardware_result_matrix)
+
+    logger.info("Software matrix:")
+    logger.info(software_result_matrix)
+
+    # Assert the equality of hardware and software matrices
+    logger.info("Comparing hardware and software matrices...")
+    assert ((hardware_result_matrix == software_result_matrix).all()), "The solution is not correct"
+    logger.info("Matrices match: Hardware and software solutions are equivalent.")
+        
+
+async def run_test(dut):
+    logger.debug("running test inside run_test")
+    input_matrix_size = (8, 128)
+    weight_matrix_size = (4, 128)
+    
+    mlp = MLP()
+    torch.manual_seed(42)
     input_data = torch.randint(0, 128, size=input_matrix_size, dtype=torch.float32)
     mlp.fc1.weight.data = torch.randint(0, 128, size=weight_matrix_size, dtype=torch.float32)
 
@@ -168,155 +219,28 @@ async def mlp_test(dut):
     await RisingEdge(dut.clk)
     await RisingEdge(dut.clk)
     dut.rst.value = 1 
-    reset_nsb_prefetcher(dut)
-    reset_fte(dut)
     await RisingEdge(dut.clk)
     await RisingEdge(dut.clk)
     dut.rst.value = 0
     await RisingEdge(dut.clk)
     await RisingEdge(dut.clk)
     
-    ram_tester = RamTester(dut.axi_ram)
-    await ram_tester.initialize()
-    # write weights to RAM
-    weight = mlp.fc1.w_quantizer(mlp.fc1.weight)
-    await ram_tester.write_to_ram(weight)
-    await ram_tester.read_from_ram_and_verify(weight)
-    # write input data to RAM
+    axi_ram_driver = AXIDriver(dut.ram_model)
+    # await axi_ram_driver.axi_write(0x0, 0xaabbccdd）
     weigth_address_range = ceildiv(mlp.fc1.weight.shape[1] * 4, 64) * 64 * mlp.fc1.weight.shape[0] # A single row has to be multiple of 64 bytes and hence the start address has to be aligned to 64 bytes
-    await ram_tester.write_to_ram(input_data, start_address=weigth_address_range)
-    await ram_tester.read_from_ram_and_verify(input_data, start_address=weigth_address_range)
-    print("Done writing and finish verification")
-    
-    # Instruct the core
-    input_matrix_iteration = ceildiv(input_matrix_size[0], systolic_array_size[0])  # number channel blocks
-    weight_matrix_iteration = ceildiv(weight_matrix_size[0], systolic_array_size[1]) # number of iteration to produce one output channel blocks
-    
-    byte_per_weight_block = ceildiv(mlp.fc1.weight.shape[1] * 4, 64) * 64 * systolic_array_size[1]
-    byte_per_input_block = ceildiv(input_matrix_size[1] * 4, 64) * 64 * systolic_array_size[0]
-    
-    
-    # for i, (writeback_address, offset) in enumerate(writeback_address_generator(start_address=result_start_address, input_matrix_size=input_matrix_size, weight_matrix_size=weight_matrix_size,systolic_array_size=(4,128))):
-    #     print(f"Start address: {hex(writeback_address)}, Offset: {offset}, Load weight from: {hex(byte_per_weight_block * (i % input_matrix_size[0]))}, Load input from: {hex(weigth_address_range + byte_per_input_block * (i // weight_matrix_size[0]))}")
-    #     dut.rst.value = 1 
-    #     await Timer(10, units="ns")
-    #     dut.rst.value = 0
-    #     # --------------------------------------------------
-    #     dut.weight_prefetcher_req_valid.value = 1                               # enable the prefetcher
-    #     dut.weight_prefetcher_req.req_opcode.value   = 0                        # 00 is for weight bank requests
-    #     dut.weight_prefetcher_req.start_address.value = byte_per_weight_block * (i % weight_matrix_iteration)   # start address of the weight bank
-    #     dut.weight_prefetcher_req.in_features.value  = weight_matrix_size[1]    # number of input features                     
-    #     dut.weight_prefetcher_req.out_features.value = weight_matrix_size[0]    # number of output features
-    #     dut.weight_prefetcher_req.nodeslot.value     = 0                        # not used for weight bank requests
-    #     dut.weight_prefetcher_req.nodeslot_precision.value = 1                  # 01 is for fixed 8-bit precision
-    #     dut.weight_prefetcher_req.neighbour_count.value = 0                     # not used for weight bank requests
-    #     # --------------------------------------------------
-    #     dut.feature_prefetcher_req_valid.value = 1                              # enable the prefetcher
-    #     dut.feature_prefetcher_req.req_opcode.value   = 0                       # 00 is for weight bank requests
-    #     dut.feature_prefetcher_req.start_address.value  = weigth_address_range + byte_per_input_block * (i // weight_matrix_iteration)   # start address of the feature bank
-    #     dut.feature_prefetcher_req.in_features.value  = input_matrix_size[1]    # number of input features
-    #     dut.feature_prefetcher_req.out_features.value = input_matrix_size[0]    # number of output features
-    #     dut.feature_prefetcher_req.nodeslot.value     = 0                       # not used for weight bank requests
-    #     dut.feature_prefetcher_req.nodeslot_precision.value = 1                 # 01 is for fixed 8-bit precision
-    #     dut.feature_prefetcher_req.neighbour_count.value = 0                    # not used for weight bank requests
-    #     # --------------------------------------------------
-    #     await Timer(10, units="ns")
-    #     p = 0
-    #     fetched_weight, fetched_input = False, False
-    #     while True:
-    #         await RisingEdge(dut.clk)
-    #         await Timer(10, units="ns")
-    #         if dut.weight_prefetcher_resp_valid.value == 1:
-    #             fetched_weight = True
-    #         if dut.feature_prefetcher_resp_valid.value == 1:
-    #             fetched_input = True
-    #         if fetched_weight and fetched_input:
-    #             break
-    #         elif p==1000000:
-    #             raise ValueError("Deadlock detected: weight_prefetcher_req_ready and feature_prefetcher_req_ready are not ready")
-    #         p+=1
-    #     reset_nsb_prefetcher(dut)
-    #     # --------------------------------------------------
-    #     dut.nsb_fte_req_valid.value = 1                                         # enable the fte
-    #     dut.nsb_fte_req.precision.value = 1                                     # 01 is for fixed 8-bit precision
-    #     dut.layer_config_out_channel_count.value = input_matrix_size[0]         # here we used the first dimension of the input matrix as output channel count
-    #     dut.layer_config_out_features_count.value = weight_matrix_size[0]       # here we used the first dimension of the weight matrix as output features count       
-    #     dut.layer_config_out_features_address_msb_value.value = (writeback_address >> 32) & 0b11        # 2 is for the msb of 34 bits address
-    #     dut.layer_config_out_features_address_lsb_value.value = writeback_address & 0xFFFFFFFF          # 0 for the rest of the address
-    #     dut.writeback_offset.value = offset                                     # 0 for the writeback offset
-    #     #---------------------------------------------------
-    #     print("Done instructing fte")
-    #     i = 0
-    #     while True:
-    #         await RisingEdge(dut.clk)
-    #         await Timer(10, units="ns")
-    #         if dut.nsb_fte_resp_valid.value == 1:
-    #             done = True
-    #             break
-            
-    #         if i==1000000:
-    #             done = False
-    #             break
-    #         i+=1
-    #     reset_fte(dut)
-    
-    
-    # Unroll the loop
-    writeback_address_result = writeback_address_generator(start_address=result_start_address, input_matrix_size=input_matrix_size, weight_matrix_size=weight_matrix_size,systolic_array_size=(4,128))
-    (writeback_address, offset) = next(writeback_address_result)
-    load_weight_block_instruction(dut, start_address=0x0000, weight_block_size=weight_matrix_size)
-    load_feature_block_instruction(dut, start_address=weigth_address_range, input_block_size=input_matrix_size)
-    calculate_linear_and_writeback(dut, writeback_address=writeback_address, offset=offset, output_matrix_size=(input_matrix_size[0], weight_matrix_size[0]))
-    i = 0
-    while True:
-        await FallingEdge(dut.clk)
-        await Timer(10, units="ns")
-        if dut.nsb_fte_resp_valid.value == 1:
-            done = True
-            break
-        
-        if i==100000:
-            done = False
-            break
-        i+=1
-    
-    dut.rst.value = 1 
-    await Timer(10, units="ns")
-    dut.rst.value = 0
-    
-    (writeback_address, offset) = next(writeback_address_result)
-    load_weight_block_instruction(dut, start_address=0x0000, weight_block_size=weight_matrix_size)
-    load_feature_block_instruction(dut, start_address=weigth_address_range+byte_per_input_block * (1 // weight_matrix_iteration) , input_block_size=input_matrix_size)
-    calculate_linear_and_writeback(dut, writeback_address=writeback_address, offset=offset, output_matrix_size=(input_matrix_size[0], weight_matrix_size[0]))
-    i = 0
-    while True:
-        await FallingEdge(dut.clk)
-        await Timer(10, units="ns")
-        if dut.nsb_fte_resp_valid.value == 1:
-            done = True
-            break
-        
-        if i==100000:
-            done = False
-            break
-        i+=1
-        
-    software_result_matrix = compute_quantize(input_data, mlp.fc1.weight.data, debug=True)[2]
-    hardware_result_matrix = np.zeros(software_result_matrix.shape)
-    for r in range(software_result_matrix.shape[0]):
-        for c in range(software_result_matrix.shape[1]):
-            hardware_result_matrix[r][c] = int(ram_tester.axi_ram.read(0x200000000 + r*64 + c, 1).hex(),16)
-    print("Hardware matrix:", hardware_result_matrix)
-    print("Software matrix:", software_result_matrix)
-    
-    assert (
-        done
-    ), "Deadlock detected or the simulation reaches the maximum cycle limit (fixed it by adjusting the loop trip count)"
+
+    write_to_file(mlp.fc1.weight.data, "/home/thw20/FYP/systolic_array/hw/sim/cocotb/weight.mem", start_address=0, each_feature_size=4, padding_alignment=64)
+    write_to_file(input_data, "/home/thw20/FYP/systolic_array/hw/sim/cocotb/weight.mem", start_address=weigth_address_range, each_feature_size=4, padding_alignment=64)
+    data = await axi_ram_driver.axi_read(0x0)
+    data = data.hex()[2:] # remove the 0x
+    # await axi_ram_driver.axi_read(0x1)
     
     
 def test_axi_runner():
-    """Simulate the adder example using the Python runner.
+    """
+    Simulate the adder example using the Python runner.
     This file can be run directly or via pytest discovery.
+    NOTE: This is not needed anymore, as we are primarily using modelsim
     """
     sim = "icarus"
     extra_args = [] #  "--timescale", "1ps/1ps", "-Wno-WIDTH", "-Wno-CASEINCOMPLETE"
@@ -347,54 +271,12 @@ def test_axi_runner():
 
 
 if __name__ == "__main__":
-    # test_axi_runner()
-    fc = MLP()
-    
-    input_data = torch.tensor(
-        [[91, 30, 46, 20],
-        [71, 57, 41, 71],
-        [45, 42,  0, 12],
-        [23, 47,  1, 31]], dtype=torch.float32)
+    torch.manual_seed(42)  
+    mlp = MLP()
+    input_data = torch.randint(0, 128, size=input_matrix_size, dtype=torch.float32)
+    mlp.fc1.weight.data = torch.randint(0, 128, size=weight_matrix_size, dtype=torch.float32)
 
-    # Set weights for fc1 layer
-    fc.fc1.weight.data = torch.tensor(
-        [[ 15, 107,  64,  46],
-        [123, 116,   5,  85],
-        [ 28,  12, 125,  88],
-        [ 24,  75,  18,  29]], dtype=torch.float32)
-
-    # Quantize weights and input data
-    quantized_weight = fc.fc1.w_quantizer(fc.fc1.weight.data)
-    quantized_data = fc.fc1.w_quantizer(input_data)
-    weight, data = quantized_weight.numpy().astype(np.int8), quantized_data.numpy().astype(np.int8)
-
-    # Print quantized weights in hex format
-    print("Quantized Weights:")
-    for row in weight:
-        hex_row = [hex(value) for value in row]
-        print(hex_row)
-
-    # Print quantized input data in hex format
-    print("\nTransposed Quantized Input Data:")
-    transposed_data = data.transpose()
-    for row in transposed_data:
-        hex_row = [hex(value) for value in row]
-        print(hex_row)
-
-    # Calculate and print linear operation result
-    result = torch.nn.functional.linear(input_data, fc.fc1.weight.data).numpy().astype(np.int64)
-    print("\nLinear Operation Result:")
-    for row in result:
-        hex_row = [hex(value)[-2:] for value in row]
-        print(hex_row)
-    for row in result:
-        hex_row = [int(hex(value)[-2:],16) for value in row]
-        print(hex_row)
-        
-    
-    # Calculate the matrix multiplication result
-    result = np.matmul(data, weight)
-    print("\nMatrix Multiplication Result:")
-    for row in result:
-        hex_row = [hex(value)[-2:] for value in row]
-        print(hex_row)
+    weight = mlp.fc1.w_quantizer(mlp.fc1.weight)
+    weigth_address_range = ceildiv(mlp.fc1.weight.shape[1] * 4, 64) * 64 * mlp.fc1.weight.shape[0] # A single row has to be multiple of 64 bytes and hence the start address has to be aligned to 64 bytes
+    write_to_file(mlp.fc1.weight.data, "/home/thw20/FYP/systolic_array/hw/sim/cocotb/weight.mem", writing_mode='w',start_address=0, each_feature_size=4, padding_alignment=64)
+    write_to_file(input_data, "/home/thw20/FYP/systolic_array/hw/sim/cocotb/weight.mem", writing_mode='a', start_address=weigth_address_range, each_feature_size=4, padding_alignment=64)

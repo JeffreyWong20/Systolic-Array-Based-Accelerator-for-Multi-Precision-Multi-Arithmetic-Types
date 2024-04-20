@@ -100,6 +100,41 @@ async def cycle_reset(dut):
     dut.rst.value = 0
     await RisingEdge(dut.clk)
     await RisingEdge(dut.clk)
+    
+def write_to_file(data, filename, start_address=0, each_feature_size=4, padding_alignment=64, writing_mode='w'):
+    data = np.asarray(data.detach().numpy(), dtype=np.int8)
+    num_features_in_a_row = data.shape[1]
+    start_address_line = ceildiv(start_address, padding_alignment) + 1
+    
+    with open(filename, 'r') as f:
+        lines = f.readlines()
+
+        if start_address_line < 0 or start_address_line > len(lines):
+            print("Warning: Line number out of range. Appending new lines up to the specified line number.")
+            while len(lines) < start_address_line:
+                lines.append('\n')  # Append new lines until the desired line number is reached
+            
+            
+    with open(filename, writing_mode) as f:
+        while len(lines) < start_address_line:
+            f.write("\n") 
+
+        line = ''
+        for idx, val in enumerate(data.flatten()):
+            if idx % num_features_in_a_row == 0 and idx != 0:
+                line += '\n'
+                f.writelines(line)
+                line = ''
+            elif idx * each_feature_size % padding_alignment == 0 and idx != 0:
+                line += '\n'
+                f.writelines(line)
+                line = ''
+            
+            line += "000000"
+            line += struct.pack('b', val).hex()
+            # print(f"Writing: index={idx}, value={val}, bytes=x{struct.pack('b', val).hex()}")
+        f.writelines(line)
+        f.write('\n')
 
 class RamTester:
     """This is a ram class that also contains helper function to write and verify its functionality"""
@@ -121,7 +156,6 @@ class RamTester:
 
     async def initialize(self):
         await cycle_reset(self.dut)
-        
         
     async def write_to_ram(self, data, start_address=0):
         data = np.asarray(data.detach().numpy(), dtype=np.int8)
