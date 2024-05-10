@@ -6,6 +6,16 @@ debug = True
 logger = logging.getLogger("instruction")
 if debug:
     logger.setLevel(logging.DEBUG)
+
+from enum import Enum
+
+# Define an enumeration class
+class Activation(Enum):
+    NONE = 0
+    RELU = 1
+    LEAKT_RELU = 2
+    RESERVED_ACTIVATION = 3
+    
 # --------------------------------------------------
 # Instruction
 # --------------------------------------------------
@@ -117,7 +127,7 @@ async def clear_fte(dut):
 # --------------------------------------------------
 # Blocking Instruction
 # --------------------------------------------------
-async def load_weight_block_instruction_b(dut, start_address=0x0000, weight_block_size=(4, 128), precision=1, blocking=True):
+async def load_weight_block_instruction_b(dut, start_address=0x0000, weight_block_size=(4, 128), precision=1, blocking=True, timeout=10000):
     dut.weight_prefetcher_req_valid.value           = 1                         # enable the prefetcher
     dut.weight_prefetcher_req.req_opcode.value      = 0                         # 00 is for weight bank requests
     dut.weight_prefetcher_req.start_address.value   = start_address             # start address of the weight bank
@@ -135,14 +145,14 @@ async def load_weight_block_instruction_b(dut, start_address=0x0000, weight_bloc
             if dut.weight_prefetcher_resp_valid.value == 1:
                 logger.info("Weight prefetcher response is valid")
                 break
-            elif p==10000:
+            elif p==timeout:
                 raise ValueError("Deadlock detected: weight_prefetcher_req_ready are not ready")
             p+=1
     await RisingEdge(dut.clk)
     await clear_weight_prefetcher(dut)
     logger.info("Weight prefetcher is reset")
         
-async def load_feature_block_instruction_b(dut, start_address=0x0000, input_block_size=(8, 128), precision=1, blocking=True):
+async def load_feature_block_instruction_b(dut, start_address=0x0000, input_block_size=(8, 128), precision=1, blocking=True, timeout=10000):
     dut.feature_prefetcher_req_valid.value          = 1                         # enable the prefetcher
     dut.feature_prefetcher_req.req_opcode.value     = 0                         # 00 is for weight bank requests
     dut.feature_prefetcher_req.start_address.value  = start_address             # start address of the feature bank
@@ -160,14 +170,14 @@ async def load_feature_block_instruction_b(dut, start_address=0x0000, input_bloc
             if dut.feature_prefetcher_resp_valid.value == 1:
                 logging.info("Feature prefetcher response is valid")
                 break
-            elif p==1000000:
+            elif p==timeout:
                 raise ValueError("Deadlock detected: feature_prefetcher_req_ready are not ready")
             p+=1
     await RisingEdge(dut.clk)
     await clear_feature_prefetcher(dut)
     logging.info("Feature prefetcher is reset")
         
-async def calculate_linear_and_writeback_b(dut, writeback_address=0x200000000, output_matrix_size=(8, 8), offset=0, precision=1, blocking=True):
+async def calculate_linear_and_writeback_b(dut, writeback_address=0x200000000, output_matrix_size=(8, 8), offset=0, precision=1, activation_code=0, bias=0, blocking=True, timeout=10000):
     dut.nsb_fte_req_valid.value = 1                                             # enable the fte
     dut.nsb_fte_req.precision.value = 1                                         # 01 is for fixed 8-bit precision
     dut.layer_config_out_channel_count.value = output_matrix_size[0]            # here we used the first dimension of the input matrix as output channel count
@@ -175,6 +185,13 @@ async def calculate_linear_and_writeback_b(dut, writeback_address=0x200000000, o
     dut.layer_config_out_features_address_msb_value.value = (writeback_address >> 32) & 0b11        # 2 is for the msb of 34 bits address
     dut.layer_config_out_features_address_lsb_value.value = writeback_address & 0xFFFFFFFF          # 0 for the rest of the address
     dut.writeback_offset.value = offset                                         # 0 for the writeback offset
+    dut.layer_config_activation_function_value.value = activation_code
+    if bias is not None:
+        for i in range(len(bias)):
+            dut.layer_config_bias_value[i].value = bias[i]
+    else:
+        dut.layer_config_bias_value.value = 0
+    # dut.layer_config_bias_value.value = bias                                    
     await RisingEdge(dut.clk)    
     if blocking:
         while True:
@@ -193,7 +210,7 @@ async def calculate_linear_and_writeback_b(dut, writeback_address=0x200000000, o
             if dut.nsb_fte_resp_valid.value == 1:
                 logging.info("FTE response is valid")
                 break
-            elif p==1000000:
+            elif p==timeout:
                 raise ValueError("Deadlock detected: nsb_fte_req_ready are not ready")
             p+=1
     await RisingEdge(dut.clk)

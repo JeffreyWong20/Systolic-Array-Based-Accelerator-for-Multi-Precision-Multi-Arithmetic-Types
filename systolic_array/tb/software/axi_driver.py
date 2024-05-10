@@ -1,14 +1,25 @@
 import cocotb
 from cocotb.triggers import RisingEdge
+import math
 
 class AXIDriver:
     def __init__(self, dut):
         self.dut = dut
 
     # This function writes data to the AXI interface
-    # Assumes that the AXI interface is 32 bits wide
     
     async def axi_write(self, address, data):
+        # Handle unaligned address   
+        wstrd = 0xFFFFFFFFFFFFFFFF
+        address_valid = address >> 6
+        address_valid = address_valid << 6
+        address_diff = address - address_valid
+        data = data << (address_diff * 8)
+        
+        if (address_diff != 0): 
+            wstrd = wstrd << address_diff
+            wstrd = int(hex(wstrd)[address_diff:], 16)
+            
         # Reset signals    
         self.dut.s_axi_awaddr.value     = 0
         self.dut.s_axi_awburst.value    = 0
@@ -23,7 +34,7 @@ class AXIDriver:
         
         self.dut.s_axi_wdata.value  = 0
         self.dut.s_axi_wlast.value  = 0
-        self.dut.s_axi_wstrb.value  = 0b1111
+        self.dut.s_axi_wstrb.value  = wstrd
         self.dut.s_axi_wvalid.value = 0
 
         self.dut.s_axi_bready.value = 0
@@ -33,6 +44,9 @@ class AXIDriver:
         # AW phase
         self.dut.s_axi_awvalid.value    = 1
         self.dut.s_axi_awaddr.value     = address
+        self.dut.s_axi_awsize.value     = 2 # Set writing 32 bits in one go 2^2 = 4 bytes
+        self.dut.s_axi_awburst.value    = 0 # fixed address
+        self.dut.s_axi_awlen.value      = 0 # Single beat transaction
         # Wait to accept address
         print("Waiting for awready")
         while(True):
@@ -46,9 +60,6 @@ class AXIDriver:
         # W phase (single beat transaction)
         self.dut.s_axi_wvalid.value     = 1
         self.dut.s_axi_wdata.value      = data
-        self.dut.s_axi_awsize.value     = 2 # Set writing 32 bits in one go 2^2 = 4 bytes
-        self.dut.s_axi_awburst.value    = 0
-        self.dut.s_axi_awlen.value      = 0 # Single beat transaction
         # Wait to accept data
         while(True):
             await RisingEdge(self.dut.clk)
@@ -62,6 +73,7 @@ class AXIDriver:
             if (self.dut.s_axi_bvalid.value):
                 break
         print("bvalid received")
+        self.dut.s_axi_bready.value = 0
 
     async def axi_read(self, address):
         await RisingEdge(self.dut.clk)

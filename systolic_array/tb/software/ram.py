@@ -43,15 +43,16 @@ def partitioner(data, ultra_ram_size=1024, systolic_array_size=(4,128), systolic
 
 def offset_generator(weight_matrix_size, ultra_ram_size, systolic_array_size, byte_per_feature=4):
     """
-    generate the writebakc offset with in different iterations to produce the result row
+    generate the writeback offset with in different iterations to produce a section of result row with size of bus width
     """
     output_feature = weight_matrix_size[0]
     iteration_per_result_row = ceildiv(output_feature, systolic_array_size[1])
     for i in range(iteration_per_result_row):
-        yield i * systolic_array_size[1] * byte_per_feature
+        # if the offset is greater than 64 than we need to write the result in the next line
+        yield (i * systolic_array_size[1] * byte_per_feature) // 64 ,(i * systolic_array_size[1] * byte_per_feature) % 64
         
      
-def writeback_address_generator(start_address, input_matrix_size, weight_matrix_size, ultra_ram_size=1024, systolic_array_size=(4,128), byte_per_feature=4):
+def writeback_address_generator(writeback_address, input_matrix_size, weight_matrix_size, ultra_ram_size=1024, systolic_array_size=(4,128), byte_per_feature=4):
     """
     generate the start address for write back to the memory in different iterations and also offset
     input_matrix: input matrix
@@ -62,12 +63,35 @@ def writeback_address_generator(start_address, input_matrix_size, weight_matrix_
     block_feature_size = systolic_array_size[1]
     
     byte_per_row = ceildiv(output_feature * byte_per_feature, 64) * 64 # 64 bytes alignment
-    byte_per_channel_block = block_channel_size * byte_per_row
+    line_per_row = byte_per_row // 64               # how many line to store the result row
+    line_per_sys_array = block_feature_size // 16   # how many line can be written by the systolic array in one iteration
+    # can these line be produced by the systolic array in one iteration
+    if line_per_sys_array > line_per_row:
+        line_per_row = 1 
+    else:
+        # Only one beat is needed per iteration
+        if line_per_sys_array == 0 or line_per_sys_array == 1:
+            line_per_row = line_per_row
+        else:
+            print(f"line_per_sys_array={line_per_sys_array}, line_per_row={line_per_row}")
+            print(f"output_feature={output_feature}, systolic_array_size[1]={systolic_array_size[1]}")
+            print(f"output_channel={output_channel}, systolic_array_size[0]={systolic_array_size[0]}")
+            raise ValueError("Not supported yet.")
     
+    byte_per_channel_block = block_channel_size * byte_per_row
+    # NOTE: This does not work for all cases 
+    # TODO: This might fail for some edge cases
     iteration_per_channel= ceildiv(output_channel, systolic_array_size[0])
     for i in range(iteration_per_channel):
-        for offset in offset_generator(weight_matrix_size, ultra_ram_size, systolic_array_size, byte_per_feature):
-            yield start_address + i * byte_per_channel_block, offset
+        for line, offset in offset_generator(weight_matrix_size, ultra_ram_size, systolic_array_size, byte_per_feature):
+            # NOTE:
+            # Because of the offset machanism in the write back, we have to write feature with the lower memory index first (right most of the array)
+            # A row can span multiple lines in the memory
+            # Right most of the row is usually the bottom line of all thoses line. (Refer to the report for more detail)
+            # TODO:
+            # Obviously, this need to be change for more flexibility and edges cases. 
+            current_line = line_per_row - 1 - line
+            yield writeback_address + current_line * 64 + i * byte_per_channel_block, offset
         
 
 def load_address_generator(start_address, input_matrix_size, weight_matrix_size, ultra_ram_size=1024, systolic_array_size=(4,128), byte_per_feature=4):
@@ -103,21 +127,23 @@ async def cycle_reset(dut):
     
 def write_to_file(data, filename, start_address=0, each_feature_size=4, padding_alignment=64, writing_mode='w'):
     data = np.asarray(data.detach().numpy(), dtype=np.int8)
-    num_features_in_a_row = data.shape[1]
-    start_address_line = ceildiv(start_address, padding_alignment) + 1
+    # if data is a 1D array, convert it to a 2D array
+    num_features_in_a_row = data.shape[0] if len(data.shape) == 1 else data.shape[1]
+    start_address_line = ceildiv(start_address, padding_alignment)
     
     with open(filename, 'r') as f:
         lines = f.readlines()
-
-        if start_address_line < 0 or start_address_line > len(lines):
-            print("Warning: Line number out of range. Appending new lines up to the specified line number.")
-            while len(lines) < start_address_line:
-                lines.append('\n')  # Append new lines until the desired line number is reached
-            
             
     with open(filename, writing_mode) as f:
-        while len(lines) < start_address_line:
-            f.write("\n") 
+        print(f"Current number of lines: {len(lines)} and the specified line number: {start_address_line}")
+        if start_address_line < 0 or start_address_line > len(lines):
+            print("Warning: Line number out of range. Appending new lines up to the specified line number.")
+            print(f"Current number of lines: {len(lines)} and the specified line number: {start_address_line}")
+            while len(lines) < start_address_line:
+                lines.append('\n')  # Append new lines until the desired line number is reached
+                # write an empty line to the file which is 64 bytes aligned
+                f.write('0'*64*2)
+                f.write('\n')
 
         line = ''
         for idx, val in enumerate(data.flatten()):
@@ -132,7 +158,6 @@ def write_to_file(data, filename, start_address=0, each_feature_size=4, padding_
             
             line += "000000"
             line += struct.pack('b', val).hex()
-            # print(f"Writing: index={idx}, value={val}, bytes=x{struct.pack('b', val).hex()}")
         f.writelines(line)
         f.write('\n')
 
@@ -220,6 +245,40 @@ async def simple_ram_test(dut):
     axi_ram.hexdump(0x0000, 8, prefix="RAM")
     
     assert data == b'test'
+    
+async def read_ram(axi_ram_driver, software_result_matrix, byte_per_feature, result_start_address):
+    software_result_matrix = software_result_matrix
+    byte_per_row = ceildiv(software_result_matrix.shape[1]*byte_per_feature, 64) * 64
+    line_per_row = byte_per_row // 64
+    hardware_result_matrix = np.zeros(software_result_matrix.shape).astype(np.uint8)
+
+    # Iterate through each row and line, process data, and populate the hardware result matrix
+    for row in range(software_result_matrix.shape[0]):
+        for i in range(line_per_row):
+            data = await axi_ram_driver.axi_read(result_start_address + i*64 + row*byte_per_row)
+            data_hex = data.hex()[2:] 
+            # data hex should be 64 bytes so it should have 128 characters
+            if len(data_hex) < 128:
+                data_hex = '0'*int((128-len(data_hex))) + data_hex
+            print(data_hex)
+            
+            # 1 line can at most contain 64//byte_per_feature = 16 features
+            for element in range(64//byte_per_feature):
+                idx = i*16 + element # per line is 16 features
+                # if the feature in this transfer is less than 16, we need to skip the first few bytes
+                if software_result_matrix.shape[1]-16*i < 16:
+                    start_read_idx = (16-software_result_matrix.shape[1])*byte_per_feature*2
+                else:
+                    start_read_idx = 0
+                
+                if idx < software_result_matrix.shape[1]:
+                    start_feature_idx = start_read_idx+element*byte_per_feature*2
+                    end_feature_idx = start_read_idx+element*byte_per_feature*2+byte_per_feature*2
+                    hardware_result_matrix[row][idx] = int(data_hex[start_feature_idx:end_feature_idx], 16)
+                    # print(f"Error: row={row}, idx={idx}, start_feature_idx={start_feature_idx}, end_feature_idx={end_feature_idx}, data_hex={data_hex}")
+                    # print(data_hex[start_feature_idx:end_feature_idx])
+                    
+    return hardware_result_matrix
     
 if __name__ == "__main__":
     test_ram_operations()

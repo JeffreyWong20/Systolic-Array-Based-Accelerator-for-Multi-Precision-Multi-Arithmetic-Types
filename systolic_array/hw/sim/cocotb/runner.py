@@ -16,8 +16,12 @@ sys.path.append(
         "..",
     )
 )
+print(sys.path)
+from tb.runners.top_bias_tb import bias_test
+from tb.runners.fcn_tb import fcn_test
 from tb.runners.top_tb import mlp_test, run_test
+# from tb.runners.jsc_tb import jsc_test
 
 @cocotb.test()
 async def graph_test(dut):
-    await mlp_test(dut)
+    await fcn_test(dut)
