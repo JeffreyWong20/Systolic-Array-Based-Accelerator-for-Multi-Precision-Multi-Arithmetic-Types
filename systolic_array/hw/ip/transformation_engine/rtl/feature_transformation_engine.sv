@@ -123,7 +123,7 @@ module feature_transformation_engine #(
     input logic [31:0]  layer_config_out_channel_count,  // Number of output channels
     input logic [31:0]  layer_config_out_features_count, // Number of output features in a channel                                 
     input logic [1:0]  layer_config_activation_function_value,
-    input logic [31:0] layer_config_bias_value,
+    input logic [SYSTOLIC_MODULE_COUNT*MATRIX_N-1:0] [31:0] layer_config_bias_value,
     input logic [31:0] layer_config_leaky_relu_alpha_value,
     input logic [1:0]  layer_config_out_features_address_msb_value,
     input logic [AXI_ADDRESS_WIDTH-2:0] layer_config_out_features_address_lsb_value,

@@ -8,6 +8,10 @@ TEST_RUNNER   ?=runner
 MODULE        ?=runner
 TOPLEVEL      ?=top
 
+# Custom verilog parameters
+# BLOCK_WIDTH=4
+# BLOCK_HIGH_WIDTH=2
+
 CMD_BIN := vsim
 
 VSIM_LIB_OPTS = $(addprefix -L , $(VSIM_LIBS))
@@ -22,6 +26,9 @@ endif
 ifeq (, $(CMD))
     $(error Unable to locate command >$(CMD_BIN)<)
 endif
+
+# Add custom flags to the simulator command
+# CMD += -gBLOCK_WIDTH=$(BLOCK_WIDTH) -gBLOCK_HIGH_WIDTH=$(BLOCK_HIGH_WIDTH)
 
 ifeq ($(GUI),1)
     CMD += -gui

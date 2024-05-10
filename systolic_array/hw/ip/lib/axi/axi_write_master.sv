@@ -77,6 +77,10 @@ logic [AXI_ADDRESS_WIDTH-1:0]      axi_write_master_req_start_address_q;
 logic [7:0]                        axi_write_master_req_len_q;
 logic [7:0]                        sent_beats;
 
+// Unaligned access
+logic [63:0] aligned_wstrd;
+logic [AXI_DATA_WIDTH-1:0] aligned_wdata;
+
 // ==================================================================================================================================================
 // Logic
 // ==================================================================================================================================================
@@ -142,7 +146,11 @@ assign axi_write_master_req_ready = (axi_write_state == AXI_IDLE);
 
 always_comb begin
     axi_awvalid = (axi_write_state == AXI_AW);
-
+    // TODO: I assume unaligned access only happens if data is less than 64 bytes and hence 1 transfer is enough
+    // See detail in the report 
+    aligned_wstrd = '1 << axi_write_master_req_start_address_q[5:0];
+    aligned_wdata = data_queue_data << (axi_write_master_req_start_address_q[5:0] * 8);
+    
     axi_awaddr = axi_write_master_req_start_address_q;
 
     axi_awsize  = 3'b110; // 64 bytes
@@ -157,9 +165,9 @@ always_comb begin
     axi_awqos   = '0;
 
     axi_wvalid = (axi_write_state == AXI_W) && data_queue_data_valid;
-    axi_wdata  = data_queue_data;
+    axi_wdata  = aligned_wdata;
     axi_wlast  = (sent_beats == axi_write_master_req_len_q);
-    axi_wstrb  = '1;
+    axi_wstrb  = aligned_wstrd;
 
     axi_bready = (axi_write_state == AXI_B);
 end

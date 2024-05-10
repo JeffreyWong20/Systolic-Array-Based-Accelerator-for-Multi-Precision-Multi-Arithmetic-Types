@@ -42,7 +42,7 @@ module systolic_module #(
     output logic [MATRIX_N-1:0] [DATA_WIDTH-1:0]                 sys_module_down_out,
 
     input  logic                                                 bias_valid,
-    input  logic [DATA_WIDTH-1:0]                                bias,
+    input  logic [MATRIX_N-1:0] [DATA_WIDTH-1:0]                 bias,
 
     input  logic                                                 activation_valid,
     input  logic [$bits(top_pkg::ACTIVATION_FUNCTION_e)-1:0]     activation,
@@ -105,7 +105,7 @@ for (genvar row = 0; row < MATRIX_N; row++) begin : rows_gen
             .pe_down_out                (sys_module_pe_down               [row+1] [col] ),
 
             .bias_valid                 (bias_valid),
-            .bias                       (bias),
+            .bias                       (bias[col]),
 
             .activation_valid           (activation_valid),
             .activation                 (activation),
@@ -160,28 +160,5 @@ end
 assign down_flush_done = ~sys_module_down_out_valid;
 
 assign diagonal_flush_done = &forward_flush_done && &down_flush_done;
-
-// ============================================================================================
-// Assertions
-// ============================================================================================
-
-// for (genvar row=0; row < MATRIX_N; row++) begin
-
-//     P_forward_valid_propagates: assert property (
-//         @(posedge core_clk) disable iff (!resetn)
-//         sys_module_forward_in_valid[row] |-> ##(MATRIX_N) sys_module_pe_forward_valid[row][MATRIX_N]
-//     );
-
-// end
-
-// for (genvar col=0; col < MATRIX_N; col++) begin
-
-//     P_down_valid_propagates: assert property (
-//         @(posedge core_clk) disable iff (!resetn)
-//         sys_module_down_in_valid[col] |-> ##(MATRIX_N) sys_module_pe_down_valid[MATRIX_N][col]
-//     );
-
-// end
-
 
 endmodule

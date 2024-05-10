@@ -63,20 +63,24 @@ module feature_transformation_core #(
     output logic                                                                                      axi_write_master_resp_ready,
 
     // Layer configuration
-    input  logic [AXI_ADDRESS_WIDTH-1:0]                                                              writeback_offset, // offset is used to indicate the current block to write back 
     input  logic [31:0]                                                                               layer_config_out_channel_count,
     input  logic [31:0]                                                                               layer_config_out_features_count,  // the number of feature in a row of the systolic array output
     input  logic [1:0]                                                                                layer_config_out_features_address_msb_value,
     input  logic [AXI_ADDRESS_WIDTH-2:0]                                                              layer_config_out_features_address_lsb_value,
-    input  logic [31:0]                                                                               layer_config_bias_value,
+    input  logic [SYSTOLIC_MODULE_COUNT*MATRIX_N-1:0] [31:0]                                          layer_config_bias_value,
     input  logic [1:0]                                                                                layer_config_activation_function_value,
     input  logic [31:0]                                                                               layer_config_leaky_relu_alpha_value,
     input  logic [0:0]                                                                                ctrl_buffering_enable_value,
-    input  logic [0:0]                                                                                ctrl_writeback_enable_value
+    input  logic [0:0]                                                                                ctrl_writeback_enable_value,
+
+    // Write Back Configuration
+    // input  logic [$clog2(MAX_WRITEBACK_BEATS_PER_NODESLOT):0]                                         writeback_required_beats
+    input  logic [AXI_ADDRESS_WIDTH-1:0]                                                              writeback_offset             // offset is used to indicate the current block to write back 
+
 );
 
 parameter SYS_MODULES_PER_BEAT = 512 / (MATRIX_N * FLOAT_WIDTH);
-parameter MAX_WRITEBACK_BEATS_PER_NODESLOT = SYSTOLIC_MODULE_COUNT / SYS_MODULES_PER_BEAT;
+parameter MAX_WRITEBACK_BEATS_PER_NODESLOT = SYSTOLIC_MODULE_COUNT / SYS_MODULES_PER_BEAT; // The max beats require to write back all systolic modules
 
 typedef enum logic [3:0] {
     FTE_FSM_IDLE, FTE_FSM_REQ, FTE_FSM_REQ_WC, FTE_FSM_REQ_FC, FTE_FSM_MULT_SLOW, FTE_FSM_MULT_FAST, FTE_FSM_BIAS, FTE_FSM_ACTIVATION, FTE_FSM_BUFFER, FTE_FSM_WRITEBACK_REQ, FTE_FSM_WRITEBACK_RESP, FTE_FSM_SHIFT, FTE_FSM_NSB_RESP
@@ -129,6 +133,7 @@ logic [MAX_FEATURE_COUNT-1:0] [DATA_WIDTH-1:0]                                  
 logic [SYSTOLIC_MODULE_COUNT-1:0]                                               sys_module_flush_done;
 
 logic [SYSTOLIC_MODULE_COUNT-1:0] [MATRIX_N:0] [MATRIX_N-1:0] [DATA_WIDTH-1:0]  sys_module_pe_acc;
+logic [SYSTOLIC_MODULE_COUNT*MATRIX_N-1:0] [DATA_WIDTH-1:0]                     sys_bias_per_row;
 
 logic                                                                           shift_sys_module;
 logic                                                                           bias_valid;
@@ -162,6 +167,9 @@ logic [SYSTOLIC_MODULE_COUNT-1:0] [MATRIX_N-1:0] [MATRIX_N-1:0] [DATA_WIDTH-1:0]
 assign debug_update_counter_inv = ~debug_update_counter;
 
 logic bias_applied, activation_applied;
+// Writeback AXI_DATA_WIDTH shifting logic (shifting horizontally)
+logic [SYSTOLIC_MODULE_COUNT:0] sys_module_active;                                      // use to recall if a systolic array is active or not to write out the result
+logic [top_pkg::TRANSFORMATION_ROWS:0] [AXI_DATA_WIDTH-1:0] axi_write_master_data_i;    // use to shift the data horizontally
 
 // ==================================================================================================================================================
 // Instances
@@ -170,19 +178,23 @@ for (genvar sys_module = 0; sys_module < SYSTOLIC_MODULE_COUNT; sys_module++) be
     // Driving from weight channel
     always_comb begin
         sys_module_down_in_valid [sys_module*MATRIX_N + (MATRIX_N-1) : sys_module*MATRIX_N] = {MATRIX_N{weight_channel_resp_valid}} & weight_channel_resp.valid_mask[sys_module*MATRIX_N + (MATRIX_N-1) : sys_module*MATRIX_N];
-        // sys_module_down_in       [sys_module*MATRIX_N + (MATRIX_N-1) : sys_module*MATRIX_N] = weight_channel_resp.data[sys_module*MATRIX_N + (MATRIX_N-1) : sys_module*MATRIX_N];
+    end
+
+    always_ff @(posedge core_clk or negedge resetn) begin
+        if (!resetn | fte_state_n == FTE_FSM_IDLE) begin
+            sys_module_active [sys_module+1 : sys_module] <= '0;
+        end else begin
+            sys_module_active [sys_module+1 : sys_module] <= |sys_module_down_in_valid[sys_module*MATRIX_N + (MATRIX_N-1) : sys_module*MATRIX_N] | sys_module_active [sys_module+1 : sys_module];
+        end
     end
 
     for (genvar index = sys_module*MATRIX_N; index < (sys_module*MATRIX_N + (MATRIX_N-1) + 1); index++) begin
         always_comb begin
             sys_module_down_in       [index] = weight_channel_resp.data[index][DATA_WIDTH-1:0];
+            sys_bias_per_row         [index] = layer_config_bias_value[index][DATA_WIDTH-1:0];
         end
     end
 
-    // Driving from feature channel
-    // logic [SYSTOLIC_MODULE_COUNT:0] [MATRIX_N-1:0]                                  sys_module_forward_valid;
-    // logic [SYSTOLIC_MODULE_COUNT:0] [MATRIX_N-1:0] [DATA_WIDTH-1:0]                 sys_module_forward;
-    
     systolic_module #(
         .PRECISION (PRECISION),
         .FLOAT_WIDTH (FLOAT_WIDTH),
@@ -207,7 +219,7 @@ for (genvar sys_module = 0; sys_module < SYSTOLIC_MODULE_COUNT; sys_module++) be
         .sys_module_down_out                 (sys_module_down_out       [sys_module*MATRIX_N + (MATRIX_N-1) : sys_module*MATRIX_N]),
         
         .bias_valid                          (bias_valid),
-        .bias                                (layer_config_bias_value [DATA_WIDTH-1:0]),
+        .bias                                (sys_bias_per_row          [sys_module*MATRIX_N + (MATRIX_N-1) : sys_module*MATRIX_N]),
         
         .activation_valid                    (activation_valid),
         .activation                          (layer_config_activation_function_value),
@@ -338,7 +350,7 @@ always_comb begin
                         : FTE_FSM_NSB_RESP;
         end
 
-        FTE_FSM_NSB_RESP: begin
+        FTE_FSM_NSB_RESP: begin // if the nsb response is ready, meaning we have finished the write back for the current nodeslot and shift one last time to clean the entire row
             fte_state_n = nsb_fte_resp_ready ? FTE_FSM_IDLE : FTE_FSM_NSB_RESP;
         end
 
@@ -367,39 +379,6 @@ always_ff @(posedge core_clk or negedge resetn) begin
 
     end
 end
-
-// // Take snapshot of busy slots and respective node IDs after NSB request
-// // -------------------------------------------------------------------------------------
-
-// always_ff @(posedge core_clk or negedge resetn) begin
-//     if (!resetn) begin
-//         busy_aggregation_slots_snapshot <= '0;
-//         nsb_req_nodeslots_q <= '0;
-        
-//     // Starting multiplication
-//     end else if ((fte_state == FTE_FSM_IDLE) && (fte_state_n == FTE_FSM_REQ_WC)) begin
-//         busy_aggregation_slots_snapshot <= ~transformation_core_aggregation_buffer_slot_free;
-//         nsb_req_nodeslots_q <= nsb_fte_req.nodeslots;
-//     end
-// end
-
-// for (genvar row = 0; row < MATRIX_N; row++) begin
-//     always_ff @(posedge core_clk or negedge resetn) begin
-//         if (!resetn) begin
-//             sys_module_node_id_snapshot [row]          <= '0;
-            
-//         // Starting multiplication
-//         end else if ((fte_state == FTE_FSM_IDLE) && (fte_state_n == FTE_FSM_REQ_WC)) begin
-//             sys_module_node_id_snapshot [row]          <= transformation_core_aggregation_buffer_node_id [row];
-        
-//         // Shift node IDs
-//         end else if (fte_state == FTE_FSM_SHIFT) begin
-//             sys_module_node_id_snapshot [row]          <= sys_module_node_id_snapshot [row+1];
-//         end
-//     end
-// end
-
-// assign sys_module_node_id_snapshot [MATRIX_N] = '0;
 
 // Driving systolic module
 // -------------------------------------------------------------------------------------
@@ -448,40 +427,8 @@ always_comb begin
     // Bias and activation after multiplication finished
     bias_valid       = (fte_state == FTE_FSM_BIAS);
     activation_valid = (fte_state == FTE_FSM_ACTIVATION);
-    shift_sys_module = (fte_state == FTE_FSM_SHIFT);
+    shift_sys_module = (fte_state == FTE_FSM_SHIFT) || (fte_state == FTE_FSM_NSB_RESP && fte_state_n == FTE_FSM_IDLE); // Added FTE_FSM_IDLE to shift the last row out which is equivalant to reseting the systolic array
 end
-
-// // Buffering Logic
-// // -------------------------------------------------------------------------------------
-
-// for (genvar slot = 0; slot < TRANSFORMATION_BUFFER_SLOTS; slot++) begin
-//     always_comb begin
-//         transformation_buffer_write_enable  [slot] = transformation_buffer_slot_arb_oh[slot] && (fte_state == FTE_FSM_BUFFER);
-//         transformation_buffer_write_address [slot] = '0;
-//         transformation_buffer_write_data    [slot] = sys_module_pe_acc [0] [0]; // 16*32 bits = 512b
-//     end    
-// end
-
-// always_ff @(posedge core_clk or negedge resetn) begin
-//     if (!resetn) begin
-//         nodeslots_to_buffer <= '0;
-        
-//     // Accepting NSB request
-//     end else if (nsb_fte_req_valid && nsb_fte_req_ready) begin
-//         nodeslots_to_buffer    <= ctrl_buffering_enable_value ? nodeslot_count : nodeslots_to_buffer;
-    
-//     // Done flushing a row of features
-//     end else if (fte_state == FTE_FSM_BUFFER) begin
-//         nodeslots_to_buffer <= nodeslots_to_buffer - 1'b1;
-//     end
-// end
-
-// count_ones #(
-//     .INPUT_WIDTH (top_pkg::MAX_NODESLOT_COUNT)
-// ) count_nodeslots (
-//     .data (nsb_fte_req.nodeslots),
-//     .count (nodeslot_count)
-// );
 
 // Writeback Logic
 // -------------------------------------------------------------------------------------
@@ -491,9 +438,7 @@ always_comb begin
 
     // Div feautre count by 16, round up
     writeback_required_beats_intermediate = (layer_config_out_features_count >> 4) + (layer_config_out_features_count[3:0] ? 1'b1 : 1'b0); // intermediate value with a larger width to capture the occurance of number greater than 32
-    writeback_required_beats = (writeback_required_beats_intermediate >= 'd32)? 'd32: writeback_required_beats_intermediate; // For now, we only write back 8 beats because the systolic array has a size of 128 width 128*4/(16 feature per transcation) = 32 (each beat is 64 byte)
-
-    // TO DO: we need to change here too sys_module_node_id_snapshot
+    writeback_required_beats = (writeback_required_beats_intermediate >= MAX_WRITEBACK_BEATS_PER_NODESLOT)? '1: writeback_required_beats_intermediate; // TODO: For now this is hardcoded to be neight the feature count or systolic array count. Ideally this should be number of beats needed to be transfered
     // Request
     axi_write_master_req_valid = (fte_state == FTE_FSM_WRITEBACK_REQ);
     axi_write_master_req_start_address = {layer_config_out_features_address_msb_value, layer_config_out_features_address_lsb_value}
@@ -503,38 +448,42 @@ always_comb begin
 
     // Data
     axi_write_master_data_valid = (fte_state == FTE_FSM_WRITEBACK_RESP);
-    axi_write_master_data = {sys_module_pe_acc [SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd3][0],
-                            sys_module_pe_acc  [SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd2][0],
-                            sys_module_pe_acc  [SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd1][0],
-                            sys_module_pe_acc  [SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd0][0]
-                        };
-
-    // writing the same rows of four different systolic modules following the memory layout with each feature taking up 4 bytes
-    axi_write_master_data = {
-        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd3][0][3],
-        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd3][0][2],
-        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd3][0][1],
-        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd3][0][0],
-
-        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd2][0][3],
-        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd2][0][2],
-        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd2][0][1],
-        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd2][0][0],
-
-        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd1][0][3],
-        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd1][0][2],
-        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd1][0][1],
-        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd1][0][0],
-
-        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd0][0][3],
-        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd0][0][2],
-        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd0][0][1],
-        {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[SYS_MODULES_PER_BEAT*sent_writeback_beats + 'd0][0][0]
-    };
-
     // logic [SYSTOLIC_MODULE_COUNT-1:0] [MATRIX_N:0] [MATRIX_N-1:0] [DATA_WIDTH-1:0]  sys_module_pe_acc;
     // Response
     axi_write_master_resp_ready = (fte_state == FTE_FSM_WRITEBACK_RESP);
+end
+
+// writing the same rows of four different systolic modules following the memory layout with each feature taking up 4 bytes
+// TODO: Need optimisation here. The plan is to restructure sent_writeback_beats order
+for (genvar sys_module = 0; sys_module < 4; sys_module++) begin
+    always_comb begin
+        if(sys_module < SYSTOLIC_MODULE_COUNT & sys_module_active[(SYS_MODULES_PER_BEAT*(sent_writeback_beats)) + sys_module]) begin
+            axi_write_master_data_i[0][AXI_DATA_WIDTH-1-sys_module*MATRIX_N*32:AXI_DATA_WIDTH-1-((sys_module+1)*MATRIX_N*32-1)] = { // axi_write_master_data_i[0][(sys_module+1)*MATRIX_N*32-1:sys_module*MATRIX_N*32] = {
+                {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[(SYS_MODULES_PER_BEAT*sent_writeback_beats)  + sys_module][0][0],
+                {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[(SYS_MODULES_PER_BEAT*sent_writeback_beats)  + sys_module][0][1],
+                {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[(SYS_MODULES_PER_BEAT*sent_writeback_beats)  + sys_module][0][2],
+                {{32 - DATA_WIDTH} {1'd0}}, sys_module_pe_acc[(SYS_MODULES_PER_BEAT*sent_writeback_beats)  + sys_module][0][3]
+            };
+        end else begin
+            axi_write_master_data_i[0][AXI_DATA_WIDTH-1-sys_module*MATRIX_N*32:AXI_DATA_WIDTH-1-((sys_module+1)*MATRIX_N*32-1)] = 0;
+        end
+    end
+end
+
+// ripple shifter 
+// TODO: As we are performing fix shifing here. Meaning the software has to assume the input feature is a multiple of 4
+for (genvar sys_module = 0; sys_module < 4; sys_module++) begin
+    always_comb begin
+        if(SYS_MODULES_PER_BEAT*sent_writeback_beats + sys_module > SYSTOLIC_MODULE_COUNT | !sys_module_active[SYS_MODULES_PER_BEAT*sent_writeback_beats + sys_module]) begin
+            axi_write_master_data_i[sys_module+1] = axi_write_master_data_i[sys_module] >> 128;
+        end else begin
+            axi_write_master_data_i[sys_module+1] = axi_write_master_data_i[sys_module];
+        end
+    end
+end
+
+always_comb begin
+    axi_write_master_data = axi_write_master_data_i[4];
 end
 
 
@@ -545,8 +494,8 @@ always_ff @(posedge core_clk or negedge resetn) begin
 
     // Accepting NSB request
     end else if (nsb_fte_req_valid && nsb_fte_req_ready) begin
-        total_row_to_writeback <= ctrl_writeback_enable_value ? layer_config_out_channel_count : output_row_to_writeback; // TODO: hardcored to 4
-        output_row_to_writeback <= ctrl_writeback_enable_value ? layer_config_out_channel_count : output_row_to_writeback; // TODO: hardcored to 4
+        total_row_to_writeback <= ctrl_writeback_enable_value ? TRANSFORMATION_ROWS : output_row_to_writeback; // TODO: I made a design decision to write back TRANSFORMATION_ROWS rows of the output matrix meaning the software has to ensure that the output channel is a multiple of 4. Empty rows will also get write back
+        output_row_to_writeback <= ctrl_writeback_enable_value ? TRANSFORMATION_ROWS : output_row_to_writeback; // TODO: hardcored to TRANSFORMATION_ROWS currently
         sent_writeback_beats <= '0;
 
     // Accepting AXI Write Master request

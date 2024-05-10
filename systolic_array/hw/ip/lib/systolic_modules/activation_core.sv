@@ -38,11 +38,11 @@ always_comb begin
     end
 
     top_pkg::RELU: begin
-        activated_feature_comb = in_feature[FLOAT_WIDTH-1] ? '0 : in_feature;
+        activated_feature_comb = in_feature[DATA_WIDTH-1] ? '0 : in_feature;
     end
 
     top_pkg::LEAKY_RELU: begin
-        activated_feature_comb = in_feature[FLOAT_WIDTH-1] ? leaky_relu_activation_comb : in_feature;
+        activated_feature_comb = in_feature[DATA_WIDTH-1] ? leaky_relu_activation_comb : in_feature;
     end
 
     endcase

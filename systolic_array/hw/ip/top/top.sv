@@ -83,7 +83,9 @@ module top #(
     input logic [31:0]  layer_config_out_features_count,   
     input logic [1:0]   layer_config_out_features_address_msb_value,
     input logic [AXI_ADDRESS_WIDTH-2:0] layer_config_out_features_address_lsb_value,
-    input logic [AXI_ADDRESS_WIDTH-1:0] writeback_offset                             
+    input logic [AXI_ADDRESS_WIDTH-1:0] writeback_offset,
+    input logic [1:0]  layer_config_activation_function_value,
+    input logic [top_pkg::SYSTOLIC_MODULE_COUNT*top_pkg::TRANSFORMATION_ROWS-1:0] [31:0] layer_config_bias_value      
     // input logic [1:0]  layer_config_activation_function_value,
     // input logic [31:0] layer_config_bias_value,
     // input logic [31:0] layer_config_leaky_relu_alpha_value,
@@ -92,23 +94,11 @@ module top #(
 );
 // ====================================================================================
 // Declarations
-// ====================================================================================
-// logic [9:0]  layer_config_out_channel_count;
-// logic [9:0]  layer_config_out_features_count;  
-// logic [1:0]  layer_config_out_features_address_msb_value;
-// logic [31:0] layer_config_out_features_address_lsb_value;       
-logic [1:0]  layer_config_activation_function_value;
-logic [31:0] layer_config_bias_value;
+// ====================================================================================   
 logic [31:0] layer_config_leaky_relu_alpha_value;
 logic  ctrl_buffering_enable_value;
 logic  ctrl_writeback_enable_value;
 
-// assign layer_config_out_features_count =  10'd16; // top_pkg::MAX_FEATURE_COUNT;
-// assign layer_config_out_channel_count = 10'd4; // e.g. If output matrix is 4 X 8, the number of channel is 4. 
-// assign layer_config_out_features_address_msb_value = 2'b10;
-// assign layer_config_out_features_address_lsb_value = 32'd0; 
-assign layer_config_bias_value = 32'd0;                     // no bias
-assign layer_config_activation_function_value = 2'b00;      // no activation
 assign layer_config_leaky_relu_alpha_value = 32'd0;
 assign ctrl_buffering_enable_value = 1'b0;                  // no buffering (We don't need this)
 assign ctrl_writeback_enable_value = 1'b1;
@@ -481,7 +471,7 @@ prefetcher #(
 prefetcher #(
     .AXI_DATA_WIDTH(AXI_DATA_WIDTH),
     .AXI_ADDR_WIDTH(AXI_ADDR_WIDTH),
-    .MAX_FIFO_ROWS(top_pkg::SYSTOLIC_MODULE_HEIGHT)
+    .MAX_FIFO_ROWS(top_pkg::TRANSFORMATION_ROWS)
 ) prefetcher_feature_i (
     .core_clk                                                  (clk),
     .resetn                                                    (!rst),
