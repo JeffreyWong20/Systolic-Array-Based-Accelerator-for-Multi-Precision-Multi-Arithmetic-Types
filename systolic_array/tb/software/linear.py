@@ -5,9 +5,11 @@ from math import ceil, log2
 import torch
 from torch import Tensor
 from torch.nn import functional as F
+from numpy import full 
 
 from .integer import (
     integer_quantizer,
+    integer_quantize_in_hex,
 )
 
 class _LinearBase(torch.nn.Linear):
@@ -114,7 +116,136 @@ class LinearMixedPrecision(_LinearBase):
         self.b_low_quantizer = partial(
             integer_quantizer, width=b_low_width, frac_width=b_low_frac_width
         )
+            
+    def reconstruct_weight(self, fixed_point_conversion=False):
+        """
+        Reconstruct the weight tensor with mixed-precision fixed-point representation
+        E.g 0b101 . 00111
+        Result will be padded to 32 bits. Extra not valid bit in the front will be padded with zero
+        
+        :param fixed_point_conversion: If True, return the converted fixed-point representation or just the weight value defaults to False
+        :type fixed_point_conversion: bool, optional
+        """
+        w_high = self.w_high_quantizer(self.weight)
+        w_low = self.w_low_quantizer(self.weight)
+        block_per_row = math.ceil(self.out_features / self.block_width)
+        
+        if fixed_point_conversion:
+            w_high = w_high.detach()
+            w_low = w_low.detach()
+            w_high = integer_quantize_in_hex(w_high, self.config['weight_high_width'],self.config['weight_high_frac_width'])
+            w_low = integer_quantize_in_hex(w_low, self.config['weight_low_width'],self.config['weight_low_frac_width'])
+            constructed_weight = full(self.weight.shape, '0'*self.config['weight_high_width'])
+        else:
+            constructed_weight = torch.Tensor(*self.weight.shape)
+            
+        for j in range(block_per_row):
+            col_end = min((j + 1) * self.block_width, self.out_features)
+            constructed_weight[j * self.block_width : col_end, :] = w_high[j * self.block_width : col_end, :]
+            constructed_weight[j * self.block_width + self.block_high_width : col_end, :] = w_low[j * self.block_width + self.block_high_width : col_end, :]
+        
+        return constructed_weight
+        
+    def reconstruct_bias(self, fixed_point_conversion=False, str_output=True):
+        """
+        Reconstruct the bias tensor with mixed-precision fixed-point representation
+        E.g 0b101 . 00111
+        Result will be padded to 32 bits. Extra not valid bit in the front will be padded with zero
+        
+        fixed_point_conversion: return the converted fixed-point representation
+        string_output: return the fixed-point representation in hex string or returned as number
+        
+        :param fixed_point_conversion: If True, return the converted fixed-point representation or just the weight value defaults to False
+        :type fixed_point_conversion: bool, optional
+        :param str_output: If True, return the hex string or return the unsigned integer defaults to True, defaults to True
+        :type str_output: bool, optional
+        """
+        b_high = self.b_high_quantizer(self.bias)
+        b_low = self.b_low_quantizer(self.bias)
+        block_per_row = math.ceil(self.out_features / self.block_width)
+        
+        if fixed_point_conversion:
+            b_high = b_high.detach()
+            b_low = b_low.detach()
+            b_high = integer_quantize_in_hex(b_high, self.config['bias_high_width'],self.config['bias_high_frac_width'], is_signed=True, str_output=str_output)
+            b_low = integer_quantize_in_hex(b_low, self.config['bias_low_width'],self.config['bias_low_frac_width'], is_signed=True, str_output=str_output)
+            if str_output:
+                constructed_bias = full((self.weight.shape[0],), '0'*self.config['bias_high_width'])
+            else:
+                constructed_bias = full((self.weight.shape[0],), 0)
+        else:
+            constructed_bias = torch.zeros(self.weight.shape[0],)
+            
+        for j in range(block_per_row):
+            col_end = min((j + 1) * self.block_width, self.out_features)
+            constructed_bias[j * self.block_width : col_end] = b_high[j * self.block_width : col_end]
+            constructed_bias[j * self.block_width + self.block_high_width : col_end] = b_low[j * self.block_width + self.block_high_width : col_end]
+            
+        return constructed_bias
+    
+    def reconstruct_input(self, x, fixed_point_conversion=False):
+        """
+        Reconstruct the input tensor with high precision fixed-point representation
+        E.g 0b101 . 00111
+        Result will be padded to 32 bits. Extra not valid bit in the front will be padded with zero
+        
+        :param x: The input tensor
+        :type x: Tensor | ndarray | int | float
+        :param fixed_point_conversion: If True, return the converted fixed-point representation or just the weight value defaults to False
+        :type fixed_point_conversion: bool, optional
+        """
+        x_high = self.x_high_quantizer(x)
+        
+        if fixed_point_conversion:
+            return integer_quantize_in_hex(x, self.config['data_in_high_width'],self.config['data_in_high_frac_width'])
+        else:
+            return x_high
+            
+    
+    def reconstruct_result(self, x, fixed_point_conversion=False):
+        """
+        Reconstruct the input tensor with high precision fixed-point representation
+        E.g 0b101 . 00111
+        Result will be padded to 32 bits. Extra not valid bit in the front will be padded with zero
+        
+        :param x: The input tensor
+        :type x: Tensor | ndarray | int | float
+        :param fixed_point_conversion: If True, return the converted fixed-point representation or just the weight value defaults to False
+        :type fixed_point_conversion: bool, optional
+        """
+        w_high = self.w_high_quantizer(self.weight)
+        w_low = self.w_low_quantizer(self.weight)
+        x_high = self.x_high_quantizer(x)
+        x_low = self.x_low_quantizer(x)
 
+        if self.bias is not None:
+            b_high = self.b_high_quantizer(self.bias)
+            b_low = self.b_low_quantizer(self.bias)
+        else:
+            b_high = None
+            b_low = None
+            
+        result_high = F.linear(x_high, w_high, b_high)
+        result_low = F.linear(x_low, w_low, b_low)
+        
+        if fixed_point_conversion:
+            result_high = result_high.detach()
+            result_low = result_low.detach()
+            result_high = integer_quantize_in_hex(result_high, self.config['weight_high_width'],self.config['weight_high_frac_width'])
+            result_low = integer_quantize_in_hex(result_low, self.config['weight_low_width'],self.config['weight_low_frac_width'])
+            constructed_result = full(result_high.shape, '0'*self.config['weight_high_width'])
+        else:
+            constructed_result = torch.Tensor(*result_high.shape)
+            
+        block_per_row = math.ceil(self.out_features / self.block_width)
+            
+        for j in range(block_per_row):
+            col_end = min((j + 1) * self.block_width, self.out_features)
+            constructed_result[:, j * self.block_width : col_end] = result_high[:, j * self.block_width : col_end]
+            constructed_result[:, j * self.block_width + self.block_high_width : col_end] = result_low[:, j * self.block_width + self.block_high_width : col_end]
+    
+        return constructed_result
+        
     def forward(self, x: Tensor) -> Tensor:
         w_high = self.w_high_quantizer(self.weight)
         w_low = self.w_low_quantizer(self.weight)

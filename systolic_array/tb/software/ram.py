@@ -125,8 +125,9 @@ async def cycle_reset(dut):
     await RisingEdge(dut.clk)
     await RisingEdge(dut.clk)
     
-def write_to_file(data, filename, start_address=0, each_feature_size=4, padding_alignment=64, writing_mode='w'):
-    data = np.asarray(data.detach().numpy(), dtype=np.int8)
+def write_to_file(data, filename, start_address=0, each_feature_size=4, padding_alignment=64, writing_mode='w', direct_write_str=False):
+    if not direct_write_str:
+        data = np.asarray(data.detach().numpy(), dtype=np.int8)
     # if data is a 1D array, convert it to a 2D array
     num_features_in_a_row = data.shape[0] if len(data.shape) == 1 else data.shape[1]
     start_address_line = ceildiv(start_address, padding_alignment)
@@ -155,11 +156,16 @@ def write_to_file(data, filename, start_address=0, each_feature_size=4, padding_
                 line += '\n'
                 f.writelines(line)
                 line = ''
-            
-            line += "000000"
-            line += struct.pack('b', val).hex()
+            if not direct_write_str:
+                line += "000000"
+                line += struct.pack('b', val).hex()
+            else:
+                line += val
         f.writelines(line)
         f.write('\n')
+                
+                
+            
 
 class RamTester:
     """This is a ram class that also contains helper function to write and verify its functionality"""
@@ -213,19 +219,6 @@ class RamTester:
             
             assert read_data == expected_bytes, \
                 f"Data mismatch at index {idx}: read={read_data.hex()}, expected={expected_bytes.hex()}"
-
-
-async def test_ram_operations(dut):
-    ram_tester = RamTester(dut.axi_ram)
-    await ram_tester.initialize()
-    
-    mlp = MLP()
-    data = mlp.fc1.w_quantizer(ram_tester.mlp.fc1.weight)
-    
-    await ram_tester.write_to_ram(data)
-    await ram_tester.read_from_ram_and_verify(data)
-    print("Done complete")
-
 
 # @cocotb.test()
 async def simple_ram_test(dut):
@@ -281,4 +274,4 @@ async def read_ram(axi_ram_driver, software_result_matrix, byte_per_feature, res
     return hardware_result_matrix
     
 if __name__ == "__main__":
-    test_ram_operations()
+    print("")

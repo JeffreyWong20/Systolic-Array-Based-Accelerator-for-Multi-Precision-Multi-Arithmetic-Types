@@ -24,4 +24,4 @@ from tb.runners.top_tb import mlp_test, run_test
 
 @cocotb.test()
 async def graph_test(dut):
-    await fcn_test(dut)
+    await bias_test(dut)

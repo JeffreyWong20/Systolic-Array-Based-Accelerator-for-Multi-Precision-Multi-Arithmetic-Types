@@ -51,11 +51,11 @@ class FCN(nn.Module):
     """Fully connected neural network"""
     def __init__(self, first_layer_weight_shape, second_layer_weight_shape, third_layer_weight_shape) -> None:
         super().__init__()
-        self.fc1 = LinearInteger(first_layer_weight_shape[0], first_layer_weight_shape[1], bias=True, config=config) # Bias true for the first layer
-        self.fc2 = LinearInteger(second_layer_weight_shape[0], second_layer_weight_shape[1], bias=False, config=config)
-        self.fc3 = LinearInteger(third_layer_weight_shape[0], third_layer_weight_shape[1], bias=False, config=config)
-        self.fc4 = LinearInteger(fourth_layer_weight_shape[0], fourth_layer_weight_shape[1], bias=False, config=config)
-        self.fc5 = LinearInteger(fifth_layer_weight_shape[0], fifth_layer_weight_shape[1], bias=True, config=config) # Bias true for the last layer
+        self.fc1 = LinearInteger(first_layer_weight_shape[1], first_layer_weight_shape[0], bias=True, config=config) # Bias true for the first layer
+        self.fc2 = LinearInteger(second_layer_weight_shape[1], second_layer_weight_shape[0], bias=False, config=config)
+        self.fc3 = LinearInteger(third_layer_weight_shape[1], third_layer_weight_shape[0], bias=False, config=config)
+        self.fc4 = LinearInteger(fourth_layer_weight_shape[1], fourth_layer_weight_shape[0], bias=False, config=config)
+        self.fc5 = LinearInteger(fifth_layer_weight_shape[1], fifth_layer_weight_shape[0], bias=True, config=config) # Bias true for the last layer
 
     def forward(self, x):
         x = torch.flatten(x, start_dim=1, end_dim=-1)
