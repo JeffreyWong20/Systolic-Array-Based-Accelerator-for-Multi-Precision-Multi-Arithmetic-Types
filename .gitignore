@@ -3,9 +3,19 @@ sim_build/*
 axi/*
 agile/*
 systolic_array/sim_build/*
-systolic_array copy/*
 systolic_array/hw/sim/cocotb/sim_build/*
 
+systolic_array/hw/sim/cocotb/*
+!systolic_array/hw/sim/cocotb/runner.py
+!systolic_array/hw/sim/cocotb/Makefile
+!systolic_array/hw/sim/cocotb/modelsim.ini
+!systolic_array/hw/sim/cocotb/sources.mk
+# !systolic_array/hw/sim/cocotb/*.py
+# !systolic_array/hw/sim/cocotb/*.do
+systolic_array/hw/sim/cocotb/transcript
+
+# mase 
+systolic_array/tb/runners/mase_output/*
 # cocotb_example
 cocotb_example/axi/sim_build/*
 
