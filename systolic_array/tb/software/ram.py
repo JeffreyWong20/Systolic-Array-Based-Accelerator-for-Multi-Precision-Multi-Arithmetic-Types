@@ -147,20 +147,29 @@ def write_to_file(data, filename, start_address=0, each_feature_size=4, padding_
                 f.write('\n')
 
         line = ''
+        written_elements_in_a_wordline = 0
         for idx, val in enumerate(data.flatten()):
             if idx % num_features_in_a_row == 0 and idx != 0:
                 line += '\n'
                 f.writelines(line)
+                written_elements_in_a_wordline = 0
                 line = ''
-            elif idx * each_feature_size % padding_alignment == 0 and idx != 0:
+            elif written_elements_in_a_wordline == 16:
                 line += '\n'
                 f.writelines(line)
+                written_elements_in_a_wordline = 0
                 line = ''
+            # elif idx * each_feature_size % padding_alignment == 0 and idx != 0:
+            #     line += '\n'
+            #     f.writelines(line)
+            #     written_elements_in_a_wordline = 0
+            #     line = ''
             if not direct_write_str:
                 line += "000000"
                 line += struct.pack('b', val).hex()
             else:
                 line += val
+            written_elements_in_a_wordline +=1
         f.writelines(line)
         f.write('\n')
                 

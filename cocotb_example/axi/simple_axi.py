@@ -17,7 +17,7 @@ from cocotb.triggers import Timer
 from cocotbext.axi import AxiBus, AxiMaster, AxiRam
 import torch
 import numpy as np
-from systolic_array.software.linear import LinearInteger
+# from systolic_array.software.linear import LinearInteger
 
 np.random.seed(0)
 # --------------------------------------------------
@@ -32,23 +32,23 @@ config = {
     "bias_width": 8,
     "bias_frac_width": 0,
 }
-class MLP(torch.nn.Module):
-    """
-    Toy quantized FC model for digit recognition on MNIST
-    """
+# class MLP(torch.nn.Module):
+#     """
+#     Toy quantized FC model for digit recognition on MNIST
+#     """
 
-    def __init__(self) -> None:
-        super().__init__()
-        input_features = 4
-        output_features = 4
-        random_matrix = np.random.randint(0, 101, size=(input_features, output_features))
-        self.fc1 = LinearInteger(input_features, output_features, bias=False, config=config)
-        self.fc1.weight.data = torch.tensor(random_matrix, dtype=torch.float32)
+#     def __init__(self) -> None:
+#         super().__init__()
+#         input_features = 4
+#         output_features = 4
+#         random_matrix = np.random.randint(0, 101, size=(input_features, output_features))
+#         self.fc1 = LinearInteger(input_features, output_features, bias=False, config=config)
+#         self.fc1.weight.data = torch.tensor(random_matrix, dtype=torch.float32)
 
-    def forward(self, x):
-        x = torch.flatten(x, start_dim=1, end_dim=-1)
-        x = torch.nn.functional.relu(self.fc1(x))
-        return x
+#     def forward(self, x):
+#         x = torch.flatten(x, start_dim=1, end_dim=-1)
+#         x = torch.nn.functional.relu(self.fc1(x))
+#         return x
     
 async def cycle_reset(dut):
     dut.rst.setimmediatevalue(0)

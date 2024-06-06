@@ -20,8 +20,8 @@
 
 module mac #(
     parameter PRECISION   = top_pkg::FLOAT_32,
-    parameter FLOAT_WIDTH = 32,
-    parameter DATA_WIDTH  = 32
+    parameter DATA_WIDTH  = 32,
+    parameter ACCUMULATOR_WIDTH = 32
 ) (
     input  logic                              core_clk,            
     input  logic                              resetn,
@@ -32,10 +32,10 @@ module mac #(
     input  logic [DATA_WIDTH-1:0]             a,
     input  logic [DATA_WIDTH-1:0]             b,
 
-    output logic [DATA_WIDTH-1:0]             accumulator,
+    output logic [ACCUMULATOR_WIDTH-1:0]     accumulator,
     
-    input  logic                              overwrite,
-    input  logic [DATA_WIDTH-1:0]             overwrite_data
+    input  logic                             overwrite,
+    input  logic [ACCUMULATOR_WIDTH-1:0]     overwrite_data
     
 );
 
@@ -65,7 +65,8 @@ if (PRECISION == top_pkg::FLOAT_32) begin
 end else begin
 
     fixed_point_mac #(
-        .DATA_WIDTH     (DATA_WIDTH)
+        .DATA_WIDTH     (DATA_WIDTH),
+        .ACCUMULATOR_WIDTH (ACCUMULATOR_WIDTH)
     ) fixed_point_mac_i (
         .core_clk,            
         .resetn,

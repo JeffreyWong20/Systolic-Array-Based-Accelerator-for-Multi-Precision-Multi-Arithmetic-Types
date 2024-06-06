@@ -49,7 +49,7 @@ config = {
 }
 class FCN(nn.Module):
     """Fully connected neural network"""
-    def __init__(self, first_layer_weight_shape, second_layer_weight_shape, third_layer_weight_shape) -> None:
+    def __init__(self, first_layer_weight_shape, second_layer_weight_shape, third_layer_weight_shape, fourth_layer_weight_shape, fifth_layer_weight_shape) -> None:
         super().__init__()
         self.fc1 = LinearInteger(first_layer_weight_shape[1], first_layer_weight_shape[0], bias=True, config=config) # Bias true for the first layer
         self.fc2 = LinearInteger(second_layer_weight_shape[1], second_layer_weight_shape[0], bias=False, config=config)
@@ -134,7 +134,7 @@ feature_start_address_list = [input_start_address, first_layer_result, second_la
 
 input_data = torch.randint(0, 128, size=(1, 16), dtype=torch.float32)
 
-fc = FCN(first_layer_weight_shape, second_layer_weight_shape, third_layer_weight_shape)
+fc = FCN(first_layer_weight_shape, second_layer_weight_shape, third_layer_weight_shape, fourth_layer_weight_shape, fifth_layer_weight_shape)
 fc.fc1.weight.data = torch.randint(-128, 127, size=first_layer_weight_shape, dtype=torch.float32)   
 fc.fc2.weight.data = torch.randint(-128, 127, size=second_layer_weight_shape, dtype=torch.float32)   
 fc.fc3.weight.data = torch.randint(-128, 127, size=third_layer_weight_shape, dtype=torch.float32)

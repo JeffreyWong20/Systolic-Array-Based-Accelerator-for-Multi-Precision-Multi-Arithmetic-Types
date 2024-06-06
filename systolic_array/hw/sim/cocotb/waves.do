@@ -183,80 +183,87 @@
 
 # ------------------------ ------------------------ ------------------------ ------------------------ ------------------------ ------------------------ ------------------------
 
-# add wave -position insertpoint {sim:/top/transformation_engine_i/genblk1[1]/feature_transformation_core_i/genblk2[0]/sys_module_i/*}
-# add wave -position insertpoint {sim:/top/transformation_engine_i/genblk1[1]/feature_transformation_core_i/*}
+# add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/genblk2[0]/sys_module_i/*}
+# add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/*}
 # 
-# add wave -position insertpoint {sim:/top/prefetcher_weight_i/weight_bank_fixed_i/row_fifo_out_data[0]}
-# add wave -position insertpoint {sim:/top/prefetcher_weight_i/weight_bank_fixed_i/row_fifo_out_data[1]}
-# add wave -position insertpoint {sim:/top/prefetcher_weight_i/weight_bank_fixed_i/row_fifo_out_data[2]}
-# add wave -position insertpoint {sim:/top/prefetcher_weight_i/weight_bank_fixed_i/row_fifo_out_data[3]}
-# add wave -position insertpoint sim:/top/prefetcher_weight_i/weight_bank_fixed_i/*
+# add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_weight_i/weight_bank_fixed_i/row_fifo_out_data[0]}
+# add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_weight_i/weight_bank_fixed_i/row_fifo_out_data[1]}
+# add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_weight_i/weight_bank_fixed_i/row_fifo_out_data[2]}
+# add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_weight_i/weight_bank_fixed_i/row_fifo_out_data[3]}
+# add wave -position insertpoint sim:/top_wrapper_tb/top_i/prefetcher_weight_i/weight_bank_fixed_i/*
 # 
-# add wave -position insertpoint {sim:/top/transformation_engine_i/genblk1[1]/feature_transformation_core_i/*}
+# add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/*}
 
-# add wave -position insertpoint {sim:/top/transformation_engine_i/genblk1[1]/feature_transformation_core_i/debug[0]}
-# add wave -position insertpoint {sim:/top/transformation_engine_i/genblk1[1]/feature_transformation_core_i/debug[1]}
-# add wave -position insertpoint {sim:/top/transformation_engine_i/genblk1[1]/feature_transformation_core_i/debug[2]}
-# add wave -position insertpoint {sim:/top/transformation_engine_i/genblk1[1]/feature_transformation_core_i/debug[3]}
+# add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/debug[0]}
+# add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/debug[1]}
+# add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/debug[2]}
+# add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/debug[3]}
 # 
-# add wave -position insertpoint {sim:/top/transformation_engine_i/genblk1[1]/feature_transformation_core_i/debug_1[0]}
-# add wave -position insertpoint {sim:/top/transformation_engine_i/genblk1[1]/feature_transformation_core_i/debug_1[1]}
-# add wave -position insertpoint {sim:/top/transformation_engine_i/genblk1[1]/feature_transformation_core_i/debug_1[2]}
-# add wave -position insertpoint {sim:/top/transformation_engine_i/genblk1[1]/feature_transformation_core_i/debug_1[3]}
+# add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/debug_1[0]}
+# add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/debug_1[1]}
+# add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/debug_1[2]}
+# add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/debug_1[3]}
 
 
 for {set i 0} {$i < 128} {incr i} {
-    add wave -position insertpoint [format {sim:/top/transformation_engine_i/genblk1[1]/feature_transformation_core_i/weight_channel_resp/data[%d]} $i]
+    add wave -position insertpoint [format {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/weight_channel_resp/data[%d]} $i]
 }
 
 
 for {set i 0} {$i < 8} {incr i} {
-    add wave -position insertpoint [format {sim:/top/transformation_engine_i/genblk1[1]/feature_transformation_core_i/feature_channel_resp/data[%d]} $i]
+    add wave -position insertpoint [format {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/feature_channel_resp/data[%d]} $i]
 }
 
 
-add wave -position insertpoint {sim:/top/prefetcher_weight_i/weight_bank_fixed_i/weight_channel_resp/data[0]}
-add wave -position insertpoint {sim:/top/prefetcher_weight_i/weight_bank_fixed_i/weight_channel_resp/data[1]}
-add wave -position insertpoint {sim:/top/prefetcher_weight_i/weight_bank_fixed_i/weight_channel_resp/data[2]}
-add wave -position insertpoint {sim:/top/prefetcher_weight_i/weight_bank_fixed_i/weight_channel_resp/data[3]}
-add wave -position insertpoint {sim:/top/prefetcher_feature_i/weight_bank_fixed_i/weight_channel_resp/data[0]}
-add wave -position insertpoint {sim:/top/prefetcher_feature_i/weight_bank_fixed_i/weight_channel_resp/data[1]}
-add wave -position insertpoint {sim:/top/prefetcher_feature_i/weight_bank_fixed_i/weight_channel_resp/data[2]}
-add wave -position insertpoint {sim:/top/prefetcher_feature_i/weight_bank_fixed_i/weight_channel_resp/data[3]}
-
-add wave -position insertpoint {sim:/top/transformation_engine_i/genblk1[1]/feature_transformation_core_i/feature_channel_resp}
-add wave -position insertpoint {sim:/top/transformation_engine_i/genblk1[1]/feature_transformation_core_i/weight_channel_resp}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_feature_i/weight_bank_fixed_i/weight_channel_resp/data[0]}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_feature_i/weight_bank_fixed_i/weight_channel_resp/data[1]}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_feature_i/weight_bank_fixed_i/weight_channel_resp/data[2]}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_feature_i/weight_bank_fixed_i/weight_channel_resp/data[3]}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_weight_i/weight_bank_fixed_i/weight_channel_resp/data[0]}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_weight_i/weight_bank_fixed_i/weight_channel_resp/data[1]}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_weight_i/weight_bank_fixed_i/weight_channel_resp/data[2]}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_weight_i/weight_bank_fixed_i/weight_channel_resp/data[3]}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_weight_i/weight_bank_fixed_i/weight_channel_resp/data[4]}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_weight_i/weight_bank_fixed_i/weight_channel_resp/data[5]}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_weight_i/weight_bank_fixed_i/weight_channel_resp/data[6]}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_weight_i/weight_bank_fixed_i/weight_channel_resp/data[7]}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_weight_i/weight_bank_fixed_i/weight_channel_resp/data[8]}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_weight_i/weight_bank_fixed_i/weight_channel_resp/data[9]}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_weight_i/weight_bank_fixed_i/weight_channel_resp/data[10]}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_weight_i/weight_bank_fixed_i/weight_channel_resp/data[11]}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_weight_i/weight_bank_fixed_i/weight_channel_resp/data[12]}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_weight_i/weight_bank_fixed_i/weight_channel_resp/data[13]}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_weight_i/weight_bank_fixed_i/weight_channel_resp/data[14]}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_weight_i/weight_bank_fixed_i/weight_channel_resp/data[15]}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/feature_channel_resp}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/weight_channel_resp}
 
 # Debug weight channel
-add wave -position insertpoint {sim:/top/prefetcher_weight_i/weight_bank_fixed_i/*}
-add wave -position insertpoint {sim:/top/prefetcher_weight_i/weight_channel_resp}
-add wave -position insertpoint {sim:/top/prefetcher_weight_i/weight_bank_fixed_i/row_fifo_out_data}
-add wave -position insertpoint {sim:/top/prefetcher_weight_i/weight_bank_fixed_i/weight_channel_resp}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_weight_i/weight_bank_fixed_i/*}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_weight_i/weight_channel_resp}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_weight_i/weight_bank_fixed_i/row_fifo_out_data}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_weight_i/weight_bank_fixed_i/weight_channel_resp}
 
 # Debug feature channel
-add wave -position insertpoint {sim:/top/prefetcher_feature_i/weight_bank_fixed_i/*}
-add wave -position insertpoint {sim:/top/prefetcher_feature_i/weight_channel_resp}
-add wave -position insertpoint {sim:/top/prefetcher_feature_i/weight_bank_fixed_i/row_fifo_out_data}
-add wave -position insertpoint {sim:/top/prefetcher_feature_i/weight_bank_fixed_i/weight_channel_resp}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_feature_i/weight_bank_fixed_i/*}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_feature_i/weight_channel_resp}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_feature_i/weight_bank_fixed_i/row_fifo_out_data}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/prefetcher_feature_i/weight_bank_fixed_i/weight_channel_resp}
 
 # Second
-add wave -position insertpoint {sim:/top/transformation_engine_i/genblk1[1]/feature_transformation_core_i/*}
-add wave -position insertpoint {sim:/top/transformation_engine_i/genblk1[1]/feature_transformation_core_i/feature_channel_resp}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/*}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/feature_channel_resp}
 
 # Systolic array
-add wave -position insertpoint {sim:/top/transformation_engine_i/genblk1[1]/feature_transformation_core_i/genblk1[0]/sys_module_i/*}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/genblk1[0]/sys_module_i/*}
 
-# add wave -position insertpoint {sim:/top/transformation_engine_i/genblk1[1]/feature_transformation_core_i/genblk1[0]/sys_module_i/*}
-# add wave -position insertpoint {sim:/top/transformation_engine_i/genblk1[1]/feature_transformation_core_i/genblk1[1]/sys_module_i/*}
-# add wave -position insertpoint {sim:/top/transformation_engine_i/genblk1[1]/feature_transformation_core_i/genblk1[127]/sys_module_i/*}
-
-add wave -position insertpoint {sim:/top/transformation_engine_i/genblk1[1]/feature_transformation_core_i/genblk1[0]/sys_module_i/sys_module_pe_acc}
-add wave -position insertpoint {sim:/top/transformation_engine_i/genblk1[1]/feature_transformation_core_i/genblk1[1]/sys_module_i/sys_module_pe_acc}
-add wave -position insertpoint {sim:/top/transformation_engine_i/genblk1[1]/feature_transformation_core_i/genblk1[2]/sys_module_i/sys_module_pe_acc}
-add wave -position insertpoint {sim:/top/transformation_engine_i/genblk1[1]/feature_transformation_core_i/genblk1[3]/sys_module_i/sys_module_pe_acc}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/genblk1[0]/sys_module_i/sys_module_pe_acc}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/genblk1[1]/sys_module_i/sys_module_pe_acc}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/genblk2[0]/sys_module_i/sys_module_pe_acc}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/genblk2[1]/sys_module_i/sys_module_pe_acc}
 
 
 
 for {set i 0} {$i < 128} {incr i} {
-    add wave -position insertpoint [format {sim:/top/transformation_engine_i/genblk1[1]/feature_transformation_core_i/genblk1[%d]/sys_module_i/sys_module_pe_acc} $i]
+    add wave -position insertpoint [format {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/genblk1[%d]/sys_module_i/sys_module_pe_acc} $i]
 }

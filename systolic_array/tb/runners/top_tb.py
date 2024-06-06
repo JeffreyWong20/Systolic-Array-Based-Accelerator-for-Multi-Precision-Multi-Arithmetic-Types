@@ -1,3 +1,8 @@
+
+# NOTE: OUTDATED FILE
+
+
+
 # This file offers a simple test for an AXI ram module
 import logging
 import os
@@ -69,13 +74,13 @@ class MLP(torch.nn.Module):
 def compute_quantize(input_data, weight_data, debug=False):
     """
     Compute the quantized result of the matrix multiplication between the input data and the weight data
-    """
-    fc = MLP()
-    fc.fc1.weight.data = weight_data
-    quantized_weight = fc.fc1.w_quantizer(fc.fc1.weight.data)
-    quantized_data = fc.fc1.w_quantizer(input_data)
+    """ 
+    mlp = MLP()
+    mlp.fc1.weight.data = weight_data
+    quantized_weight = mlp.fc1.w_quantizer(mlp.fc1.weight.data)
+    quantized_data = mlp.fc1.w_quantizer(input_data)
     weight, data = quantized_weight.numpy().astype(np.int8), quantized_data.numpy().astype(np.int8)
-    result = torch.nn.functional.linear(input_data, fc.fc1.weight.data).numpy().astype(np.int64)
+    result = torch.nn.functional.linear(input_data, mlp.fc1.weight.data).numpy().astype(np.int64)
     # cast the result to int8
     int_8_result = result.astype(np.uint8)
     if debug:
@@ -83,17 +88,22 @@ def compute_quantize(input_data, weight_data, debug=False):
         for row in weight:
             hex_row = [hex(value) for value in row]
             print(hex_row)
-        print("\nTransposed Quantized Input Data:")
-        transposed_data = data.transpose()
-        for row in transposed_data:
+        print("Quantized Input:")
+        for row in data:
             hex_row = [hex(value) for value in row]
             print(hex_row)
-        print("\nLinear Operation Result:")
-        for row in result:
-            hex_row = [hex(value)[-2:] for value in row]
+        print("\nTransposed Quantized Weights:")
+        transposed_weight = mlp.fc1.weight.data.transpose(0, 1).numpy().astype(np.uint8)
+        for row in transposed_weight:
+            hex_row = [hex(value) for value in row]
             print(hex_row)
-        print("\nMatrix Multiplication Result:")
+        print("\nQuantized Linear Operation Result:")
         for row in int_8_result:
+            hex_row = [hex(value) for value in row]
+            print(hex_row)
+        print("\nMaxtrix Multiplication Result with transposed_weight:")
+        result_mult = (input_data @ transposed_weight).numpy().astype(np.uint8)
+        for row in result_mult:
             hex_row = [hex(value) for value in row]
             print(hex_row)
     return data, weight, int_8_result
@@ -103,19 +113,20 @@ ceildiv = lambda a, b: -(-a // b)
 # --------------------------------------------------
 #  Actual test ::: MAKE SURE TO RUN THIS SCRIPT 
 # --------------------------------------------------
-input_matrix_size = (4, 4)
+input_matrix_size = (8, 4)
 weight_matrix_size = (4, 4)
-systolic_array_size = (1*4, 128*4)
+systolic_array_size = (1*4, 1*4)
 byte_per_feature = 4
+torch.manual_seed(42)  
+mlp = MLP()
+input_data = torch.randint(-128, 127, size=input_matrix_size, dtype=torch.float32)
+mlp.fc1.weight.data = torch.randint(-128, 127, size=weight_matrix_size, dtype=torch.float32)
+result_start_address = 0x2000000 
+weight_start_address = 0x0000000
+
 async def mlp_test(dut):
-    result_start_address = 0x2000000 
-    weight_start_address = 0x0000000
     precision = 8
-    torch.manual_seed(42)
     
-    mlp = MLP()
-    input_data = torch.randint(0, 128, size=input_matrix_size, dtype=torch.float32)
-    mlp.fc1.weight.data = torch.randint(0, 128, size=weight_matrix_size, dtype=torch.float32)
     weigth_address_range = ceildiv(mlp.fc1.weight.shape[1] * 4, 64) * 64 * mlp.fc1.weight.shape[0] # A single row has to be multiple of 64 bytes and hence the start address has to be aligned to 64 bytes
 
 
@@ -144,23 +155,24 @@ async def mlp_test(dut):
     byte_per_input_block = ceildiv(input_matrix_size[1] * 4, 64) * 64 * systolic_array_size[0]
     input_matrix_iteration = ceildiv(input_matrix_size[0], systolic_array_size[0])  # number channel blocks
     weight_matrix_iteration = ceildiv(weight_matrix_size[0], systolic_array_size[1]) # number of iteration to produce one output channel blocks
+    timeout = max(weight_matrix_size[0] * weight_matrix_size[1], input_matrix_size[0], input_matrix_size[1]) * 100
 
     logger.info("Start executing instructions")
-    for i, (writeback_address, offset) in enumerate(writeback_address_generator(start_address=result_start_address, input_matrix_size=input_matrix_size, weight_matrix_size=weight_matrix_size, systolic_array_size=(4, 128))):
+    for i, (writeback_address, offset) in enumerate(writeback_address_generator(start_address=result_start_address, input_matrix_size=input_matrix_size, weight_matrix_size=weight_matrix_size, systolic_array_size=systolic_array_size)):
         weight_start_address = byte_per_weight_block * (i % weight_matrix_iteration)
         input_start_address = weigth_address_range + byte_per_input_block * (i // weight_matrix_iteration)
         logger.info(f"Start address: {hex(writeback_address)}, Offset: {offset}, Load weight from: {hex(weight_start_address)}, Load input from: {hex(input_start_address)}")
 
         await RisingEdge(dut.clk)
-        await load_weight_block_instruction_b(dut, start_address=weight_start_address, weight_block_size=weight_matrix_size)
+        await load_weight_block_instruction_b(dut, start_address=weight_start_address, weight_block_size=weight_matrix_size, timeout=timeout)
         logger.info("Done instructing weight prefetcher")
 
         await RisingEdge(dut.clk)
-        await load_feature_block_instruction_b(dut, start_address=input_start_address, input_block_size=input_matrix_size)
+        await load_feature_block_instruction_b(dut, start_address=input_start_address, input_block_size=input_matrix_size, timeout=timeout)
         logger.info("Done instructing feature prefetcher")
 
         await RisingEdge(dut.clk)
-        await calculate_linear_and_writeback_b(dut, writeback_address=writeback_address, offset=offset, output_matrix_size=(input_matrix_size[0], weight_matrix_size[0]))
+        await calculate_linear_and_writeback_b(dut, writeback_address=writeback_address, offset=offset, output_matrix_size=(input_matrix_size[0], weight_matrix_size[0]), timeout=timeout)
         logger.info("Done instructing fte")
 
         await RisingEdge(dut.clk)
@@ -182,10 +194,13 @@ async def mlp_test(dut):
                 data_hex = '0' + data_hex
             
             for element in range(64//byte_per_feature):
-                idx = i*16 + element
+                idx = i*16 + element # row index
                 if idx < software_result_matrix.shape[1]:
-                    max_idx = min((i+1)*16-1,software_result_matrix.shape[1]-1)
-                    hardware_result_matrix[row][max_idx-element] = int(data_hex[element*byte_per_feature*2:element*byte_per_feature*2+byte_per_feature*2], 16)
+                    # max_idx = min((i+1)*16-1,software_result_matrix.shape[1]-1)
+                    # if data_hex[element*byte_per_feature*2:element*byte_per_feature*2+byte_per_feature*2] == '0'*byte_per_feature*2:
+                    #     hardware_result_matrix[row][max_idx-element] = 0
+                    # else:
+                    hardware_result_matrix[row][idx] = int(data_hex[element*byte_per_feature*2:element*byte_per_feature*2+byte_per_feature*2], 16)
 
     # Logging results
     logger.info("Hardware matrix:")
@@ -226,11 +241,13 @@ async def run_test(dut):
     await RisingEdge(dut.clk)
     
     axi_ram_driver = AXIDriver(dut.ram_model)
-    # await axi_ram_driver.axi_write(0x0, 0xaabbccdd）
-    weigth_address_range = ceildiv(mlp.fc1.weight.shape[1] * 4, 64) * 64 * mlp.fc1.weight.shape[0] # A single row has to be multiple of 64 bytes and hence the start address has to be aligned to 64 bytes
+    await axi_ram_driver.axi_write(0, 0xaabbccdd)
+    data = await axi_ram_driver.axi_read(0x0)
+    await axi_ram_driver.axi_write(4, 0x11223344)
+    # weigth_address_range = ceildiv(mlp.fc1.weight.shape[1] * 4, 64) * 64 * mlp.fc1.weight.shape[0] # A single row has to be multiple of 64 bytes and hence the start address has to be aligned to 64 bytes
 
-    write_to_file(mlp.fc1.weight.data, "/home/thw20/FYP/systolic_array/hw/sim/cocotb/weight.mem", start_address=0, each_feature_size=4, padding_alignment=64)
-    write_to_file(input_data, "/home/thw20/FYP/systolic_array/hw/sim/cocotb/weight.mem", start_address=weigth_address_range, each_feature_size=4, padding_alignment=64)
+    # write_to_file(mlp.fc1.weight.data, "/home/thw20/FYP/systolic_array/hw/sim/cocotb/weight.mem", start_address=0, each_feature_size=4, padding_alignment=64)
+    # write_to_file(input_data, "/home/thw20/FYP/systolic_array/hw/sim/cocotb/weight.mem", start_address=weigth_address_range, each_feature_size=4, padding_alignment=64)
     data = await axi_ram_driver.axi_read(0x0)
     data = data.hex()[2:] # remove the 0x
     # await axi_ram_driver.axi_read(0x1)
@@ -271,12 +288,38 @@ def test_axi_runner():
 
 
 if __name__ == "__main__":
-    torch.manual_seed(42)  
-    mlp = MLP()
-    input_data = torch.randint(0, 128, size=input_matrix_size, dtype=torch.float32)
-    mlp.fc1.weight.data = torch.randint(0, 128, size=weight_matrix_size, dtype=torch.float32)
-
     weight = mlp.fc1.w_quantizer(mlp.fc1.weight)
     weigth_address_range = ceildiv(mlp.fc1.weight.shape[1] * 4, 64) * 64 * mlp.fc1.weight.shape[0] # A single row has to be multiple of 64 bytes and hence the start address has to be aligned to 64 bytes
+    
+    quantized_weight = mlp.fc1.w_quantizer(mlp.fc1.weight.data)
+    quantized_data = mlp.fc1.w_quantizer(input_data)
+    weight, data = quantized_weight.numpy().astype(np.uint8), quantized_data.numpy().astype(np.uint8)
+    result = torch.nn.functional.linear(input_data, mlp.fc1.weight.data).numpy().astype(np.int64)
+    # cast the result to int8
+    int_8_result = result.astype(np.uint8)
+    print("Quantized Weights:")
+    for row in weight:
+        hex_row = [hex(value) for value in row]
+        print(hex_row)
+    print("Quantized Input:")
+    for row in data:
+        hex_row = [hex(value) for value in row]
+        print(hex_row)
+    print("\nTransposed Quantized Weights:")
+    transposed_weight = mlp.fc1.weight.data.transpose(0, 1).numpy().astype(np.uint8)
+    for row in transposed_weight:
+        hex_row = [hex(value) for value in row]
+        print(hex_row)
+    print("\nQuantized Linear Operation Result:")
+    for row in int_8_result:
+        hex_row = [hex(value) for value in row]
+        print(hex_row)
+    print("\nMaxtrix Multiplication Result with transposed_weight:")
+    result_mult = (input_data @ transposed_weight).numpy().astype(np.uint8)
+    for row in result_mult:
+        hex_row = [hex(value) for value in row]
+        print(hex_row)
+
+    open("/home/thw20/FYP/systolic_array/hw/sim/cocotb/weight.mem", 'w').close()
     write_to_file(mlp.fc1.weight.data, "/home/thw20/FYP/systolic_array/hw/sim/cocotb/weight.mem", writing_mode='w',start_address=0, each_feature_size=4, padding_alignment=64)
     write_to_file(input_data, "/home/thw20/FYP/systolic_array/hw/sim/cocotb/weight.mem", writing_mode='a', start_address=weigth_address_range, each_feature_size=4, padding_alignment=64)

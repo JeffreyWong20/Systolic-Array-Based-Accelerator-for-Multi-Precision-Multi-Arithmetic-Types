@@ -17,9 +17,10 @@
 // Additional Comments:
 // 
 //////////////////////////////////////////////////////////////////////////////////
-
+import top_pkg::*;
 module fixed_point_mac #(
-    parameter DATA_WIDTH = 16
+    parameter DATA_WIDTH = 16,
+    parameter ACCUMULATOR_WIDTH = 32
 ) (
     input  logic                              core_clk,            
     input  logic                              resetn,
@@ -27,16 +28,20 @@ module fixed_point_mac #(
     input  logic                              in_valid,
     output logic                              in_ready,
 
-    input  logic [DATA_WIDTH-1:0]             a,
-    input  logic [DATA_WIDTH-1:0]             b,
+    input  logic signed [DATA_WIDTH-1:0]      a,
+    input  logic signed [DATA_WIDTH-1:0]      b,
 
-    output logic [DATA_WIDTH-1:0]             accumulator,
+    output logic signed [ACCUMULATOR_WIDTH-1:0] accumulator,
     
     input  logic                              overwrite,
-    input  logic [DATA_WIDTH-1:0]            overwrite_data
+    input  logic signed [ACCUMULATOR_WIDTH-1:0]      overwrite_data
 );
+logic signed [2*DATA_WIDTH-1:0] mul_wire;
+logic signed [ACCUMULATOR_WIDTH-1:0] acc_reg;
 
-logic [DATA_WIDTH-1:0] acc_reg;
+always @(*) begin
+    mul_wire = a * b;
+end
 
 // Accumulator
 always_ff @(posedge core_clk or negedge resetn) begin
@@ -44,7 +49,7 @@ always_ff @(posedge core_clk or negedge resetn) begin
         acc_reg <= '0;
     end else begin
         acc_reg <= overwrite ? overwrite_data
-                    : in_valid && in_ready ? (acc_reg + a*b) 
+                    : in_valid && in_ready ? (acc_reg + mul_wire) 
                     : acc_reg;
     end
 end

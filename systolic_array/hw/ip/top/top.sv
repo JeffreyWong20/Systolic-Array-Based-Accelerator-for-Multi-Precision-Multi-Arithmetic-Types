@@ -6,56 +6,52 @@ module top #(
     parameter AXI_DATA_WIDTH = 512,
     parameter AXI_ADDR_WIDTH = 30,
     parameter STRB_WIDTH = (AXI_DATA_WIDTH / 8),
-    parameter ID_WIDTH = 8
+    parameter ID_WIDTH = 8,
+    parameter SYSTOLIC_MODULE_COUNT = top_pkg::SYSTOLIC_MODULE_COUNT,
+    parameter TRANSFORMATION_ROWS = top_pkg::TRANSFORMATION_ROWS,
+    parameter MATRIX_N = 4
 )
 (
     input clk,
     input rst,
-
-    // input logic                           sys_clk,
-    // input logic                           sys_rst, //Common port for all controllers
-
-    // input  logic                          regbank_clk,
-    // input  logic                          regbank_resetn,
-
     // AXI Memory Interconnect -> Memory (Routed to DRAM Controller if `DRAM_CONTROLLER defined)
-    // output logic  [7:0]                   c0_ddr4_s_axi_awid,
-    // output logic  [AXI_ADDR_WIDTH-1:0]    c0_ddr4_s_axi_awaddr,
-    // output logic  [7:0]                   c0_ddr4_s_axi_awlen,
-    // output logic  [2:0]                   c0_ddr4_s_axi_awsize,
-    // output logic  [1:0]                   c0_ddr4_s_axi_awburst,
-    // output logic  [0:0]                   c0_ddr4_s_axi_awlock,
-    // output logic  [3:0]                   c0_ddr4_s_axi_awcache,
-    // output logic  [2:0]                   c0_ddr4_s_axi_awprot,
-    // output logic  [3:0]                   c0_ddr4_s_axi_awqos,
-    // output logic                          c0_ddr4_s_axi_awvalid,
-    // input  logic                          c0_ddr4_s_axi_awready,
-    // output logic  [511:0]                 c0_ddr4_s_axi_wdata,
-    // output logic  [63:0]                  c0_ddr4_s_axi_wstrb,
-    // output logic                          c0_ddr4_s_axi_wlast,
-    // output logic                          c0_ddr4_s_axi_wvalid,
-    // input  logic                          c0_ddr4_s_axi_wready,
-    // input  logic [7:0]                    c0_ddr4_s_axi_bid,
-    // input  logic [1:0]                    c0_ddr4_s_axi_bresp,
-    // input  logic                          c0_ddr4_s_axi_bvalid,
-    // output logic                          c0_ddr4_s_axi_bready,
-    // output logic  [7:0]                   c0_ddr4_s_axi_arid,
-    // output logic  [AXI_ADDR_WIDTH-1:0]    c0_ddr4_s_axi_araddr,
-    // output logic  [7:0]                   c0_ddr4_s_axi_arlen,
-    // output logic  [2:0]                   c0_ddr4_s_axi_arsize,
-    // output logic  [1:0]                   c0_ddr4_s_axi_arburst,
-    // output logic  [0:0]                   c0_ddr4_s_axi_arlock,
-    // output logic  [3:0]                   c0_ddr4_s_axi_arcache,
-    // output logic  [2:0]                   c0_ddr4_s_axi_arprot,
-    // output logic  [3:0]                   c0_ddr4_s_axi_arqos,
-    // output logic                          c0_ddr4_s_axi_arvalid,
-    // input  logic                          c0_ddr4_s_axi_arready,
-    // input  logic [7:0]                    c0_ddr4_s_axi_rid,
-    // input  logic [511:0]                  c0_ddr4_s_axi_rdata,
-    // input  logic [1:0]                    c0_ddr4_s_axi_rresp,
-    // input  logic                          c0_ddr4_s_axi_rlast,
-    // input  logic                          c0_ddr4_s_axi_rvalid,
-    // output logic                          c0_ddr4_s_axi_rready,
+    output logic  [7:0]                   c0_ddr4_s_axi_awid,
+    output logic  [AXI_ADDR_WIDTH-1:0]    c0_ddr4_s_axi_awaddr,
+    output logic  [7:0]                   c0_ddr4_s_axi_awlen,
+    output logic  [2:0]                   c0_ddr4_s_axi_awsize,
+    output logic  [1:0]                   c0_ddr4_s_axi_awburst,
+    output logic  [0:0]                   c0_ddr4_s_axi_awlock,
+    output logic  [3:0]                   c0_ddr4_s_axi_awcache,
+    output logic  [2:0]                   c0_ddr4_s_axi_awprot,
+    output logic  [3:0]                   c0_ddr4_s_axi_awqos,
+    output logic                          c0_ddr4_s_axi_awvalid,
+    input  logic                          c0_ddr4_s_axi_awready,
+    output logic  [511:0]                 c0_ddr4_s_axi_wdata,
+    output logic  [63:0]                  c0_ddr4_s_axi_wstrb,
+    output logic                          c0_ddr4_s_axi_wlast,
+    output logic                          c0_ddr4_s_axi_wvalid,
+    input  logic                          c0_ddr4_s_axi_wready,
+    input  logic [7:0]                    c0_ddr4_s_axi_bid,
+    input  logic [1:0]                    c0_ddr4_s_axi_bresp,
+    input  logic                          c0_ddr4_s_axi_bvalid,
+    output logic                          c0_ddr4_s_axi_bready,
+    output logic  [7:0]                   c0_ddr4_s_axi_arid,
+    output logic  [AXI_ADDR_WIDTH-1:0]    c0_ddr4_s_axi_araddr,
+    output logic  [7:0]                   c0_ddr4_s_axi_arlen,
+    output logic  [2:0]                   c0_ddr4_s_axi_arsize,
+    output logic  [1:0]                   c0_ddr4_s_axi_arburst,
+    output logic  [0:0]                   c0_ddr4_s_axi_arlock,
+    output logic  [3:0]                   c0_ddr4_s_axi_arcache,
+    output logic  [2:0]                   c0_ddr4_s_axi_arprot,
+    output logic  [3:0]                   c0_ddr4_s_axi_arqos,
+    output logic                          c0_ddr4_s_axi_arvalid,
+    input  logic                          c0_ddr4_s_axi_arready,
+    input  logic [7:0]                    c0_ddr4_s_axi_rid,
+    input  logic [511:0]                  c0_ddr4_s_axi_rdata,
+    input  logic [1:0]                    c0_ddr4_s_axi_rresp,
+    input  logic                          c0_ddr4_s_axi_rlast,
+    input  logic                          c0_ddr4_s_axi_rvalid,
+    output logic                          c0_ddr4_s_axi_rready,
 
     // messagfe -> weight_preferrer
     input   logic                                                weight_prefetcher_req_valid,
@@ -79,13 +75,13 @@ module top #(
     output  NSB_FTE_RESP_t                                       nsb_fte_resp,
 
     // Layer Config
-    input logic [31:0]  layer_config_out_channel_count,
-    input logic [31:0]  layer_config_out_features_count,   
-    input logic [1:0]   layer_config_out_features_address_msb_value,
-    input logic [AXI_ADDRESS_WIDTH-2:0] layer_config_out_features_address_lsb_value,
-    input logic [AXI_ADDRESS_WIDTH-1:0] writeback_offset,
-    input logic [1:0]  layer_config_activation_function_value,
-    input logic [top_pkg::SYSTOLIC_MODULE_COUNT*top_pkg::TRANSFORMATION_ROWS-1:0] [31:0] layer_config_bias_value      
+    input logic [31:0]                                          layer_config_out_channel_count,
+    input logic [31:0]                                          layer_config_out_features_count,   
+    input logic [1:0]                                           layer_config_out_features_address_msb_value,
+    input logic [AXI_ADDR_WIDTH-2:0]                            layer_config_out_features_address_lsb_value,
+    input logic [AXI_ADDR_WIDTH-1:0]                            writeback_offset,
+    input logic [1:0]                                           layer_config_activation_function_value,
+    input logic [(SYSTOLIC_MODULE_COUNT*MATRIX_N)-1:0] [31:0]   layer_config_bias_value      
     // input logic [1:0]  layer_config_activation_function_value,
     // input logic [31:0] layer_config_bias_value,
     // input logic [31:0] layer_config_leaky_relu_alpha_value,
@@ -243,133 +239,88 @@ WEIGHT_CHANNEL_RESP_t [top_pkg::PRECISION_COUNT-1:0] feature_channel_resp;
 // ====================================================================================
 // AXI Memory 
 // ====================================================================================
-logic  [7:0]                   c0_ddr4_s_axi_awid;
-logic  [AXI_ADDR_WIDTH-1:0]    c0_ddr4_s_axi_awaddr;
-logic  [7:0]                   c0_ddr4_s_axi_awlen;
-logic  [2:0]                   c0_ddr4_s_axi_awsize;
-logic  [1:0]                   c0_ddr4_s_axi_awburst;
-logic  [0:0]                   c0_ddr4_s_axi_awlock;
-logic  [3:0]                   c0_ddr4_s_axi_awcache;
-logic  [2:0]                   c0_ddr4_s_axi_awprot;
-logic  [3:0]                   c0_ddr4_s_axi_awqos;
-logic                          c0_ddr4_s_axi_awvalid;
-logic                          c0_ddr4_s_axi_awready;
-logic  [511:0]                 c0_ddr4_s_axi_wdata;
-logic  [63:0]                  c0_ddr4_s_axi_wstrb;
-logic                          c0_ddr4_s_axi_wlast;
-logic                          c0_ddr4_s_axi_wvalid;
-logic                          c0_ddr4_s_axi_wready;
-logic [7:0]                    c0_ddr4_s_axi_bid;
-logic [1:0]                    c0_ddr4_s_axi_bresp;
-logic                          c0_ddr4_s_axi_bvalid;
-logic                          c0_ddr4_s_axi_bready;
-logic  [7:0]                   c0_ddr4_s_axi_arid;
-logic  [AXI_ADDR_WIDTH-1:0]    c0_ddr4_s_axi_araddr;
-logic  [7:0]                   c0_ddr4_s_axi_arlen;
-logic  [2:0]                   c0_ddr4_s_axi_arsize;
-logic  [1:0]                   c0_ddr4_s_axi_arburst;
-logic  [0:0]                   c0_ddr4_s_axi_arlock;
-logic  [3:0]                   c0_ddr4_s_axi_arcache;
-logic  [2:0]                   c0_ddr4_s_axi_arprot;
-logic  [3:0]                   c0_ddr4_s_axi_arqos;
-logic                          c0_ddr4_s_axi_arvalid;
-logic                          c0_ddr4_s_axi_arready;
-logic [7:0]                    c0_ddr4_s_axi_rid;
-logic [511:0]                  c0_ddr4_s_axi_rdata;
-logic [1:0]                    c0_ddr4_s_axi_rresp;
-logic                          c0_ddr4_s_axi_rlast;
-logic                          c0_ddr4_s_axi_rvalid;
-logic                          c0_ddr4_s_axi_rready;
+// logic  [7:0]                   c0_ddr4_s_axi_awid;
+// logic  [AXI_ADDR_WIDTH-1:0]    c0_ddr4_s_axi_awaddr;
+// logic  [7:0]                   c0_ddr4_s_axi_awlen;
+// logic  [2:0]                   c0_ddr4_s_axi_awsize;
+// logic  [1:0]                   c0_ddr4_s_axi_awburst;
+// logic  [0:0]                   c0_ddr4_s_axi_awlock;
+// logic  [3:0]                   c0_ddr4_s_axi_awcache;
+// logic  [2:0]                   c0_ddr4_s_axi_awprot;
+// logic  [3:0]                   c0_ddr4_s_axi_awqos;
+// logic                          c0_ddr4_s_axi_awvalid;
+// logic                          c0_ddr4_s_axi_awready;
+// logic  [511:0]                 c0_ddr4_s_axi_wdata;
+// logic  [63:0]                  c0_ddr4_s_axi_wstrb;
+// logic                          c0_ddr4_s_axi_wlast;
+// logic                          c0_ddr4_s_axi_wvalid;
+// logic                          c0_ddr4_s_axi_wready;
+// logic [7:0]                    c0_ddr4_s_axi_bid;
+// logic [1:0]                    c0_ddr4_s_axi_bresp;
+// logic                          c0_ddr4_s_axi_bvalid;
+// logic                          c0_ddr4_s_axi_bready;
+// logic  [7:0]                   c0_ddr4_s_axi_arid;
+// logic  [AXI_ADDR_WIDTH-1:0]    c0_ddr4_s_axi_araddr;
+// logic  [7:0]                   c0_ddr4_s_axi_arlen;
+// logic  [2:0]                   c0_ddr4_s_axi_arsize;
+// logic  [1:0]                   c0_ddr4_s_axi_arburst;
+// logic  [0:0]                   c0_ddr4_s_axi_arlock;
+// logic  [3:0]                   c0_ddr4_s_axi_arcache;
+// logic  [2:0]                   c0_ddr4_s_axi_arprot;
+// logic  [3:0]                   c0_ddr4_s_axi_arqos;
+// logic                          c0_ddr4_s_axi_arvalid;
+// logic                          c0_ddr4_s_axi_arready;
+// logic [7:0]                    c0_ddr4_s_axi_rid;
+// logic [511:0]                  c0_ddr4_s_axi_rdata;
+// logic [1:0]                    c0_ddr4_s_axi_rresp;
+// logic                          c0_ddr4_s_axi_rlast;
+// logic                          c0_ddr4_s_axi_rvalid;
+// logic                          c0_ddr4_s_axi_rready;
 
-// axi_interface axi_ram (
-//     .clk                        (clk),
-//     .rst                        (rst),
+// axi_ram #(
+//     .DATA_WIDTH(AXI_DATA_WIDTH),
+//     .ADDR_WIDTH(AXI_ADDR_WIDTH),
+//     .ID_WIDTH(8)
+// ) ram_model (
+//     .clk                    (clk),
+//     .rst                    (rst),
 
-//     .axi_awid                   (c0_ddr4_s_axi_awid),
-//     .axi_awaddr                 (c0_ddr4_s_axi_awaddr),
-//     .axi_awlen                  (c0_ddr4_s_axi_awlen),
-//     .axi_awsize                 (c0_ddr4_s_axi_awsize),
-//     .axi_awburst                (c0_ddr4_s_axi_awburst),
-//     .axi_awlock                 (c0_ddr4_s_axi_awlock),
-//     .axi_awcache                (c0_ddr4_s_axi_awcache),
-//     .axi_awprot                 (c0_ddr4_s_axi_awprot),
-//     .axi_awqos                  (c0_ddr4_s_axi_awqos), // not used 
-//     .axi_awregion               (), // not used
-//     .axi_awvalid                (c0_ddr4_s_axi_awvalid),
-//     .axi_awready                (c0_ddr4_s_axi_awready),
-//     .axi_wdata                  (c0_ddr4_s_axi_wdata),
-//     .axi_wstrb                  (c0_ddr4_s_axi_wstrb),
-//     .axi_wlast                  (c0_ddr4_s_axi_wlast),
-//     .axi_wvalid                 (c0_ddr4_s_axi_wvalid),
-//     .axi_wready                 (c0_ddr4_s_axi_wready),
-//     .axi_bid                    (c0_ddr4_s_axi_bid),
-//     .axi_bresp                  (c0_ddr4_s_axi_bresp),
-//     .axi_bvalid                 (c0_ddr4_s_axi_bvalid),
-//     .axi_bready                 (c0_ddr4_s_axi_bready),
-//     .axi_arid                   (c0_ddr4_s_axi_arid),
-//     .axi_araddr                 (c0_ddr4_s_axi_araddr),
-//     .axi_arlen                  (c0_ddr4_s_axi_arlen),
-//     .axi_arsize                 (c0_ddr4_s_axi_arsize),
-//     .axi_arburst                (c0_ddr4_s_axi_arburst),
-//     .axi_arlock                 (c0_ddr4_s_axi_arlock),
-//     .axi_arcache                (c0_ddr4_s_axi_arcache),
-//     .axi_arprot                 (c0_ddr4_s_axi_arprot),
-//     .axi_arqos                  (c0_ddr4_s_axi_arqos), // not used prefetcher_weight_bank_rm_axi_interconnect_axi_arqos
-//     .axi_arregion               (), // not used
-//     .axi_arvalid                (c0_ddr4_s_axi_arvalid),
-//     .axi_arready                (c0_ddr4_s_axi_arready),
-//     .axi_rid                    (c0_ddr4_s_axi_rid),
-//     .axi_rdata                  (c0_ddr4_s_axi_rdata),
-//     .axi_rresp                  (c0_ddr4_s_axi_rresp),
-//     .axi_rlast                  (c0_ddr4_s_axi_rlast),
-//     .axi_rvalid                 (c0_ddr4_s_axi_rvalid),
-//     .axi_rready                 (c0_ddr4_s_axi_rready)
+//     .s_axi_awid             (c0_ddr4_s_axi_awid),
+//     .s_axi_awaddr           (c0_ddr4_s_axi_awaddr),
+//     .s_axi_awlen            (c0_ddr4_s_axi_awlen),
+//     .s_axi_awsize           (c0_ddr4_s_axi_awsize),
+//     .s_axi_awburst          (c0_ddr4_s_axi_awburst),
+//     .s_axi_awlock           (c0_ddr4_s_axi_awlock),
+//     .s_axi_awcache          (c0_ddr4_s_axi_awcache),
+//     .s_axi_awprot           (c0_ddr4_s_axi_awprot),
+//     .s_axi_awvalid          (c0_ddr4_s_axi_awvalid),
+//     .s_axi_awready          (c0_ddr4_s_axi_awready),
+//     .s_axi_wdata            (c0_ddr4_s_axi_wdata),
+//     .s_axi_wstrb            (c0_ddr4_s_axi_wstrb),
+//     .s_axi_wlast            (c0_ddr4_s_axi_wlast),
+//     .s_axi_wvalid           (c0_ddr4_s_axi_wvalid),
+//     .s_axi_wready           (c0_ddr4_s_axi_wready),
+//     .s_axi_bid              (c0_ddr4_s_axi_bid),
+//     .s_axi_bresp            (c0_ddr4_s_axi_bresp),
+//     .s_axi_bvalid           (c0_ddr4_s_axi_bvalid),
+//     .s_axi_bready           (c0_ddr4_s_axi_bready),
+//     .s_axi_arid             (c0_ddr4_s_axi_arid),
+//     .s_axi_araddr           (c0_ddr4_s_axi_araddr),
+//     .s_axi_arlen            (c0_ddr4_s_axi_arlen),
+//     .s_axi_arsize           (c0_ddr4_s_axi_arsize),
+//     .s_axi_arburst          (c0_ddr4_s_axi_arburst),
+//     .s_axi_arlock           (c0_ddr4_s_axi_arlock),
+//     .s_axi_arcache          (c0_ddr4_s_axi_arcache),
+//     .s_axi_arprot           (c0_ddr4_s_axi_arprot),
+//     .s_axi_arvalid          (c0_ddr4_s_axi_arvalid),
+//     .s_axi_arready          (c0_ddr4_s_axi_arready),
+//     .s_axi_rid              (c0_ddr4_s_axi_rid),
+//     .s_axi_rdata            (c0_ddr4_s_axi_rdata),
+//     .s_axi_rresp            (c0_ddr4_s_axi_rresp),
+//     .s_axi_rlast            (c0_ddr4_s_axi_rlast),
+//     .s_axi_rvalid           (c0_ddr4_s_axi_rvalid),
+//     .s_axi_rready           (c0_ddr4_s_axi_rready)
 // );
-
-axi_ram #(
-    .DATA_WIDTH(AXI_DATA_WIDTH),
-    .ADDR_WIDTH(AXI_ADDR_WIDTH),
-    .ID_WIDTH(8)
-) ram_model (
-    .clk                    (clk),
-    .rst                    (rst),
-
-    .s_axi_awid             (c0_ddr4_s_axi_awid),
-    .s_axi_awaddr           (c0_ddr4_s_axi_awaddr),
-    .s_axi_awlen            (c0_ddr4_s_axi_awlen),
-    .s_axi_awsize           (c0_ddr4_s_axi_awsize),
-    .s_axi_awburst          (c0_ddr4_s_axi_awburst),
-    .s_axi_awlock           (c0_ddr4_s_axi_awlock),
-    .s_axi_awcache          (c0_ddr4_s_axi_awcache),
-    .s_axi_awprot           (c0_ddr4_s_axi_awprot),
-    .s_axi_awvalid          (c0_ddr4_s_axi_awvalid),
-    .s_axi_awready          (c0_ddr4_s_axi_awready),
-    .s_axi_wdata            (c0_ddr4_s_axi_wdata),
-    .s_axi_wstrb            (c0_ddr4_s_axi_wstrb),
-    .s_axi_wlast            (c0_ddr4_s_axi_wlast),
-    .s_axi_wvalid           (c0_ddr4_s_axi_wvalid),
-    .s_axi_wready           (c0_ddr4_s_axi_wready),
-    .s_axi_bid              (c0_ddr4_s_axi_bid),
-    .s_axi_bresp            (c0_ddr4_s_axi_bresp),
-    .s_axi_bvalid           (c0_ddr4_s_axi_bvalid),
-    .s_axi_bready           (c0_ddr4_s_axi_bready),
-    .s_axi_arid             (c0_ddr4_s_axi_arid),
-    .s_axi_araddr           (c0_ddr4_s_axi_araddr),
-    .s_axi_arlen            (c0_ddr4_s_axi_arlen),
-    .s_axi_arsize           (c0_ddr4_s_axi_arsize),
-    .s_axi_arburst          (c0_ddr4_s_axi_arburst),
-    .s_axi_arlock           (c0_ddr4_s_axi_arlock),
-    .s_axi_arcache          (c0_ddr4_s_axi_arcache),
-    .s_axi_arprot           (c0_ddr4_s_axi_arprot),
-    .s_axi_arvalid          (c0_ddr4_s_axi_arvalid),
-    .s_axi_arready          (c0_ddr4_s_axi_arready),
-    .s_axi_rid              (c0_ddr4_s_axi_rid),
-    .s_axi_rdata            (c0_ddr4_s_axi_rdata),
-    .s_axi_rresp            (c0_ddr4_s_axi_rresp),
-    .s_axi_rlast            (c0_ddr4_s_axi_rlast),
-    .s_axi_rvalid           (c0_ddr4_s_axi_rvalid),
-    .s_axi_rready           (c0_ddr4_s_axi_rready)
-);
 
 // ====================================================================================
 // Prefetcher

@@ -1,6 +1,8 @@
 <testsuites name="results">
   <testsuite name="all" package="all">
-    <property name="random_seed" value="1708224257" />
-    <testcase name="graph_test" classname="runner" file="/home/thw20/FYP/systolic_array/hw/sim/cocotb/runner.py" lineno="20" time="1.7047312259674072" sim_time_ns="2270.001" ratio_time="1331.5887955955118" />
+    <property name="random_seed" value="1717705751" />
+    <testcase name="graph_test" classname="runner" file="/home/thw20/FYP/systolic_array/hw/sim/cocotb/runner.py" lineno="27" time="4.406439781188965" sim_time_ns="75130.001" ratio_time="17050.046007829045">
+      <failure message="Test failed with RANDOM_SEED=1717705751" />
+    </testcase>
   </testsuite>
 </testsuites>

@@ -1,5 +1,4 @@
-# This file offers a simple test for an AXI ram module
-import logging
+# This file offers a testbench for the mixed precision layer.
 import math
 import os
 import sys
@@ -40,30 +39,44 @@ if debug:
 #   Model specifications
 #   prefer small models for fast test
 # --------------------------------------------------
+SYSTOLIC_MODULE_COUNT = 4
+systolic_array_size = (1*4, SYSTOLIC_MODULE_COUNT*4)
+byte_per_feature, precision = 4, 8
+
+input_shape = (1, 64) # NOTE: IF you change this, you need to run this file to generate the weight and bias
+first_layer_weight_shape = (32, 64) # NOTE: IF you change this, you need to run this file to generate the weight and bias
+
+input_start_address = 0x0010000
+weight_start_address = 0x0000000
+first_layer_result = 0x1200000
+
+high_precision = (8, 4)
+low_precision = (4, 3)
+
 config = {
     # High precision
-    "weight_high_width": 8,
-    "weight_high_frac_width": 4,
-    "data_in_high_width": 8,
-    "data_in_high_frac_width": 4,
-    "bias_high_width": 8,
-    "bias_high_frac_width": 4,
+    "weight_high_width": high_precision[0],
+    "weight_high_frac_width": high_precision[1],
+    "data_in_high_width": high_precision[0],
+    "data_in_high_frac_width": high_precision[1],
+    "bias_high_width": high_precision[0],
+    "bias_high_frac_width": high_precision[1],
     # Low precision
-    "weight_low_width": 4,
-    "weight_low_frac_width": 3,
-    "data_in_low_width": 3,
-    "data_in_low_frac_width": 3,
-    "bias_low_width": 4,
-    "bias_low_frac_width": 3,
+    "weight_low_width": low_precision[0],
+    "weight_low_frac_width": low_precision[1],
+    "data_in_low_width": low_precision[0],
+    "data_in_low_frac_width": low_precision[1],
+    "bias_low_width": low_precision[0],
+    "bias_low_frac_width": low_precision[1],
     #
-    "block_width": 8,
+    "block_width": int(systolic_array_size[1]),
+    "block_high_width": int(systolic_array_size[1]/2),
     "block_height": 4,
-    "block_high_width": 4,
     # 
     "weight_width": 8,
     "weight_frac_width": 4,
-    "data_in_width": 8,
-    "data_in_frac_width": 4,
+    "data_IN_WIDTH": 8,
+    "data_IN_FRAC_WIDTH": 4,
     "bias_width": 8,
     "bias_frac_width": 4,
     "bypass": False,
@@ -76,6 +89,7 @@ class MLP(torch.nn.Module):
     def __init__(self, first_layer_weight_shape) -> None:
         super().__init__()
         self.fc1 = LinearMixedPrecision(first_layer_weight_shape[1], first_layer_weight_shape[0], bias=True, config=config)
+        self.fc_no_bias = LinearMixedPrecision(first_layer_weight_shape[1], first_layer_weight_shape[0], bias=False, config=config)
 
     def forward(self, x):
         x = torch.flatten(x, start_dim=1, end_dim=-1)
@@ -88,23 +102,13 @@ ceildiv = lambda a, b: -(-a // b)
 #  Global setting
 # --------------------------------------------------
 torch.manual_seed(42)  
-systolic_array_size = (1*4, 4*4)
-byte_per_feature, precision = 4, 8
-
-input_shape = (1, 16)
-first_layer_weight_shape = (64, 16)
-
-input_start_address = 0x1100000
-weight_start_address = 0x0000000
-first_layer_result = 0x1200000
-
 feature_start_address_list = [input_start_address, first_layer_result]
-input_data = torch.randn(*(1, 16))
+input_data = torch.randn(*(input_shape))
 
 fc = MLP(first_layer_weight_shape)
 fc.fc1.weight.data = torch.randn(*first_layer_weight_shape) 
 fc.fc1.bias.data = torch.randn(first_layer_weight_shape[0])
-
+fc.fc_no_bias.weight.data = fc.fc1.weight.data
 
 
 weight_address_ranges = []
@@ -130,7 +134,9 @@ def compute_quantize(model, debug=False, input_data=None):
     quantized_weight_str = model.fc1.reconstruct_weight(fixed_point_conversion=True) # signed number converted to unsigned
     quantized_bias_str = model.fc1.reconstruct_bias(fixed_point_conversion=True) # signed number converted to unsigned
     quantized_result_str = model.fc1.reconstruct_result(input_data, fixed_point_conversion=True) # signed number converted to unsigned
-    
+    quantized_result_scaled_int = model.fc1.reconstruct_result(input_data, fixed_point_conversion=True, str_output=False) # signed number converted to unsigned
+        
+    no_bias_quantized_result_str = model.fc_no_bias.reconstruct_result(input_data, fixed_point_conversion=True) # signed number converted to unsigned
     if debug:
         print("Quantized Weights:")
         for row in quantized_weight_str:
@@ -147,6 +153,10 @@ def compute_quantize(model, debug=False, input_data=None):
         for row in quantized_result_str:
             hex_row = [value for value in row]
             print(hex_row)
+        print("\nNo bias quantized result str:")
+        for row in no_bias_quantized_result_str:
+            hex_row = [value for value in row]
+            print(hex_row)
         
     
     weight_size_list = []
@@ -154,20 +164,21 @@ def compute_quantize(model, debug=False, input_data=None):
         # Check if the module is an instance of a linear layer
         if isinstance(module, torch.nn.Linear) or isinstance(module, LinearMixedPrecision):
             print(f"Name: {name}, Shape: {module.weight.shape}")
-            weight_size_list.append(module.weight.shape)
+            if module.bias is not None:
+                weight_size_list.append(module.weight.shape)
     
     input_size_list = [input_data.shape]+[(input_data.shape[0], weight_shape[0]) for weight_shape in weight_size_list]
     input_size_list.pop() # last input is accutually the final result 
     
-    return input_size_list, weight_size_list, [layer_result.numpy().astype(np.uint8) for layer_result in result_list]+[int_8_result]
+    return input_size_list, weight_size_list, [quantized_result_scaled_int]
 
 ceildiv = lambda a, b: -(-a // b)
 
 
-async def bias_test(dut):
+async def mixed_precision_test(dut):
     input_size_list, weight_size_list, result_list = compute_quantize(model=fc, debug=True, input_data=input_data)
     combined_list = zip(input_size_list, weight_size_list)
-    print(combined_list)
+    print(input_size_list, weight_size_list)
     
     # Create a 10ns-period clock on port clk and reset port rst
     clock = Clock(dut.clk, 10, units="ns")
@@ -216,16 +227,16 @@ async def bias_test(dut):
 
             await RisingEdge(dut.clk)
             if layer_index==0:
-                bias = fc.fc1.reconstruct_bias(fixed_point_conversion=False, str_output=False)
-                bias_section = bias[reversed_index*systolic_array_size[1]:(reversed_index+1)*systolic_array_size[1]]
+                bias = fc.fc1.reconstruct_bias(fixed_point_conversion=True, str_output=False)
+                bias_section = bias[reversed_index*systolic_array_size[1]:(reversed_index+1)*systolic_array_size[1]].tolist()
             elif layer_index==4:
-                bias = fc.fc5.reconstruct_bias(fixed_point_conversion=False, str_output=False)
-                bias_section = bias[reversed_index*systolic_array_size[1]:(reversed_index+1)*systolic_array_size[1]]
+                bias = fc.fc5.reconstruct_bias(fixed_point_conversion=True, str_output=False)
+                bias_section = bias[reversed_index*systolic_array_size[1]:(reversed_index+1)*systolic_array_size[1]].tolist()
             else:
                 bias_section = None
             logger.info("Feeding bias:")
             logger.info(bias_section)
-            Activation_code = Activation.NONE.value if layer_index==4 else Activation.RELU.value
+            Activation_code = Activation.NONE.value if layer_index==0 else Activation.RELU.value
             await calculate_linear_and_writeback_b(dut, writeback_address=writeback_address, offset=offset, output_matrix_size=(input_shape[0], weight_shape[0]), activation_code=Activation_code, timeout=timeout, bias=bias_section)
             logger.info("Done instructing fte")
 
@@ -252,6 +263,8 @@ async def bias_test(dut):
 
     logger.info("Software matrix:")
     print(software_result_matrix)
+    
+    assert ((hardware_result_matrix == software_result_matrix).all()), "The solution is not correct"
             
     
 # def test_axi_runner():
@@ -289,38 +302,138 @@ async def bias_test(dut):
 
 
 if __name__ == "__main__":
-    fc = MLP(first_layer_weight_shape)
+    # fc = MLP(first_layer_weight_shape)
     
     # Input
-    quantized_input_data = fc.fc1.w_high_quantizer(input_data)
-    quantized_input_data_str = fc.fc1.reconstruct_input(input_data, fixed_point_conversion=True)
+    quantized_input_high_data = fc.fc1.w_high_quantizer(input_data)
+    quantized_input_high_data_str = fc.fc1.reconstruct_input(input_data, fixed_point_conversion=True)
+    quantized_input_high_data_2 = fc.fc1.reconstruct_input(input_data, fixed_point_conversion=False)
+    
+    quantized_input_low_data = fc.fc1.w_low_quantizer(quantized_input_high_data)
+    quantized_input_low_data_str = fc.fc1.reconstruct_input(quantized_input_high_data, high=False, fixed_point_conversion=True)
+    quantized_input_low_data_2 = fc.fc1.reconstruct_input(quantized_input_high_data, high=False, fixed_point_conversion=False)
     
     # Quantize the weights
     quantized_weight_str = fc.fc1.reconstruct_weight(fixed_point_conversion=True) # signed number converted to unsigned
+    quantized_weight = fc.fc1.reconstruct_weight(fixed_point_conversion=False) # signed number converted to unsigned
+
+    #bias
     quantized_bias_str = fc.fc1.reconstruct_bias(fixed_point_conversion=True) # signed number converted to unsigned
-    print("False")
-    quantized_bias = fc.fc1.reconstruct_bias(fixed_point_conversion=True, str_output=False) # signed number converted to unsigned
+    quantized_bias = fc.fc1.reconstruct_bias(fixed_point_conversion=False, str_output=False) # signed number converted to unsigned
+    quantized_bias_scaled_int = fc.fc1.reconstruct_bias(fixed_point_conversion=True, str_output=False) # signed number converted to unsigned
+    
     quantized_result_str = fc.fc1.reconstruct_result(input_data, fixed_point_conversion=True) # signed number converted to unsigned
+    quantized_result = fc.fc1.reconstruct_result(input_data, fixed_point_conversion=False, str_output=False) 
+    quantized_result_scaled_int = fc.fc1.reconstruct_result(input_data, fixed_point_conversion=True, str_output=False) # signed number converted to unsigned
+    
+    no_bias_quantized_result_str = fc.fc_no_bias.reconstruct_result(input_data, fixed_point_conversion=True) # signed number converted to unsigned
+    no_bias_quantized_result_scaled_int = fc.fc_no_bias.reconstruct_result(input_data, fixed_point_conversion=True, str_output=False) # signed number converted to unsigned
+    no_bias_quantized_result = fc.fc_no_bias.reconstruct_result(input_data, fixed_point_conversion=False, str_output=False) 
+
+
 
     print("Quantized Weights:")
     for row in quantized_weight_str:
         hex_row = [value for value in row]
         print(hex_row)
+    print("Transposed Quantized Weight:")
+    for row in np.array(quantized_weight_str).T:
+        hex_row = [value for value in row]
+        print(hex_row)
+    print("Quantized Weight Value:")
+    for row in quantized_weight.detach().numpy():
+        hex_row = [value for value in row]
+        print(hex_row)
+    print("====================================")
     print("Quantized Bias:")
     hex_row = [value for value in quantized_bias_str]
     print(hex_row)
-    print("Quantized Bias Value:")
-    hex_row = [value for value in quantized_bias]
+    print("Quantized Bias Value Scaled int:")
+    hex_row = [value for value in quantized_bias_scaled_int]
     print(hex_row)
-    print("Quantized Input:")
-    for row in quantized_input_data_str:
-        hex_row = [value for value in row]
-        print(hex_row)
+    print("Quantized Bias Value:")
+    hex_row = [value for value in quantized_bias.detach().numpy()]
+    print(hex_row)
+    print("====================================")
     print("\nQuantized Linear Operation Result:")
     for row in quantized_result_str:
         hex_row = [value for value in row]
         print(hex_row)
+    print("\nQuantized Linear Operation Result Scaled Int:")
+    for row in quantized_result_scaled_int:
+        hex_row = [value for value in row]
+        print(hex_row)
+    print("\nQuantized Linear Operation Result acctually value:")
+    for row in quantized_result.detach().numpy():
+        hex_row = [value for value in row]
+        print(hex_row)
     
-    open("/home/thw20/FYP/systolic_array/hw/sim/cocotb/weight.mem", 'w').close()
+    print("\nNo bias quantized result str:")
+    for row in no_bias_quantized_result_str:
+        hex_row = [value for value in row]
+        print(hex_row)
+    print("\nNo bias quantized result scaled int:")
+    for row in no_bias_quantized_result_scaled_int:
+        hex_row = [value for value in row]
+        print(hex_row)
+    print("\nNo bias quantized result acctually value:")
+    for row in no_bias_quantized_result.detach().numpy():
+        hex_row = [value for value in row]
+        print(hex_row)
+    print("====================================")
+    print("Initial Input:")
+    for row in input_data.detach().numpy():
+        hex_row = [value for value in row]
+        print(hex_row)
+    print("Quantized Input High:")
+    for row in quantized_input_high_data_str:
+        hex_row = [value for value in row]
+        print(hex_row)
+    print("Hight Input Value:")
+    for row in quantized_input_high_data.detach().numpy():
+        hex_row = [value for value in row]
+        print(hex_row)
+    print("Quantized Input Low:")
+    for row in quantized_input_low_data_str:
+        hex_row = [value for value in row]
+        print(hex_row)
+    print("Low Input Value:")
+    for row in quantized_input_low_data.detach().numpy():
+        hex_row = [value for value in row]
+        print(hex_row)
+    print("====================================")
+    
+    # open("/home/thw20/FYP/systolic_array/hw/sim/cocotb/weight.mem", 'w').close()
     write_to_file(quantized_weight_str, "/home/thw20/FYP/systolic_array/hw/sim/cocotb/weight.mem", writing_mode='w',start_address=weight_start_address_list[0], each_feature_size=4, padding_alignment=64, direct_write_str=True)
-    write_to_file(quantized_input_data_str, "/home/thw20/FYP/systolic_array/hw/sim/cocotb/weight.mem", writing_mode='a', start_address=feature_start_address_list[0], each_feature_size=4, padding_alignment=64, direct_write_str=True)
+    write_to_file(quantized_input_high_data_str, "/home/thw20/FYP/systolic_array/hw/sim/cocotb/weight.mem", writing_mode='a', start_address=feature_start_address_list[0], each_feature_size=4, padding_alignment=64, direct_write_str=True)
+    
+    
+    print(input_data)
+    weight = fc.fc1.w_low_quantizer(fc.fc1.weight)[13, :].detach().numpy()
+    low_input = fc.fc1.w_low_quantizer(input_data)[0, :].detach().numpy()
+    model_result = fc.fc_no_bias(input_data)
+    l_r = torch.nn.functional.linear(fc.fc1.w_low_quantizer(fc.fc1.weight), fc.fc1.w_low_quantizer(input_data))
+
+    r = np.dot(weight, low_input, out=None)
+    # print('high input')
+    # print(fc.fc1.w_high_quantizer(input_data)[0, :].detach().numpy())
+    # print("====================================LOW WEIGHT, LOW INPUT====================================")
+    # print(weight, low_input, r)
+    # print(l_r)
+    # print(model_result)
+    
+    _list_8 = ['1f', '18', '0e', 'de', '0b', 'ec', 'ff', 'e6', 'f4', '1a', 'fa', 'ea', 'f4', 'f7', 'f4', '0c', '1a', 'fd', 'f8', '07', 'f4', '11', '0d', '1b', '14', '15', '0a', '15', 'fc', '01', 'fc', '0e']
+    _list_4 = ['7', '7', '7', '8', '5', '8', '0', '8', 'a', '7', 'd', '8', 'a', 'c', 'a', '6', '7', 'f', 'c', '4', 'a', '7', '6', '7', '7', '7', '5', '7', 'e', '0', 'e', '7']
+    binary_list = [bin(int(i, 16))[2:].zfill(8)[::-1] for i in _list_8]
+    
+    print("====================================")
+    print(fc.fc1.w_low_quantizer(torch.tensor(-0.5625)))
+    
+    # hardware rounding 
+    IN_FRAC_WIDTH = 4
+    IN_WIDTH = 8
+    OUT_FRAC_WIDTH = 3
+    OUT_WIDTH = 4
+    IN_INT_WIDTH = IN_WIDTH - IN_FRAC_WIDTH
+    OUT_INT_WIDTH = OUT_WIDTH - OUT_FRAC_WIDTH
+    is_one = lambda x: x == '1'

@@ -160,6 +160,8 @@ class LinearMixedPrecision(_LinearBase):
         :param str_output: If True, return the hex string or return the unsigned integer defaults to True, defaults to True
         :type str_output: bool, optional
         """
+        if self.bias is None:
+            return None
         b_high = self.b_high_quantizer(self.bias)
         b_low = self.b_low_quantizer(self.bias)
         block_per_row = math.ceil(self.out_features / self.block_width)
@@ -183,7 +185,7 @@ class LinearMixedPrecision(_LinearBase):
             
         return constructed_bias
     
-    def reconstruct_input(self, x, fixed_point_conversion=False):
+    def reconstruct_input(self, x, high=True, fixed_point_conversion=False):
         """
         Reconstruct the input tensor with high precision fixed-point representation
         E.g 0b101 . 00111
@@ -194,15 +196,22 @@ class LinearMixedPrecision(_LinearBase):
         :param fixed_point_conversion: If True, return the converted fixed-point representation or just the weight value defaults to False
         :type fixed_point_conversion: bool, optional
         """
-        x_high = self.x_high_quantizer(x)
-        
-        if fixed_point_conversion:
-            return integer_quantize_in_hex(x, self.config['data_in_high_width'],self.config['data_in_high_frac_width'])
+        if high:
+            x_high = self.x_high_quantizer(x)
+            if fixed_point_conversion:
+                return integer_quantize_in_hex(x, self.config['data_in_high_width'],self.config['data_in_high_frac_width'])
+            else:
+                return x_high
         else:
-            return x_high
+            x_high = self.x_low_quantizer(x)
+            if fixed_point_conversion:
+                return integer_quantize_in_hex(x, self.config['data_in_low_width'],self.config['data_in_low_frac_width'])
+            else:
+                return x_high
+        
             
     
-    def reconstruct_result(self, x, fixed_point_conversion=False):
+    def reconstruct_result(self, x, fixed_point_conversion=False, str_output=True, signed_scaled_integer=False, cast_to_high_precision_format=False):
         """
         Reconstruct the input tensor with high precision fixed-point representation
         E.g 0b101 . 00111
@@ -212,11 +221,14 @@ class LinearMixedPrecision(_LinearBase):
         :type x: Tensor | ndarray | int | float
         :param fixed_point_conversion: If True, return the converted fixed-point representation or just the weight value defaults to False
         :type fixed_point_conversion: bool, optional
+        :param str_output: If True, return the hex string or return the unsigned scaled integer defaults to True, defaults to True
+        :type str_output: bool, optional
+        :param signed_scaled_integer: If True, return the signed integer, defaults to False
         """
         w_high = self.w_high_quantizer(self.weight)
         w_low = self.w_low_quantizer(self.weight)
         x_high = self.x_high_quantizer(x)
-        x_low = self.x_low_quantizer(x)
+        x_low = self.x_low_quantizer(x_high)
 
         if self.bias is not None:
             b_high = self.b_high_quantizer(self.bias)
@@ -231,9 +243,16 @@ class LinearMixedPrecision(_LinearBase):
         if fixed_point_conversion:
             result_high = result_high.detach()
             result_low = result_low.detach()
-            result_high = integer_quantize_in_hex(result_high, self.config['weight_high_width'],self.config['weight_high_frac_width'])
-            result_low = integer_quantize_in_hex(result_low, self.config['weight_low_width'],self.config['weight_low_frac_width'])
+            result_high = integer_quantize_in_hex(result_high, self.config['weight_high_width'],self.config['weight_high_frac_width'], is_signed=True, str_output=str_output, signed_scaled_integer=signed_scaled_integer)
+            if cast_to_high_precision_format:
+                result_low = integer_quantize_in_hex(result_low, self.config['weight_high_width'],self.config['weight_high_frac_width'], is_signed=True, str_output=str_output, signed_scaled_integer=signed_scaled_integer)
+            else:
+                result_low = integer_quantize_in_hex(result_low, self.config['weight_low_width'],self.config['weight_low_frac_width'], is_signed=True, str_output=str_output, signed_scaled_integer=signed_scaled_integer)
             constructed_result = full(result_high.shape, '0'*self.config['weight_high_width'])
+            if str_output:
+                constructed_result = full(result_high.shape, '0'*self.config['weight_high_width'])
+            else:
+                constructed_result = full(result_high.shape, 0)
         else:
             constructed_result = torch.Tensor(*result_high.shape)
             
@@ -250,7 +269,7 @@ class LinearMixedPrecision(_LinearBase):
         w_high = self.w_high_quantizer(self.weight)
         w_low = self.w_low_quantizer(self.weight)
         x_high = self.x_high_quantizer(x)
-        x_low = self.x_low_quantizer(x)
+        x_low = self.x_low_quantizer(x_high)
 
         if self.bias is not None:
             b_high = self.b_high_quantizer(self.bias)

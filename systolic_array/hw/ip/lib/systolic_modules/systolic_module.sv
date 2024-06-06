@@ -22,6 +22,8 @@ module systolic_module #(
     parameter PRECISION = top_pkg::FLOAT_32,
     parameter FLOAT_WIDTH = 32,
     parameter DATA_WIDTH = 32,
+    parameter ACCUMULATOR_WIDTH = 32,
+    parameter FRACTIONAL_BITS = 0,
     parameter MATRIX_N = 4
 ) (
     input  logic                                                 core_clk,            
@@ -51,13 +53,13 @@ module systolic_module #(
 
     // Accumulators for each Processing Element, from which output matrix can be constructed
     // One more row than required to shift in zeros into last row during SHIFT phase
-    output logic [MATRIX_N:0] [MATRIX_N-1:0] [DATA_WIDTH-1:0]    sys_module_pe_acc,
+    output logic [MATRIX_N:0] [MATRIX_N-1:0] [ACCUMULATOR_WIDTH-1:0]    sys_module_pe_acc,
 
-    output logic                                                 diagonal_flush_done,
+    output logic                                                        diagonal_flush_done,
 
-    input logic [DATA_WIDTH-1:0]                                 layer_config_leaky_relu_alpha_value,
+    input logic [DATA_WIDTH-1:0]                                        layer_config_leaky_relu_alpha_value,
 
-    output logic [MATRIX_N-1:0] [MATRIX_N-1:0] [DATA_WIDTH-1:0]  debug_update_counter
+    output logic [MATRIX_N-1:0] [MATRIX_N-1:0] [DATA_WIDTH-1:0]         debug_update_counter
 );
 
 // ============================================================================================
@@ -83,9 +85,11 @@ for (genvar row = 0; row < MATRIX_N; row++) begin : rows_gen
     for (genvar col = 0; col < MATRIX_N; col++) begin : cols_gen
   
         processing_element #(
-            .PRECISION  (PRECISION),
-            .DATA_WIDTH (DATA_WIDTH),
-            .FLOAT_WIDTH(FLOAT_WIDTH)
+            .PRECISION          (PRECISION),
+            .DATA_WIDTH         (DATA_WIDTH),
+            .ACCUMULATOR_WIDTH  (ACCUMULATOR_WIDTH),
+            .FRACTIONAL_BITS    (FRACTIONAL_BITS),
+            .FLOAT_WIDTH        (FLOAT_WIDTH)
         ) pe_i (
             .core_clk,
             .resetn,

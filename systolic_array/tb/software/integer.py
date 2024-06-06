@@ -87,7 +87,7 @@ def integer_fraction(
     frac_width = max(filter(lambda x: x <= frac_width, frac_choices))
     return frac_width
 
-def _integer_hex_str(scaled_up_integer: int, width: int, str_output: bool = False) -> str | int:
+def _integer_hex_str(scaled_up_integer: int, width: int, str_output: bool = False, signed_scaled_integer: bool = False) -> str | int:
     """
     Convert the integer to hex string
 
@@ -107,10 +107,12 @@ def _integer_hex_str(scaled_up_integer: int, width: int, str_output: bool = Fals
     if str_output:
         return padded_zero_to_32_bit
     else:
+        if signed_scaled_integer:
+            return int(scaled_up_integer)
         return int(padded_zero_to_32_bit, 16)
     
 def integer_quantize_in_hex(
-        x, width: int, frac_width: int, is_signed: bool = True, str_output: bool = True
+        x, width: int, frac_width: int, is_signed: bool = True, str_output: bool = True, signed_scaled_integer: bool = False
     ):
         """
         Quantize the input tensor to fixed-point integer and return the hex string or the unsigned integer
@@ -134,9 +136,9 @@ def integer_quantize_in_hex(
         else:
             int_min = 0
             int_max = 2**width - 1
-
+                   
         scale = 2**frac_width
-        f = lambda x: _integer_hex_str(x, width, str_output)
+        f = lambda x: _integer_hex_str(x, width, str_output, signed_scaled_integer)
         
         if isinstance(x, (Tensor, ndarray)):
             scaled_up_integer =  ((x.mul(scale)).round()).clamp(int_min, int_max)

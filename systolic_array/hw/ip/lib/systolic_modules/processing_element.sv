@@ -16,6 +16,8 @@
 module processing_element #(
     parameter PRECISION = top_pkg::FLOAT_32,
     parameter DATA_WIDTH = 32,
+    parameter ACCUMULATOR_WIDTH = 32,
+    parameter FRACTIONAL_BITS = 0,
     parameter FLOAT_WIDTH = 32
 ) (
     input  logic                            core_clk,
@@ -24,10 +26,10 @@ module processing_element #(
     input  logic                            pulse_systolic_module,
 
     input  logic                            pe_forward_in_valid,
-    input  logic [DATA_WIDTH-1:0]           pe_forward_in,
+    input  logic signed [DATA_WIDTH-1:0]    pe_forward_in,
 
     input  logic                            pe_down_in_valid,
-    input  logic [DATA_WIDTH-1:0]           pe_down_in,
+    input  logic signed [DATA_WIDTH-1:0]    pe_down_in,
     
     output logic                            pe_forward_out_valid,
     output logic [DATA_WIDTH-1:0]           pe_forward_out,
@@ -36,15 +38,15 @@ module processing_element #(
     output logic [DATA_WIDTH-1:0]           pe_down_out,
 
     input  logic                            bias_valid,
-    input  logic [DATA_WIDTH-1:0]           bias,
+    input  logic signed [DATA_WIDTH-1:0]    bias,
 
     input  logic                                             activation_valid,
     input  logic [$bits(top_pkg::ACTIVATION_FUNCTION_e)-1:0] activation,
 
     input  logic                            shift_valid,
-    input  logic [DATA_WIDTH-1:0]           shift_data,
+    input  logic [ACCUMULATOR_WIDTH-1:0]    shift_data,
     
-    output logic [DATA_WIDTH-1:0]           pe_acc,
+    output logic [ACCUMULATOR_WIDTH-1:0]    pe_acc,
 
     input  logic [DATA_WIDTH-1:0]           layer_config_leaky_relu_alpha_value,
 
@@ -55,18 +57,19 @@ module processing_element #(
 // Declarations
 // ==================================================================================================================================================
 
-logic                   update_accumulator;
+logic                               update_accumulator;
 
-logic                   overwrite_accumulator;
-logic [DATA_WIDTH-1:0]  overwrite_data;
+logic                               overwrite_accumulator;
+logic [ACCUMULATOR_WIDTH-1:0]       overwrite_data;
 
-logic                   bias_out_valid_comb;
-// logic [FLOAT_WIDTH-1:0] pe_acc_add_bias_comb; // TODO: The multi-precision system is messed up here
-logic                   bias_out_valid;
-logic [DATA_WIDTH-1:0]  pe_acc_add_bias; // TODO: The multi-precision system is messed up here
+logic                               bias_out_valid_comb;
+logic                               bias_out_valid;
+logic [ACCUMULATOR_WIDTH-1:0]       extended_bias;
+logic [ACCUMULATOR_WIDTH-1:0]       pe_acc_add_bias; // TODO: The multi-precision system is messed up here
 
-logic                   activated_feature_valid;
-logic [DATA_WIDTH-1:0]  activated_feature; // TODO: The multi-precision system is messed up here
+logic                               activated_feature_valid;
+logic [ACCUMULATOR_WIDTH-1:0]       activated_feature; // TODO: The multi-precision system is messed up here
+logic [ACCUMULATOR_WIDTH-1:0]       extended_layer_config_leaky_relu_alpha_value;
 
 // ==================================================================================================================================================
 // Accumulator
@@ -75,7 +78,7 @@ logic [DATA_WIDTH-1:0]  activated_feature; // TODO: The multi-precision system i
 mac #(
     .PRECISION          (PRECISION),
     .DATA_WIDTH         (DATA_WIDTH),
-    .FLOAT_WIDTH        (FLOAT_WIDTH)
+    .ACCUMULATOR_WIDTH  (ACCUMULATOR_WIDTH)
 ) mac_i (
     .core_clk,            
     .resetn,
@@ -95,6 +98,9 @@ mac #(
 // Bias addition
 // -------------------------------------------------------------
 logic floating_point_valid; // TODO: Remove this later
+
+assign extended_bias = {{{ACCUMULATOR_WIDTH-FRACTIONAL_BITS} {bias[DATA_WIDTH-1]}}, bias,{FRACTIONAL_BITS{1'd0}}};
+assign extended_layer_config_leaky_relu_alpha_value = {{{ACCUMULATOR_WIDTH-FRACTIONAL_BITS} {layer_config_leaky_relu_alpha_value[DATA_WIDTH-1]}}, layer_config_leaky_relu_alpha_value,{FRACTIONAL_BITS{1'd0}}};
 
 if (PRECISION == top_pkg::FLOAT_32) begin
     
@@ -122,13 +128,11 @@ if (PRECISION == top_pkg::FLOAT_32) begin
     // end
 
 end else begin
-
     // Fixed point
     always_comb begin
         bias_out_valid = bias_valid;
-        pe_acc_add_bias = pe_acc + bias;
+        pe_acc_add_bias = pe_acc + extended_bias;
     end
-
 end
 
 // Activations
@@ -136,7 +140,7 @@ end
 
 activation_core #(
     .PRECISION  (PRECISION),
-    .DATA_WIDTH (DATA_WIDTH),
+    .DATA_WIDTH (ACCUMULATOR_WIDTH),
     .FLOAT_WIDTH(FLOAT_WIDTH)
 ) activation_core_i (
     .core_clk                            (core_clk),
@@ -149,7 +153,7 @@ activation_core #(
     .activated_feature_valid (activated_feature_valid),
     .activated_feature       (activated_feature),
 
-    .layer_config_leaky_relu_alpha_value (layer_config_leaky_relu_alpha_value)
+    .layer_config_leaky_relu_alpha_value (extended_layer_config_leaky_relu_alpha_value)
 );
 
 // ==================================================================================================================================================

@@ -6,7 +6,7 @@ include sources.mk
 TOPLEVEL_LANG ?=verilog
 TEST_RUNNER   ?=runner
 MODULE        ?=runner
-TOPLEVEL      ?=top
+TOPLEVEL      ?=top_wrapper_tb
 
 # Custom verilog parameters
 # BLOCK_WIDTH=4
