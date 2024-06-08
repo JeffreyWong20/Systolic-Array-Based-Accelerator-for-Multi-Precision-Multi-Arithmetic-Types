@@ -375,10 +375,11 @@ async def mase_mixed_precision(dut):
             await RisingEdge(dut.clk)
             await load_weight_block_instruction_b(dut, start_address=weight_start_address, weight_block_size=weight_shape, timeout=timeout)
             logger.info("Done instructing weight prefetcher")
-
-            await RisingEdge(dut.clk)
-            await load_feature_block_instruction_b(dut, start_address=input_start_address, input_block_size=input_shape, timeout=timeout)
-            logger.info("Done instructing feature prefetcher")
+            
+            if i % weight_matrix_iteration == 0:
+                await RisingEdge(dut.clk)
+                await load_feature_block_instruction_b(dut, start_address=input_start_address, input_block_size=input_shape, timeout=timeout)
+                logger.info("Done instructing feature prefetcher")
 
             await RisingEdge(dut.clk)
             if layer_index==0:

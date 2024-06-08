@@ -183,11 +183,13 @@ always_comb begin
     end
 
     WEIGHT_BANK_FSM_WEIGHTS_WAITING: begin
-        weight_bank_state_n = weight_channel_req_valid ? WEIGHT_BANK_FSM_DUMP_WEIGHTS : WEIGHT_BANK_FSM_WEIGHTS_WAITING;
+        weight_bank_state_n = weight_channel_req_valid ? WEIGHT_BANK_FSM_DUMP_WEIGHTS 
+                            : nsb_prefetcher_weight_bank_req_valid && (nsb_prefetcher_weight_bank_req.req_opcode == top_pkg::WEIGHTS) ? WEIGHT_BANK_FSM_FETCH_REQ
+                            : WEIGHT_BANK_FSM_WEIGHTS_WAITING;
     end
 
     WEIGHT_BANK_FSM_DUMP_WEIGHTS: begin
-        weight_bank_state_n = weight_channel_resp_valid && weight_channel_resp_ready && weight_channel_resp.done ? WEIGHT_BANK_FSM_IDLE
+        weight_bank_state_n = weight_channel_resp_valid && weight_channel_resp_ready && weight_channel_resp.done ? WEIGHT_BANK_FSM_WEIGHTS_WAITING
                             : WEIGHT_BANK_FSM_DUMP_WEIGHTS;
     end
 
@@ -209,7 +211,7 @@ end
 
 //  Set responses to NSB
 always_comb begin
-    nsb_prefetcher_weight_bank_req_ready = (weight_bank_state == WEIGHT_BANK_FSM_IDLE);
+    nsb_prefetcher_weight_bank_req_ready = (weight_bank_state == WEIGHT_BANK_FSM_IDLE) || (weight_bank_state == WEIGHT_BANK_FSM_WEIGHTS_WAITING);
     
     nsb_prefetcher_weight_bank_resp_valid = (weight_bank_state == WEIGHT_BANK_FSM_WRITE) && (weight_bank_state_n == WEIGHT_BANK_FSM_WEIGHTS_WAITING); 
     
@@ -358,7 +360,7 @@ always_comb begin
 end
 
 // When finished dumping weights, reset read pointer so the same weights can be used for the next FTE pass
-assign reset_weights = (weight_bank_state == WEIGHT_BANK_FSM_DUMP_WEIGHTS) && (weight_bank_state_n == WEIGHT_BANK_FSM_IDLE);
-assign reset_write_ptr = (weight_bank_state == WEIGHT_BANK_FSM_DUMP_WEIGHTS) && (weight_bank_state_n == WEIGHT_BANK_FSM_IDLE);
+assign reset_weights = (weight_bank_state == WEIGHT_BANK_FSM_DUMP_WEIGHTS) && (weight_bank_state_n == WEIGHT_BANK_FSM_WEIGHTS_WAITING);
+assign reset_write_ptr = ((weight_bank_state == WEIGHT_BANK_FSM_WEIGHTS_WAITING) || (weight_bank_state == WEIGHT_BANK_FSM_IDLE)) && (weight_bank_state_n == WEIGHT_BANK_FSM_FETCH_REQ);
 
 endmodule

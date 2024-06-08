@@ -142,7 +142,6 @@ VERILOG_SOURCES += \
 	$(FYP_DIR)/hw/ip/lib/axi/axi_read_master.sv \
 	$(FYP_DIR)/hw/ip/lib/axi/axi_write_master.sv \
 	$(FYP_DIR)/hw/ip/lib/base_components/binary_to_onehot.sv \
-	$(FYP_DIR)/hw/ip/lib/base_components/fixed_point_conversion.sv \
 	$(FYP_DIR)/hw/ip/lib/base_components/fixed_cast_single.sv \
 	$(FYP_DIR)/hw/ip/lib/base_components/count_ones.sv \
 	$(FYP_DIR)/hw/ip/lib/base_components/onehot_to_binary_comb.sv \
