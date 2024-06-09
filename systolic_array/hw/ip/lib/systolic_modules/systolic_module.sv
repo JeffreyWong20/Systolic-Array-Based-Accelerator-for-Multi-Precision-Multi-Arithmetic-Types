@@ -33,12 +33,14 @@ module systolic_module #(
     
     input  logic [MATRIX_N-1:0]                                  sys_module_forward_in_valid,
     input  logic [MATRIX_N-1:0] [DATA_WIDTH-1:0]                 sys_module_forward_in,
+    input  logic [MATRIX_N-1:0] [DATA_WIDTH-1:0]                 sys_module_forward_in_pass,
     
     input  logic [MATRIX_N-1:0]                                  sys_module_down_in_valid,
     input  logic [MATRIX_N-1:0] [DATA_WIDTH-1:0]                 sys_module_down_in,
 
     output logic [MATRIX_N-1:0]                                  sys_module_forward_out_valid,
     output logic [MATRIX_N-1:0] [DATA_WIDTH-1:0]                 sys_module_forward_out,
+    output logic [MATRIX_N-1:0] [DATA_WIDTH-1:0]                 sys_module_forward_out_pass,
     
     output logic [MATRIX_N-1:0]                                  sys_module_down_out_valid,
     output logic [MATRIX_N-1:0] [DATA_WIDTH-1:0]                 sys_module_down_out,
@@ -69,6 +71,7 @@ module systolic_module #(
 //   <    row    > <    col   > <      data      >
 logic [MATRIX_N-1:0] [MATRIX_N:0] [0:0]                      sys_module_pe_forward_valid;
 logic [MATRIX_N-1:0] [MATRIX_N:0] [DATA_WIDTH-1:0]           sys_module_pe_forward;
+logic [MATRIX_N-1:0] [MATRIX_N:0] [DATA_WIDTH-1:0]           sys_module_pe_forward_copy;
 
 //   <    row    > <    col   > <      data      >
 logic [MATRIX_N:0] [MATRIX_N-1:0] [0:0]                      sys_module_pe_down_valid;
@@ -139,10 +142,12 @@ for (genvar row=0; row < MATRIX_N; row++) begin
         // Drive forward inputs
         sys_module_pe_forward         [row][0] = sys_module_forward_in      [row];
         sys_module_pe_forward_valid   [row][0] = sys_module_forward_in_valid[row];
+        sys_module_pe_forward_copy    [row][0] = sys_module_forward_in_pass [row];
 
         // Drive forward outputs
         sys_module_forward_out_valid [row] = sys_module_pe_forward_valid [row] [MATRIX_N];
-        sys_module_forward_out [row] = sys_module_pe_forward [row] [MATRIX_N];
+        sys_module_forward_out [row]    = sys_module_pe_forward [row] [MATRIX_N];
+        sys_module_forward_out_pass [row] = sys_module_pe_forward_copy [row] [MATRIX_N];
     end
 end
 

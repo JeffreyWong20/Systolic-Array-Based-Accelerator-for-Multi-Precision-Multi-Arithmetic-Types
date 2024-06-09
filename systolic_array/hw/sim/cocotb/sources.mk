@@ -164,6 +164,7 @@ VERILOG_SOURCES	+= \
 	$(FYP_DIR)/hw/ip/top/top.sv \
 	$(FYP_DIR)/hw/ip/top/top_wrapper_tb.sv \
 	$(FYP_DIR)/hw/build/project_1.srcs/sources_1/ip/axi_interconnect_0/sim/axi_interconnect_0.v \
+	$(FYP_DIR)/hw/ip/transformation_engine/rtl/mixed_precision_systolic_module.sv \
 	$(FYP_DIR)/hw/ip/transformation_engine/rtl/feature_transformation_core.sv \
 	$(FYP_DIR)/hw/ip/transformation_engine/rtl/feature_transformation_engine.sv \
 	$(FYP_DIR)/hw/ip/top/ram_test.sv \

@@ -122,50 +122,21 @@ logic [$clog2(top_pkg::MAX_NODESLOT_COUNT)-1:0] total_row_to_writeback;
 
 // Systolic modules
 // -------------------------------------------------------------------------------------
-
-// Driven from aggregation buffer
-logic [HIGH_PRECISION_SYSTOLIC_MODULE_COUNT:0] [MATRIX_N-1:0]                                  sys_module_forward_high_valid; // 16
-logic [HIGH_PRECISION_SYSTOLIC_MODULE_COUNT:0] [MATRIX_N-1:0] [HIGH_PRECISION_DATA_WIDTH-1:0]  sys_module_forward_high; // input is always in high precision
-logic [LOW_PRECISION_SYSTOLIC_MODULE_COUNT:0] [MATRIX_N-1:0]                                  sys_module_forward_low_valid; // 16
-logic [LOW_PRECISION_SYSTOLIC_MODULE_COUNT:0] [MATRIX_N-1:0] [LOW_PRECISION_DATA_WIDTH-1:0]  sys_module_forward_low; // input is always in high precision
-
+logic [HIGH_PRECISION_SYSTOLIC_MODULE_COUNT:0] [MATRIX_N-1:0]                                   mp_sys_module_forward_high_valid; // 16
+logic [HIGH_PRECISION_SYSTOLIC_MODULE_COUNT:0] [MATRIX_N-1:0] [HIGH_PRECISION_DATA_WIDTH-1:0]   mp_sys_module_forward_high; // input is always in high precision
 // Driven from weight channel
-logic [MAX_FEATURE_COUNT-1:0]                                                   sys_module_down_in_high_valid;
-logic [MAX_FEATURE_COUNT-1:0] [HIGH_PRECISION_DATA_WIDTH-1:0]                   sys_module_down_in_high;
-logic [MAX_FEATURE_COUNT-1:0]                                                   sys_module_down_in_low_valid;
-logic [MAX_FEATURE_COUNT-1:0] [LOW_PRECISION_DATA_WIDTH-1:0]                    sys_module_down_in_low;
-
-logic [MAX_FEATURE_COUNT-1:0]                                                   sys_module_down_out_high_valid;
-logic [MAX_FEATURE_COUNT-1:0] [HIGH_PRECISION_DATA_WIDTH-1:0]                   sys_module_down_out_high;
-logic [MAX_FEATURE_COUNT-1:0]                                                   sys_module_down_out_low_valid;
-logic [MAX_FEATURE_COUNT-1:0] [LOW_PRECISION_DATA_WIDTH-1:0]                    sys_module_down_out_low;
-
-logic [HIGH_PRECISION_SYSTOLIC_MODULE_COUNT*MATRIX_N-1:0] [HIGH_PRECISION_DATA_WIDTH-1:0]                     sys_bias_per_row_high;
-logic [LOW_PRECISION_SYSTOLIC_MODULE_COUNT*MATRIX_N-1:0] [LOW_PRECISION_DATA_WIDTH-1:0]                       sys_bias_per_row_low;
-
-logic [SYSTOLIC_MODULE_COUNT-1:0]                                               sys_module_flush_done;
-logic [SYSTOLIC_MODULE_COUNT-1:0] [MATRIX_N:0] [MATRIX_N-1:0] [HIGH_PRECISION_ACCUMULATOR_WIDTH-1:0]  sys_module_pe_acc_high; // NOTE: Data will get writeback in a high precision format. Low precision will get padded back to high precision by using 0.
-logic [SYSTOLIC_MODULE_COUNT-1:0] [MATRIX_N:0] [MATRIX_N-1:0] [LOW_PRECISION_ACCUMULATOR_WIDTH-1:0]  sys_module_pe_acc_low; // NOTE: Data will get writeback in a high precision format. Low precision will get padded back to high precision by using 0.
 logic [SYSTOLIC_MODULE_COUNT-1:0] [MATRIX_N-1:0] [HIGH_PRECISION_DATA_WIDTH-1:0]  sys_module_pe_acc_high_casted; // NOTE: Data will get writeback in a high precision format. Low precision will get padded back to high precision by using 0.
 logic [SYSTOLIC_MODULE_COUNT-1:0] [MATRIX_N-1:0] [HIGH_PRECISION_DATA_WIDTH-1:0]  sys_module_pe_acc_low_casted; // NOTE: Data will get writeback in a high precision format. Low precision will get padded back to high precision by using 0.
-
 
 logic                                                                           shift_sys_module;
 logic                                                                           bias_valid;
 logic                                                                           activation_valid;
 
-
 // Driving systolic modules
 // -------------------------------------------------------------------------------------
-
 logic                                                 begin_feature_dump;
 logic                                                 pulse_systolic_module;
-// logic [top_pkg::AGGREGATION_BUFFER_SLOTS-1:0]         slot_pop_shift;
-// logic [top_pkg::AGGREGATION_BUFFER_SLOTS-1:0]         busy_aggregation_slots_snapshot;
-// logic                                                 pe_delay_counter;
 
-// // Flushing logic
-// logic [top_pkg::TRANSFORMATION_BUFFER_SLOTS-1:0]     transformation_buffer_slot_arb_oh;
 
 // Writeback logic
 logic [$clog2(MAX_WRITEBACK_BEATS_PER_NODESLOT):0]   sent_writeback_beats;
@@ -176,12 +147,6 @@ logic [$clog2(top_pkg::MAX_FEATURE_COUNT * 4) - 1:0] out_features_required_bytes
 
 logic [$clog2(MATRIX_N-1)-1:0]                       fast_pulse_counter;
 
-logic [HIGH_PRECISION_SYSTOLIC_MODULE_COUNT-1:0] [MATRIX_N-1:0] [MATRIX_N-1:0] [HIGH_PRECISION_DATA_WIDTH-1:0] debug_update_counter_high;
-logic [HIGH_PRECISION_SYSTOLIC_MODULE_COUNT-1:0] [MATRIX_N-1:0] [MATRIX_N-1:0] [HIGH_PRECISION_DATA_WIDTH-1:0] debug_update_counter_inv_high;
-logic [LOW_PRECISION_SYSTOLIC_MODULE_COUNT-1:0] [MATRIX_N-1:0] [MATRIX_N-1:0] [LOW_PRECISION_DATA_WIDTH-1:0] debug_update_counter_low;
-
-assign debug_update_counter_inv = ~debug_update_counter_high;
-
 logic bias_applied, activation_applied;
 // Writeback AXI_DATA_WIDTH shifting logic (shifting horizontally)
 logic [SYSTOLIC_MODULE_COUNT-1:0] sys_module_active;                                      // use to recall if a systolic array is active or not to write out the result
@@ -191,232 +156,38 @@ logic [top_pkg::TRANSFORMATION_ROWS:0] [AXI_DATA_WIDTH-1:0] axi_write_master_dat
 // ==================================================================================================================================================
 // Instances
 // ==================================================================================================================================================
-// High precision systolic array
-for (genvar sys_module = 0; sys_module < HIGH_PRECISION_SYSTOLIC_MODULE_COUNT; sys_module++) begin
-    // Driving from weight channel
-    always_comb begin
-        sys_module_down_in_high_valid [sys_module*MATRIX_N + (MATRIX_N-1) : sys_module*MATRIX_N] = {MATRIX_N{weight_channel_resp_valid}} & weight_channel_resp.valid_mask[sys_module*MATRIX_N + (MATRIX_N-1) : sys_module*MATRIX_N];
-    end
+mixed_precision_systolic_module #(
+    .PRECISION(PRECISION),
+    .FLOAT_WIDTH(FLOAT_WIDTH),
+    .MATRIX_N(MATRIX_N),
+    .SYSTOLIC_MODULE_COUNT(SYSTOLIC_MODULE_COUNT)
+) mp_sys (
+    .core_clk(core_clk),
+    .resetn(resetn),
 
-    always_ff @(posedge core_clk or negedge resetn) begin
-        if (!resetn | fte_state_n == FTE_FSM_IDLE) begin
-            // sys_module_active [sys_module+1 : sys_module] <= '0;
-            sys_module_active [sys_module] <= '0;
+    .weight_channel_resp_valid                  (weight_channel_resp_valid),
+    .weight_channel_resp                        (weight_channel_resp),
 
-        end else begin
-            // sys_module_active [sys_module+1 : sys_module] <= |sys_module_down_in_high_valid[sys_module*MATRIX_N + (MATRIX_N-1) : sys_module*MATRIX_N] | sys_module_active [sys_module+1 : sys_module];
-            sys_module_active [sys_module] <= |sys_module_down_in_high_valid[sys_module*MATRIX_N + (MATRIX_N-1) : sys_module*MATRIX_N] | sys_module_active [sys_module];
-        end
-    end
+    .layer_config_bias_value                    (layer_config_bias_value),
+    .layer_config_activation_function_value     (layer_config_activation_function_value),
+    .layer_config_leaky_relu_alpha_value        (layer_config_leaky_relu_alpha_value),
 
-    for (genvar index = sys_module*MATRIX_N; index < (sys_module*MATRIX_N + (MATRIX_N-1) + 1); index++) begin
-        always_comb begin
-            sys_module_down_in_high       [index] = weight_channel_resp.data[index][HIGH_PRECISION_DATA_WIDTH-1:0];
-            sys_bias_per_row_high         [index] = layer_config_bias_value[index][HIGH_PRECISION_DATA_WIDTH-1:0];
-        end
-    end
+    .mp_sys_module_forward_high_valid           (mp_sys_module_forward_high_valid),
+    .mp_sys_module_forward_high                 (mp_sys_module_forward_high),
 
-    systolic_module #(
-        .PRECISION (PRECISION),
-        .FLOAT_WIDTH (FLOAT_WIDTH),
-        .ACCUMULATOR_WIDTH(HIGH_PRECISION_ACCUMULATOR_WIDTH),
-        .DATA_WIDTH  (HIGH_PRECISION_DATA_WIDTH),
-        .FRACTIONAL_BITS (HIGH_PRECISION_FRACTIONAL_BITS),
-        .MATRIX_N    (MATRIX_N)
-    ) sys_module_i (
-        .core_clk                            (core_clk),
-        .resetn                              (resetn),
+    .sys_module_pe_acc_high_casted              (sys_module_pe_acc_high_casted),
+    .sys_module_pe_acc_low_casted               (sys_module_pe_acc_low_casted),
 
-        .pulse_systolic_module               (pulse_systolic_module),
+    .pulse_systolic_module                      (pulse_systolic_module),
+    .shift_sys_module                           (shift_sys_module),
+    .bias_valid                                 (bias_valid),
+    .activation_valid                           (activation_valid),
 
-        .sys_module_forward_in_valid         (sys_module_forward_high_valid  [sys_module]),
-        .sys_module_forward_in               (sys_module_forward_high        [sys_module]),
-
-        .sys_module_down_in_valid            (sys_module_down_in_high_valid  [sys_module*MATRIX_N + (MATRIX_N-1) : sys_module*MATRIX_N]),
-        .sys_module_down_in                  (sys_module_down_in_high        [sys_module*MATRIX_N + (MATRIX_N-1) : sys_module*MATRIX_N]),
-
-        .sys_module_forward_out_valid        (sys_module_forward_high_valid  [sys_module+1]),
-        .sys_module_forward_out              (sys_module_forward_high        [sys_module+1]),
-
-        .sys_module_down_out_valid           (sys_module_down_out_high_valid [sys_module*MATRIX_N + (MATRIX_N-1) : sys_module*MATRIX_N]),
-        .sys_module_down_out                 (sys_module_down_out_high       [sys_module*MATRIX_N + (MATRIX_N-1) : sys_module*MATRIX_N]),
-        
-        .bias_valid                          (bias_valid),
-        .bias                                (sys_bias_per_row_high             [sys_module*MATRIX_N + (MATRIX_N-1) : sys_module*MATRIX_N]),
-        
-        .activation_valid                    (activation_valid),
-        .activation                          (layer_config_activation_function_value),
-
-        .shift_valid                         (shift_sys_module),
-
-        .sys_module_pe_acc                   (sys_module_pe_acc_high   [sys_module]),
-
-        .diagonal_flush_done                 (sys_module_flush_done    [sys_module]),
-
-        .layer_config_leaky_relu_alpha_value ('1), // not used
-
-        .debug_update_counter                (debug_update_counter_high     [sys_module])
-    );
-    fixed_cast_single #(
-        .IN_WIDTH (HIGH_PRECISION_ACCUMULATOR_WIDTH),
-        .IN_FRAC_WIDTH (2*HIGH_PRECISION_FRACTIONAL_BITS),
-        .OUT_WIDTH (HIGH_PRECISION_DATA_WIDTH),
-        .OUT_FRAC_WIDTH (HIGH_PRECISION_FRACTIONAL_BITS)
-    ) casting_high_row_0_i (
-        .data_in    (sys_module_pe_acc_high[sys_module][0][0]),
-        .data_out   (sys_module_pe_acc_high_casted[sys_module][0])
-    );
-    fixed_cast_single #(
-        .IN_WIDTH (HIGH_PRECISION_ACCUMULATOR_WIDTH),
-        .IN_FRAC_WIDTH (2*HIGH_PRECISION_FRACTIONAL_BITS),
-        .OUT_WIDTH (HIGH_PRECISION_DATA_WIDTH),
-        .OUT_FRAC_WIDTH (HIGH_PRECISION_FRACTIONAL_BITS)
-    ) casting_high_row_1_i (
-        .data_in    (sys_module_pe_acc_high[sys_module][0][1]),
-        .data_out   (sys_module_pe_acc_high_casted[sys_module][1])
-    );
-    fixed_cast_single #(
-        .IN_WIDTH (HIGH_PRECISION_ACCUMULATOR_WIDTH),
-        .IN_FRAC_WIDTH (2*HIGH_PRECISION_FRACTIONAL_BITS),
-        .OUT_WIDTH (HIGH_PRECISION_DATA_WIDTH),
-        .OUT_FRAC_WIDTH (HIGH_PRECISION_FRACTIONAL_BITS)
-    ) casting_high_row_2_i (
-        .data_in    (sys_module_pe_acc_high[sys_module][0][2]),
-        .data_out   (sys_module_pe_acc_high_casted[sys_module][2])
-    );
-    fixed_cast_single #(
-        .IN_WIDTH (HIGH_PRECISION_ACCUMULATOR_WIDTH),
-        .IN_FRAC_WIDTH (2*HIGH_PRECISION_FRACTIONAL_BITS),
-        .OUT_WIDTH (HIGH_PRECISION_DATA_WIDTH),
-        .OUT_FRAC_WIDTH (HIGH_PRECISION_FRACTIONAL_BITS)
-    ) casting_high_row_3_i (
-        .data_in    (sys_module_pe_acc_high[sys_module][0][3]),
-        .data_out   (sys_module_pe_acc_high_casted[sys_module][3])
-    );
-end
-
-parameter HIGH_PRECISION_SYSTOLIC_MODULE_COUNT_INDEX = HIGH_PRECISION_SYSTOLIC_MODULE_COUNT - 1;
-// Low precision systolic array
-for (genvar sys_module = 0; sys_module < LOW_PRECISION_SYSTOLIC_MODULE_COUNT; sys_module++) begin
-    // Driving from weight channel
-    always_comb begin
-        sys_module_down_in_low_valid [sys_module*MATRIX_N + (MATRIX_N-1) : sys_module*MATRIX_N] = {MATRIX_N{weight_channel_resp_valid}} & weight_channel_resp.valid_mask[(HIGH_PRECISION_SYSTOLIC_MODULE_COUNT + sys_module)*MATRIX_N + (MATRIX_N-1) : (HIGH_PRECISION_SYSTOLIC_MODULE_COUNT + sys_module)*MATRIX_N];
-    end
-
-    always_ff @(posedge core_clk or negedge resetn) begin
-        if (!resetn | fte_state_n == FTE_FSM_IDLE) begin
-            // sys_module_active [HIGH_PRECISION_SYSTOLIC_MODULE_COUNT + sys_module+1 : HIGH_PRECISION_SYSTOLIC_MODULE_COUNT + sys_module] <= '0;
-            sys_module_active [HIGH_PRECISION_SYSTOLIC_MODULE_COUNT + sys_module] <= '0;
-        end else begin
-            // sys_module_active [HIGH_PRECISION_SYSTOLIC_MODULE_COUNT + sys_module+1 : HIGH_PRECISION_SYSTOLIC_MODULE_COUNT + sys_module] <= |sys_module_down_in_low_valid[sys_module*MATRIX_N + (MATRIX_N-1) : sys_module*MATRIX_N] | sys_module_active [HIGH_PRECISION_SYSTOLIC_MODULE_COUNT+sys_module+1 : HIGH_PRECISION_SYSTOLIC_MODULE_COUNT+sys_module];
-            sys_module_active [HIGH_PRECISION_SYSTOLIC_MODULE_COUNT + sys_module] <= |sys_module_down_in_low_valid[sys_module*MATRIX_N + (MATRIX_N-1) : sys_module*MATRIX_N] | sys_module_active [HIGH_PRECISION_SYSTOLIC_MODULE_COUNT+sys_module];
-        end
-    end
-
-    for (genvar index = sys_module*MATRIX_N; index < (sys_module*MATRIX_N + (MATRIX_N-1) + 1); index++) begin
-        always_comb begin
-            sys_module_down_in_low       [index] = weight_channel_resp.data[HIGH_PRECISION_SYSTOLIC_MODULE_COUNT*MATRIX_N+index][LOW_PRECISION_DATA_WIDTH-1:0];
-            sys_bias_per_row_low         [index] = layer_config_bias_value[HIGH_PRECISION_SYSTOLIC_MODULE_COUNT*MATRIX_N+index][LOW_PRECISION_DATA_WIDTH-1:0];
-        end
-    end
-
-    systolic_module #(
-        .PRECISION (PRECISION),
-        .FLOAT_WIDTH (FLOAT_WIDTH),
-        .DATA_WIDTH  (LOW_PRECISION_DATA_WIDTH),
-        .ACCUMULATOR_WIDTH (LOW_PRECISION_ACCUMULATOR_WIDTH),
-        .FRACTIONAL_BITS (LOW_PRECISION_FRACTIONAL_BITS),
-        .MATRIX_N    (MATRIX_N)
-    ) sys_module_i (
-        .core_clk                            (core_clk),
-        .resetn                              (resetn),
-
-        .pulse_systolic_module               (pulse_systolic_module),
-
-        .sys_module_forward_in_valid         (sys_module_forward_low_valid  [sys_module]),
-        .sys_module_forward_in               (sys_module_forward_low        [sys_module]),
-
-        .sys_module_down_in_valid            (sys_module_down_in_low_valid  [sys_module*MATRIX_N + (MATRIX_N-1) : sys_module*MATRIX_N]),
-        .sys_module_down_in                  (sys_module_down_in_low        [sys_module*MATRIX_N + (MATRIX_N-1) : sys_module*MATRIX_N]),
-
-        .sys_module_forward_out_valid        (sys_module_forward_low_valid  [sys_module+1]),
-        .sys_module_forward_out              (sys_module_forward_low        [sys_module+1]),
-
-        .sys_module_down_out_valid           (sys_module_down_out_low_valid [sys_module*MATRIX_N + (MATRIX_N-1) : sys_module*MATRIX_N]),
-        .sys_module_down_out                 (sys_module_down_out_low       [sys_module*MATRIX_N + (MATRIX_N-1) : sys_module*MATRIX_N]),
-        
-        .bias_valid                          (bias_valid),
-        .bias                                (sys_bias_per_row_low      [sys_module*MATRIX_N + (MATRIX_N-1) : sys_module*MATRIX_N]),
-        
-        .activation_valid                    (activation_valid),
-        .activation                          (layer_config_activation_function_value),
-
-        .shift_valid                         (shift_sys_module),
-
-        .sys_module_pe_acc                   (sys_module_pe_acc_low    [sys_module]),
-
-        .diagonal_flush_done                 (sys_module_flush_done    [HIGH_PRECISION_SYSTOLIC_MODULE_COUNT+sys_module]),
-
-        .layer_config_leaky_relu_alpha_value ('1), // not used
-
-        .debug_update_counter                (debug_update_counter_low     [sys_module])
-    );
-
-    fixed_cast_single #(
-        .IN_WIDTH (LOW_PRECISION_ACCUMULATOR_WIDTH),
-        .IN_FRAC_WIDTH (2*LOW_PRECISION_FRACTIONAL_BITS),
-        .OUT_WIDTH (HIGH_PRECISION_DATA_WIDTH),
-        .OUT_FRAC_WIDTH (HIGH_PRECISION_FRACTIONAL_BITS)
-    ) casting_low_row_0_i (
-        .data_in    (sys_module_pe_acc_low[sys_module][0][0]),
-        .data_out   (sys_module_pe_acc_low_casted[sys_module][0])
-    );
-    fixed_cast_single #(
-        .IN_WIDTH (LOW_PRECISION_ACCUMULATOR_WIDTH),
-        .IN_FRAC_WIDTH (2*LOW_PRECISION_FRACTIONAL_BITS),
-        .OUT_WIDTH (HIGH_PRECISION_DATA_WIDTH),
-        .OUT_FRAC_WIDTH (HIGH_PRECISION_FRACTIONAL_BITS)
-    ) casting_low_row_1_i (
-        .data_in    (sys_module_pe_acc_low[sys_module][0][1]),
-        .data_out   (sys_module_pe_acc_low_casted[sys_module][1])
-    );
-    fixed_cast_single #(
-        .IN_WIDTH (LOW_PRECISION_ACCUMULATOR_WIDTH),
-        .IN_FRAC_WIDTH (2*LOW_PRECISION_FRACTIONAL_BITS),
-        .OUT_WIDTH (HIGH_PRECISION_DATA_WIDTH),
-        .OUT_FRAC_WIDTH (HIGH_PRECISION_FRACTIONAL_BITS)
-    ) casting_low_row_2_i (
-        .data_in    (sys_module_pe_acc_low[sys_module][0][2]),
-        .data_out   (sys_module_pe_acc_low_casted[sys_module][2])
-    );
-    fixed_cast_single #(
-        .IN_WIDTH (LOW_PRECISION_ACCUMULATOR_WIDTH),
-        .IN_FRAC_WIDTH (2*LOW_PRECISION_FRACTIONAL_BITS),
-        .OUT_WIDTH (HIGH_PRECISION_DATA_WIDTH),
-        .OUT_FRAC_WIDTH (HIGH_PRECISION_FRACTIONAL_BITS)
-    ) casting_low_row_3_i (
-        .data_in    (sys_module_pe_acc_low[sys_module][0][3]),
-        .data_out   (sys_module_pe_acc_low_casted[sys_module][3])
-    );
-end
-
-// ==================================================================================================================================================
-// Casting unit between two systolic arrays
-// ==================================================================================================================================================
-for (genvar casting_row = 0; casting_row < MATRIX_N; casting_row++) begin
-    fixed_cast_single #(
-        .IN_WIDTH (HIGH_PRECISION_DATA_WIDTH),
-        .IN_FRAC_WIDTH (HIGH_PRECISION_FRACTIONAL_BITS),
-        .OUT_WIDTH (LOW_PRECISION_DATA_WIDTH),
-        .OUT_FRAC_WIDTH (LOW_PRECISION_FRACTIONAL_BITS)
-    ) casting_row_i (
-        .data_in    (sys_module_forward_high[HIGH_PRECISION_SYSTOLIC_MODULE_COUNT][casting_row]),
-        .data_out   (sys_module_forward_low[0][casting_row])
-    );
-    always_comb begin
-        sys_module_forward_low_valid[0][casting_row] = sys_module_forward_high_valid[HIGH_PRECISION_SYSTOLIC_MODULE_COUNT][casting_row];
-    end
-end
+    // Writeback AXI_DATA_WIDTH shifting logic (shifting horizontally)
+    .sys_module_active                          (sys_module_active),
+    .sys_module_active_count                    (sys_module_active_count),
+    .clean_sys_module_active                    (fte_state_n == FTE_FSM_IDLE)
+);
 
 // ==================================================================================================================================================
 // Logic
@@ -542,11 +313,11 @@ end
 // Feature channel
 // -------------------------------------------------------------------------------------
 always_comb begin
-    sys_module_forward_high_valid [0] = {MATRIX_N{feature_channel_resp_valid}} & feature_channel_resp.valid_mask[MATRIX_N-1:0];
+    mp_sys_module_forward_high_valid [0] = {MATRIX_N{feature_channel_resp_valid}} & feature_channel_resp.valid_mask[MATRIX_N-1:0];
 end
 for (genvar index = 0; index < MATRIX_N; index++) begin
     always_comb begin
-        sys_module_forward_high       [0][index] = feature_channel_resp.data[index][HIGH_PRECISION_DATA_WIDTH-1:0];
+        mp_sys_module_forward_high       [0][index] = feature_channel_resp.data[index][HIGH_PRECISION_DATA_WIDTH-1:0];
     end
 end
 
@@ -572,12 +343,6 @@ end
 
 // Writeback Logic
 // -------------------------------------------------------------------------------------
-count_ones #(
-    .INPUT_WIDTH(SYSTOLIC_MODULE_COUNT)
-) number_of_active_systolic_module (
-  .data(sys_module_active),
-  .count(sys_module_active_count)
-);
 
 always_comb begin
     out_features_required_bytes = layer_config_out_features_count * 4; // 4 bytes per feature
@@ -596,14 +361,6 @@ always_comb begin
     axi_write_master_data_valid = (fte_state == FTE_FSM_WRITEBACK_RESP);
     // Response
     axi_write_master_resp_ready = (fte_state == FTE_FSM_WRITEBACK_RESP);
-end
-
-logic [LOW_PRECISION_DATA_WIDTH-1:0] debug,debug1,debug2,debug3;
-always_comb begin
-    debug = sys_module_pe_acc_low[1 - HIGH_PRECISION_SYSTOLIC_MODULE_COUNT][0][0][LOW_PRECISION_FRACTIONAL_BITS+LOW_PRECISION_DATA_WIDTH-1:LOW_PRECISION_FRACTIONAL_BITS] + sys_module_pe_acc_low[1][0][0][LOW_PRECISION_FRACTIONAL_BITS-1];
-    debug1 = sys_module_pe_acc_low[0][0][1][LOW_PRECISION_FRACTIONAL_BITS+LOW_PRECISION_DATA_WIDTH-1:LOW_PRECISION_FRACTIONAL_BITS] + sys_module_pe_acc_low[1][0][1][LOW_PRECISION_FRACTIONAL_BITS-1];
-    debug2 = sys_module_pe_acc_low[0][0][2][LOW_PRECISION_FRACTIONAL_BITS+LOW_PRECISION_DATA_WIDTH-1:LOW_PRECISION_FRACTIONAL_BITS] + sys_module_pe_acc_low[1][0][2][LOW_PRECISION_FRACTIONAL_BITS-1];
-    debug3 = sys_module_pe_acc_low[0][0][3][LOW_PRECISION_FRACTIONAL_BITS+LOW_PRECISION_DATA_WIDTH-1:LOW_PRECISION_FRACTIONAL_BITS] + sys_module_pe_acc_low[1][0][3][LOW_PRECISION_FRACTIONAL_BITS-1];
 end
 
 

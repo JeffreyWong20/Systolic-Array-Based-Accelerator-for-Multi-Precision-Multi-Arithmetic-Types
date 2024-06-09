@@ -255,12 +255,14 @@ add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_
 add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/feature_channel_resp}
 
 # Systolic array
-add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/genblk1[0]/sys_module_i/*}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/mp_sys/genblk1[0]/sys_module_i/*}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/mp_sys/genblk1[1]/sys_module_i/*}
 
-add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/genblk1[0]/sys_module_i/sys_module_pe_acc}
-add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/genblk1[1]/sys_module_i/sys_module_pe_acc}
-add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/genblk2[0]/sys_module_i/sys_module_pe_acc}
-add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/genblk2[1]/sys_module_i/sys_module_pe_acc}
+
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/mp_sys/genblk1[0]/sys_module_i/sys_module_pe_acc}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/mp_sys/genblk1[1]/sys_module_i/sys_module_pe_acc}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/mp_sys/genblk2[0]/sys_module_i/sys_module_pe_acc}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/mp_sys/genblk2[1]/sys_module_i/sys_module_pe_acc}
 
 
 
