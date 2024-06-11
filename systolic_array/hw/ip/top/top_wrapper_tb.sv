@@ -40,7 +40,7 @@ module top_wrapper_tb #(
     input logic [AXI_ADDR_WIDTH-2:0] layer_config_out_features_address_lsb_value,
     input logic [AXI_ADDR_WIDTH-1:0] writeback_offset,
     input logic [1:0]  layer_config_activation_function_value,
-    input logic [top_pkg::SYSTOLIC_MODULE_COUNT*top_pkg::TRANSFORMATION_ROWS-1:0] [31:0] layer_config_bias_value    
+    input logic [top_pkg::CORE_COUNT*top_pkg::SYSTOLIC_MODULE_COUNT*top_pkg::TRANSFORMATION_ROWS-1:0] [31:0] layer_config_bias_value    
 );
 // ====================================================================================
 // Declarations

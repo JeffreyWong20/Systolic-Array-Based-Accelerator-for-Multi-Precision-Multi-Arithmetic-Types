@@ -45,13 +45,6 @@ module feature_transformation_engine #(
     output logic                                                nsb_fte_resp_valid,
     output NSB_FTE_RESP_t                                       nsb_fte_resp,
 
-    // // Aggregation Buffer Interface
-    // input  logic [top_pkg::PRECISION_COUNT-1:0] [top_pkg::AGGREGATION_BUFFER_SLOTS-1:0] [top_pkg::NODE_ID_WIDTH-1:0]                 aggregation_buffer_node_id,
-    // output logic [top_pkg::PRECISION_COUNT-1:0] [top_pkg::AGGREGATION_BUFFER_SLOTS-1:0]                                              aggregation_buffer_pop,
-    // input  logic [top_pkg::PRECISION_COUNT-1:0] [top_pkg::AGGREGATION_BUFFER_SLOTS-1:0]                                              aggregation_buffer_out_feature_valid,
-    // input  logic [top_pkg::PRECISION_COUNT-1:0] [top_pkg::AGGREGATION_BUFFER_SLOTS-1:0] [top_pkg::AGGREGATION_BUFFER_READ_WIDTH-1:0] aggregation_buffer_out_feature,
-    // input  logic [top_pkg::PRECISION_COUNT-1:0] [top_pkg::AGGREGATION_BUFFER_SLOTS-1:0]                                              aggregation_buffer_slot_free,
-
     // Weight Channels: FTE -> Prefetcher Weight Bank (REQ)
     output logic                 [top_pkg::PRECISION_COUNT-1:0] weight_channel_req_valid,
     input  logic                 [top_pkg::PRECISION_COUNT-1:0] weight_channel_req_ready,
@@ -124,7 +117,7 @@ module feature_transformation_engine #(
     input logic [31:0]  layer_config_out_channel_count,  // Number of output channels
     input logic [31:0]  layer_config_out_features_count, // Number of output features in a channel                                 
     input logic [1:0]  layer_config_activation_function_value,
-    input logic [SYSTOLIC_MODULE_COUNT*MATRIX_N-1:0] [31:0] layer_config_bias_value,
+    input logic [CORE_COUNT*SYSTOLIC_MODULE_COUNT*MATRIX_N-1:0] [31:0] layer_config_bias_value,
     input logic [31:0] layer_config_leaky_relu_alpha_value,
     input logic [1:0]  layer_config_out_features_address_msb_value,
     input logic [AXI_ADDRESS_WIDTH-2:0] layer_config_out_features_address_lsb_value,

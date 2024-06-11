@@ -65,32 +65,40 @@ def writeback_address_generator(writeback_address, input_matrix_size, weight_mat
     byte_per_row = ceildiv(output_feature * byte_per_feature, 64) * 64 # 64 bytes alignment
     line_per_row = byte_per_row // 64               # how many line to store the result row
     line_per_sys_array = block_feature_size // 16   # how many line can be written by the systolic array in one iteration
+    step = line_per_sys_array
     # can these line be produced by the systolic array in one iteration
     if line_per_sys_array > line_per_row:
+        step = 1
         line_per_row = 1 
     else:
         # Only one beat is needed per iteration
         if line_per_sys_array == 0 or line_per_sys_array == 1:
+            step = 1
             line_per_row = line_per_row
         else:
+        # Multiple beats are needed per iteration 
+            multi_beat = True
             print(f"line_per_sys_array={line_per_sys_array}, line_per_row={line_per_row}")
             print(f"output_feature={output_feature}, systolic_array_size[1]={systolic_array_size[1]}")
             print(f"output_channel={output_channel}, systolic_array_size[0]={systolic_array_size[0]}")
-            raise ValueError("Not supported yet.")
+            # raise ValueError("Not supported yet.")
     
     byte_per_channel_block = block_channel_size * byte_per_row
     # NOTE: This does not work for all cases 
     # TODO: This might fail for some edge cases
     iteration_per_channel= ceildiv(output_channel, systolic_array_size[0])
-    for i in range(iteration_per_channel):
+    for i in range(iteration_per_channel):        
         for line, offset in offset_generator(weight_matrix_size, ultra_ram_size, systolic_array_size, byte_per_feature):
+            if offset != 0 and multi_beat:
+                print(f"Warning: unalignment acess with mutlibeat write is not supported yet.")
+                raise ValueError("Not supported yet.")
             # NOTE:
             # Because of the offset machanism in the write back, we have to write feature with the lower memory index first (right most of the array)
             # A row can span multiple lines in the memory
             # Right most of the row is usually the bottom line of all thoses line. (Refer to the report for more detail)
             # TODO:
             # Obviously, this need to be change for more flexibility and edges cases. 
-            current_line = line_per_row - 1 - line
+            current_line = line_per_row - step - line
             yield writeback_address + current_line * 64 + i * byte_per_channel_block, offset
         
 
@@ -283,4 +291,7 @@ async def read_ram(axi_ram_driver, software_result_matrix, byte_per_feature, res
     return hardware_result_matrix
     
 if __name__ == "__main__":
+    for i, (writeback_address, offset) in enumerate(writeback_address_generator(0x1200000, input_matrix_size=(4, 16), weight_matrix_size=(64, 16), systolic_array_size=(4,32))):
+        print(f"writeback_address={hex(writeback_address)}, offset={offset}")
+
     print("")

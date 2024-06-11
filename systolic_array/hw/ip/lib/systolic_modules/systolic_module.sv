@@ -22,6 +22,7 @@ module systolic_module #(
     parameter PRECISION = top_pkg::FLOAT_32,
     parameter FLOAT_WIDTH = 32,
     parameter DATA_WIDTH = 32,
+    parameter PASS_THROUGH_DATA_WIDTH = 32,
     parameter ACCUMULATOR_WIDTH = 32,
     parameter FRACTIONAL_BITS = 0,
     parameter MATRIX_N = 4
@@ -33,14 +34,14 @@ module systolic_module #(
     
     input  logic [MATRIX_N-1:0]                                  sys_module_forward_in_valid,
     input  logic [MATRIX_N-1:0] [DATA_WIDTH-1:0]                 sys_module_forward_in,
-    input  logic [MATRIX_N-1:0] [DATA_WIDTH-1:0]                 sys_module_forward_in_pass,
+    input  logic [MATRIX_N-1:0] [PASS_THROUGH_DATA_WIDTH-1:0]    sys_module_forward_in_pass,
     
     input  logic [MATRIX_N-1:0]                                  sys_module_down_in_valid,
     input  logic [MATRIX_N-1:0] [DATA_WIDTH-1:0]                 sys_module_down_in,
 
     output logic [MATRIX_N-1:0]                                  sys_module_forward_out_valid,
     output logic [MATRIX_N-1:0] [DATA_WIDTH-1:0]                 sys_module_forward_out,
-    output logic [MATRIX_N-1:0] [DATA_WIDTH-1:0]                 sys_module_forward_out_pass,
+    output logic [MATRIX_N-1:0] [PASS_THROUGH_DATA_WIDTH-1:0]    sys_module_forward_out_pass,
     
     output logic [MATRIX_N-1:0]                                  sys_module_down_out_valid,
     output logic [MATRIX_N-1:0] [DATA_WIDTH-1:0]                 sys_module_down_out,
@@ -69,9 +70,9 @@ module systolic_module #(
 // ============================================================================================
 
 //   <    row    > <    col   > <      data      >
-logic [MATRIX_N-1:0] [MATRIX_N:0] [0:0]                      sys_module_pe_forward_valid;
-logic [MATRIX_N-1:0] [MATRIX_N:0] [DATA_WIDTH-1:0]           sys_module_pe_forward;
-logic [MATRIX_N-1:0] [MATRIX_N:0] [DATA_WIDTH-1:0]           sys_module_pe_forward_copy;
+logic [MATRIX_N-1:0] [MATRIX_N:0] [0:0]                             sys_module_pe_forward_valid;
+logic [MATRIX_N-1:0] [MATRIX_N:0] [DATA_WIDTH-1:0]                  sys_module_pe_forward;
+logic [MATRIX_N-1:0] [MATRIX_N:0] [PASS_THROUGH_DATA_WIDTH-1:0]     sys_module_pe_forward_copy;
 
 //   <    row    > <    col   > <      data      >
 logic [MATRIX_N:0] [MATRIX_N-1:0] [0:0]                      sys_module_pe_down_valid;
@@ -86,12 +87,12 @@ logic [MATRIX_N-1:0] down_flush_done;
 
 for (genvar row = 0; row < MATRIX_N; row++) begin : rows_gen
     for (genvar col = 0; col < MATRIX_N; col++) begin : cols_gen
-  
         processing_element #(
             .PRECISION          (PRECISION),
             .DATA_WIDTH         (DATA_WIDTH),
             .ACCUMULATOR_WIDTH  (ACCUMULATOR_WIDTH),
             .FRACTIONAL_BITS    (FRACTIONAL_BITS),
+            .PASS_THROUGH_DATA_WIDTH (PASS_THROUGH_DATA_WIDTH),
             .FLOAT_WIDTH        (FLOAT_WIDTH)
         ) pe_i (
             .core_clk,
@@ -101,12 +102,14 @@ for (genvar row = 0; row < MATRIX_N; row++) begin : rows_gen
 
             .pe_forward_in_valid        (sys_module_pe_forward_valid      [row]   [col]   ),
             .pe_forward_in              (sys_module_pe_forward            [row]   [col]   ),
+            .pe_forward_in_copy         (sys_module_pe_forward_copy       [row]   [col]   ),
             
             .pe_down_in_valid           (sys_module_pe_down_valid         [row]   [col]   ),
             .pe_down_in                 (sys_module_pe_down               [row]   [col]   ),
             
             .pe_forward_out_valid       (sys_module_pe_forward_valid      [row]   [col+1] ),
             .pe_forward_out             (sys_module_pe_forward            [row]   [col+1] ),
+            .pe_forward_out_copy        (sys_module_pe_forward_copy       [row]   [col+1] ),
             
             .pe_down_out_valid          (sys_module_pe_down_valid         [row+1] [col] ),
             .pe_down_out                (sys_module_pe_down               [row+1] [col] ),

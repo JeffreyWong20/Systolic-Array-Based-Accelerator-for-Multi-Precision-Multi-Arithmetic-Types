@@ -146,9 +146,7 @@ module prefetcher #
   logic weight_read_master_fetch_req_ready;
   logic [top_pkg::PRECISION_COUNT-1:0] weight_bank_axi_rm_fetch_req_ready;
   logic           [top_pkg::PRECISION_COUNT-1:0] [AXI_ADDRESS_WIDTH-1:0]                      weight_bank_axi_rm_fetch_start_address;
-  logic [top_pkg::PRECISION_COUNT-1:0][$clog2(
-MAX_FETCH_REQ_BYTE_COUNT
-)-1:0] weight_bank_axi_rm_fetch_byte_count;
+  logic [top_pkg::PRECISION_COUNT-1:0][$clog2(MAX_FETCH_REQ_BYTE_COUNT)-1:0]                  weight_bank_axi_rm_fetch_byte_count;
 
   logic weight_read_master_fetch_resp_valid;
   logic [top_pkg::PRECISION_COUNT-1:0] weight_bank_axi_rm_fetch_resp_valid;

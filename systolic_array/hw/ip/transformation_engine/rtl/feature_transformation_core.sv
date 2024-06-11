@@ -24,13 +24,6 @@ module feature_transformation_core #(
     input  logic                                                                                      nsb_fte_resp_ready,
     output NSB_FTE_RESP_t                                                                             nsb_fte_resp,
 
-    // // Aggregation Buffer Interface
-    // input  logic [top_pkg::AGGREGATION_BUFFER_SLOTS-1:0] [top_pkg::NODE_ID_WIDTH-1:0]                 transformation_core_aggregation_buffer_node_id,
-    // output logic [top_pkg::AGGREGATION_BUFFER_SLOTS-1:0]                                              transformation_core_aggregation_buffer_pop,
-    // input  logic [top_pkg::AGGREGATION_BUFFER_SLOTS-1:0]                                              transformation_core_aggregation_buffer_out_feature_valid,
-    // input  logic [top_pkg::AGGREGATION_BUFFER_SLOTS-1:0] [top_pkg::AGGREGATION_BUFFER_READ_WIDTH-1:0] transformation_core_aggregation_buffer_out_feature,
-    // input  logic [top_pkg::AGGREGATION_BUFFER_SLOTS-1:0]                                              transformation_core_aggregation_buffer_slot_free,
-
     // Weight Channels: FTE -> Prefetcher Weight Bank (REQ)
     output logic                                                                                      weight_channel_req_valid,
     input  logic                                                                                      weight_channel_req_ready,
@@ -67,7 +60,7 @@ module feature_transformation_core #(
     input  logic [31:0]                                                                               layer_config_out_features_count,  // the number of feature in a row of the systolic array output
     input  logic [1:0]                                                                                layer_config_out_features_address_msb_value,
     input  logic [AXI_ADDRESS_WIDTH-2:0]                                                              layer_config_out_features_address_lsb_value,
-    input  logic [SYSTOLIC_MODULE_COUNT*MATRIX_N-1:0] [31:0]                                          layer_config_bias_value,
+    input  logic [CORE_COUNT*SYSTOLIC_MODULE_COUNT*MATRIX_N-1:0] [31:0]                               layer_config_bias_value,
     input  logic [1:0]                                                                                layer_config_activation_function_value,
     input  logic [31:0]                                                                               layer_config_leaky_relu_alpha_value,
     input  logic [0:0]                                                                                ctrl_buffering_enable_value,
@@ -79,12 +72,8 @@ module feature_transformation_core #(
 
 );
 
-parameter HIGH_PRECISION_DATA_WIDTH = top_pkg::HIGH_PRECISION_DATA_WIDTH;
-parameter LOW_PRECISION_DATA_WIDTH = top_pkg::LOW_PRECISION_DATA_WIDTH;
-parameter HIGH_PRECISION_ACCUMULATOR_WIDTH = top_pkg::HIGH_PRECISION_ACCUMULATOR_WIDTH;
-parameter LOW_PRECISION_ACCUMULATOR_WIDTH = top_pkg::LOW_PRECISION_ACCUMULATOR_WIDTH;
 parameter SYS_MODULES_PER_BEAT = 512 / (MATRIX_N * FLOAT_WIDTH);
-parameter MAX_WRITEBACK_BEATS_PER_NODESLOT = SYSTOLIC_MODULE_COUNT / SYS_MODULES_PER_BEAT; // The max beats require to write back all systolic modules
+parameter MAX_WRITEBACK_BEATS_PER_NODESLOT = (CORE_COUNT*SYSTOLIC_MODULE_COUNT) / SYS_MODULES_PER_BEAT; // The max beats require to write back all systolic modules
 
 typedef enum logic [3:0] {
     FTE_FSM_IDLE, FTE_FSM_REQ, FTE_FSM_REQ_WC, FTE_FSM_REQ_FC, FTE_FSM_MULT_SLOW, FTE_FSM_MULT_FAST, FTE_FSM_BIAS, FTE_FSM_ACTIVATION, FTE_FSM_BUFFER, FTE_FSM_WRITEBACK_REQ, FTE_FSM_WRITEBACK_RESP, FTE_FSM_SHIFT, FTE_FSM_NSB_RESP
@@ -112,26 +101,24 @@ typedef enum logic [3:0] {
 FTE_FSM_e fte_state, fte_state_n;
 logic last_weight_resp_received, last_feature_resp_received;
 
-// NSB requests
-// logic [top_pkg::MAX_NODESLOT_COUNT-1:0]         nsb_req_nodeslots_q;
-// logic [$clog2(top_pkg::MAX_NODESLOT_COUNT)-1:0] nodeslot_count;
-// logic [$clog2(top_pkg::MAX_NODESLOT_COUNT)-1:0] nodeslots_to_buffer;
-// logic [$clog2(top_pkg::MAX_NODESLOT_COUNT)-1:0] nodeslots_to_writeback;
 logic [$clog2(top_pkg::MAX_NODESLOT_COUNT)-1:0] output_row_to_writeback;
 logic [$clog2(top_pkg::MAX_NODESLOT_COUNT)-1:0] total_row_to_writeback;
 
 // Systolic modules
 // -------------------------------------------------------------------------------------
-logic [HIGH_PRECISION_SYSTOLIC_MODULE_COUNT:0] [MATRIX_N-1:0]                                   mp_sys_module_forward_high_valid; // 16
-logic [HIGH_PRECISION_SYSTOLIC_MODULE_COUNT:0] [MATRIX_N-1:0] [HIGH_PRECISION_DATA_WIDTH-1:0]   mp_sys_module_forward_high; // input is always in high precision
+logic [CORE_COUNT:0] [MATRIX_N-1:0]                                   mp_sys_module_forward_high_valid; // 16
+logic [CORE_COUNT:0] [MATRIX_N-1:0] [HIGH_PRECISION_DATA_WIDTH-1:0]   mp_sys_module_forward_high; // input is always in high precision
 // Driven from weight channel
-logic [SYSTOLIC_MODULE_COUNT-1:0] [MATRIX_N-1:0] [HIGH_PRECISION_DATA_WIDTH-1:0]  sys_module_pe_acc_high_casted; // NOTE: Data will get writeback in a high precision format. Low precision will get padded back to high precision by using 0.
-logic [SYSTOLIC_MODULE_COUNT-1:0] [MATRIX_N-1:0] [HIGH_PRECISION_DATA_WIDTH-1:0]  sys_module_pe_acc_low_casted; // NOTE: Data will get writeback in a high precision format. Low precision will get padded back to high precision by using 0.
+// logic [CORE_COUNT*HIGH_PRECISION_SYSTOLIC_MODULE_COUNT-1:0] [MATRIX_N-1:0] [HIGH_PRECISION_DATA_WIDTH-1:0]  sys_module_pe_acc_high_casted; // NOTE: Data will get writeback in a high precision format. Low precision will get padded back to high precision by using 0.
+// logic [CORE_COUNT*LOW_PRECISION_SYSTOLIC_MODULE_COUNT-1:0] [MATRIX_N-1:0] [HIGH_PRECISION_DATA_WIDTH-1:0]  sys_module_pe_acc_low_casted; // NOTE: Data will get writeback in a high precision format. Low precision will get padded back to high precision by using 0.
+
+logic [CORE_COUNT*SYSTOLIC_MODULE_COUNT-1:0] [MATRIX_N-1:0] [HIGH_PRECISION_DATA_WIDTH-1:0]  sys_module_pe_acc_casted; // NOTE: Data will get writeback in a high precision format. Low precision will get padded back to high precision by using 0.
 
 logic                                                                           shift_sys_module;
 logic                                                                           bias_valid;
 logic                                                                           activation_valid;
 
+WEIGHT_CHANNEL_RESP_t [CORE_COUNT-1:0]                                          mp_weight_channel_resp;
 // Driving systolic modules
 // -------------------------------------------------------------------------------------
 logic                                                 begin_feature_dump;
@@ -142,53 +129,62 @@ logic                                                 pulse_systolic_module;
 logic [$clog2(MAX_WRITEBACK_BEATS_PER_NODESLOT):0]   sent_writeback_beats;
 logic [$clog2(top_pkg::MAX_FEATURE_COUNT/16):0]      writeback_required_beats_intermediate;
 logic [$clog2(MAX_WRITEBACK_BEATS_PER_NODESLOT):0]   writeback_required_beats;
-// logic [MATRIX_N:0] [top_pkg::NODE_ID_WIDTH-1:0]      sys_module_node_id_snapshot;
 logic [$clog2(top_pkg::MAX_FEATURE_COUNT * 4) - 1:0] out_features_required_bytes;
 
 logic [$clog2(MATRIX_N-1)-1:0]                       fast_pulse_counter;
 
 logic bias_applied, activation_applied;
 // Writeback AXI_DATA_WIDTH shifting logic (shifting horizontally)
-logic [SYSTOLIC_MODULE_COUNT-1:0] sys_module_active;                                      // use to recall if a systolic array is active or not to write out the result
-logic [$clog2(SYSTOLIC_MODULE_COUNT)-1:0] sys_module_active_count;
+logic [CORE_COUNT*SYSTOLIC_MODULE_COUNT-1:0] sys_module_active;                                      // use to recall if a systolic array is active or not to write out the result
+logic [CORE_COUNT-1:0][$clog2(SYSTOLIC_MODULE_COUNT)-1:0] sys_module_active_count;
 logic [top_pkg::TRANSFORMATION_ROWS:0] [AXI_DATA_WIDTH-1:0] axi_write_master_data_i;    // use to shift the data horizontally
 
 // ==================================================================================================================================================
 // Instances
 // ==================================================================================================================================================
-mixed_precision_systolic_module #(
-    .PRECISION(PRECISION),
-    .FLOAT_WIDTH(FLOAT_WIDTH),
-    .MATRIX_N(MATRIX_N),
-    .SYSTOLIC_MODULE_COUNT(SYSTOLIC_MODULE_COUNT)
-) mp_sys (
-    .core_clk(core_clk),
-    .resetn(resetn),
+for (genvar mp_sys_module = 0; mp_sys_module < CORE_COUNT; mp_sys_module++) begin
+    always_comb begin
+        mp_weight_channel_resp[mp_sys_module].valid_mask = weight_channel_resp.valid_mask[(mp_sys_module*SYSTOLIC_MODULE_COUNT*MATRIX_N) + (SYSTOLIC_MODULE_COUNT*MATRIX_N-1) : mp_sys_module*SYSTOLIC_MODULE_COUNT*MATRIX_N];
+        mp_weight_channel_resp[mp_sys_module].data = weight_channel_resp.data[mp_sys_module*SYSTOLIC_MODULE_COUNT*MATRIX_N + SYSTOLIC_MODULE_COUNT*MATRIX_N-1 : mp_sys_module*SYSTOLIC_MODULE_COUNT*MATRIX_N];
+    end
 
-    .weight_channel_resp_valid                  (weight_channel_resp_valid),
-    .weight_channel_resp                        (weight_channel_resp),
+    mixed_precision_systolic_module #(
+        .PRECISION(PRECISION),
+        .FLOAT_WIDTH(FLOAT_WIDTH),
+        .MATRIX_N(MATRIX_N),
+        .SYSTOLIC_MODULE_COUNT(SYSTOLIC_MODULE_COUNT)
+    ) mp_sys (
+        .core_clk(core_clk),
+        .resetn(resetn),
 
-    .layer_config_bias_value                    (layer_config_bias_value),
-    .layer_config_activation_function_value     (layer_config_activation_function_value),
-    .layer_config_leaky_relu_alpha_value        (layer_config_leaky_relu_alpha_value),
+        .weight_channel_resp_valid                  (weight_channel_resp_valid),
+        .weight_channel_resp                        (mp_weight_channel_resp             [mp_sys_module]),
 
-    .mp_sys_module_forward_high_valid           (mp_sys_module_forward_high_valid),
-    .mp_sys_module_forward_high                 (mp_sys_module_forward_high),
+        .mp_sys_module_forward_high_valid           (mp_sys_module_forward_high_valid   [mp_sys_module]),
+        .mp_sys_module_forward_high                 (mp_sys_module_forward_high         [mp_sys_module]),
+        .mp_sys_module_forward_out_high_valid       (mp_sys_module_forward_high_valid   [mp_sys_module+1]),
+        .mp_sys_module_forward_out_high             (mp_sys_module_forward_high         [mp_sys_module+1]),
 
-    .sys_module_pe_acc_high_casted              (sys_module_pe_acc_high_casted),
-    .sys_module_pe_acc_low_casted               (sys_module_pe_acc_low_casted),
+        // .sys_module_pe_acc_high_casted              (sys_module_pe_acc_high_casted      [mp_sys_module*HIGH_PRECISION_SYSTOLIC_MODULE_COUNT + HIGH_PRECISION_SYSTOLIC_MODULE_COUNT-1 : mp_sys_module*HIGH_PRECISION_SYSTOLIC_MODULE_COUNT]),
+        // .sys_module_pe_acc_low_casted               (sys_module_pe_acc_low_casted       [mp_sys_module*LOW_PRECISION_SYSTOLIC_MODULE_COUNT + LOW_PRECISION_SYSTOLIC_MODULE_COUNT-1 : mp_sys_module*LOW_PRECISION_SYSTOLIC_MODULE_COUNT]),
+        .sys_module_pe_acc_casted                   (sys_module_pe_acc_casted           [mp_sys_module*SYSTOLIC_MODULE_COUNT + SYSTOLIC_MODULE_COUNT-1 : mp_sys_module*SYSTOLIC_MODULE_COUNT]),
 
-    .pulse_systolic_module                      (pulse_systolic_module),
-    .shift_sys_module                           (shift_sys_module),
-    .bias_valid                                 (bias_valid),
-    .activation_valid                           (activation_valid),
+        .layer_config_bias_value                    (layer_config_bias_value            [mp_sys_module*SYSTOLIC_MODULE_COUNT*MATRIX_N + SYSTOLIC_MODULE_COUNT*MATRIX_N-1 : mp_sys_module*SYSTOLIC_MODULE_COUNT*MATRIX_N]),
+        .layer_config_activation_function_value     (layer_config_activation_function_value),
+        .layer_config_leaky_relu_alpha_value        (layer_config_leaky_relu_alpha_value),
 
-    // Writeback AXI_DATA_WIDTH shifting logic (shifting horizontally)
-    .sys_module_active                          (sys_module_active),
-    .sys_module_active_count                    (sys_module_active_count),
-    .clean_sys_module_active                    (fte_state_n == FTE_FSM_IDLE)
-);
+        .pulse_systolic_module                      (pulse_systolic_module),
+        .shift_sys_module                           (shift_sys_module),
+        .bias_valid                                 (bias_valid),
+        .activation_valid                           (activation_valid),
 
+        // Writeback AXI_DATA_WIDTH shifting logic (shifting horizontally)
+        .sys_module_active                          (sys_module_active                  [mp_sys_module*SYSTOLIC_MODULE_COUNT + SYSTOLIC_MODULE_COUNT-1 : mp_sys_module*SYSTOLIC_MODULE_COUNT]), // TODO: This is not implemented
+        .sys_module_active_count                    (sys_module_active_count            [mp_sys_module]),
+        .clean_sys_module_active                    (fte_state_n == FTE_FSM_IDLE)
+    );
+
+end
 // ==================================================================================================================================================
 // Logic
 // ==================================================================================================================================================
@@ -349,8 +345,9 @@ always_comb begin
     out_features_required_bytes = {out_features_required_bytes[$clog2(top_pkg::MAX_FEATURE_COUNT * 4) - 1 : 6], 6'd0} + (out_features_required_bytes[5:0] ? 'd64 : 1'b0); // nearest multiple of 64, a row of the whole output matrix
 
     // Div feautre count by 16, round up
-    writeback_required_beats_intermediate = (layer_config_out_features_count >> 4) + (layer_config_out_features_count[3:0] ? 1'b1 : 1'b0); // intermediate value with a larger width to capture the occurance of number greater than 32
-    writeback_required_beats = (writeback_required_beats_intermediate >= MAX_WRITEBACK_BEATS_PER_NODESLOT)? '1: writeback_required_beats_intermediate; // TODO: For now this is hardcoded to be neight the feature count or systolic array count. Ideally this should be number of beats needed to be transfered
+    writeback_required_beats_intermediate = (layer_config_out_features_count >> 4) + (layer_config_out_features_count[3:0] ? 1'b1 : 1'b0); // TODO: I think div by 16 is wrong here. One beat should be 64 bytes. Intermediate value with a larger width to capture the occurance of number greater than 32
+    // writeback_required_beats_intermediate = (layer_config_out_features_count >> 6) + (layer_config_out_features_count[5:0] ? 1'b1 : 1'b0); // TODO: I think div by 16 is wrong here. One beat should be 64 bytes. Intermediate value with a larger width to capture the occurance of number greater than 32
+    writeback_required_beats = (writeback_required_beats_intermediate >= MAX_WRITEBACK_BEATS_PER_NODESLOT)? MAX_WRITEBACK_BEATS_PER_NODESLOT: writeback_required_beats_intermediate; // TODO: For now this is hardcoded to be neight the feature count or systolic array count. Ideally this should be number of beats needed to be transfered
     // writeback_required_beats = (sys_module_active_count * MATRIX_N) >> 4 + ((sys_module_active_count * MATRIX_N)[3:0] ? 1'b1 : 1'b0); TODO: Use this
     // Request
     axi_write_master_req_valid = (fte_state == FTE_FSM_WRITEBACK_REQ);
@@ -367,23 +364,29 @@ end
 for (genvar sys_module = 0; sys_module < 4; sys_module++) begin
     always_comb begin
         if(sys_module < SYSTOLIC_MODULE_COUNT & sys_module_active[(SYS_MODULES_PER_BEAT*(sent_writeback_beats)) + sys_module]) begin
-            if (((SYS_MODULES_PER_BEAT*sent_writeback_beats)  + sys_module) >= HIGH_PRECISION_SYSTOLIC_MODULE_COUNT) begin
-                // Low precision casting
-                axi_write_master_data_i[0][AXI_DATA_WIDTH-1-sys_module*MATRIX_N*32:AXI_DATA_WIDTH-1-((sys_module+1)*MATRIX_N*32-1)] = {
-                    {{32 - HIGH_PRECISION_DATA_WIDTH} {1'd0}}, sys_module_pe_acc_low_casted[(SYS_MODULES_PER_BEAT*sent_writeback_beats)  + sys_module - HIGH_PRECISION_SYSTOLIC_MODULE_COUNT][0],
-                    {{32 - HIGH_PRECISION_DATA_WIDTH} {1'd0}}, sys_module_pe_acc_low_casted[(SYS_MODULES_PER_BEAT*sent_writeback_beats)  + sys_module - HIGH_PRECISION_SYSTOLIC_MODULE_COUNT][1],
-                    {{32 - HIGH_PRECISION_DATA_WIDTH} {1'd0}}, sys_module_pe_acc_low_casted[(SYS_MODULES_PER_BEAT*sent_writeback_beats)  + sys_module - HIGH_PRECISION_SYSTOLIC_MODULE_COUNT][2],
-                    {{32 - HIGH_PRECISION_DATA_WIDTH} {1'd0}}, sys_module_pe_acc_low_casted[(SYS_MODULES_PER_BEAT*sent_writeback_beats)  + sys_module - HIGH_PRECISION_SYSTOLIC_MODULE_COUNT][3]
-                };
-            end else begin
-                // High precision casting
-                axi_write_master_data_i[0][AXI_DATA_WIDTH-1-sys_module*MATRIX_N*32:AXI_DATA_WIDTH-1-((sys_module+1)*MATRIX_N*32-1)] = {
-                    {{32 - HIGH_PRECISION_DATA_WIDTH} {1'd0}}, sys_module_pe_acc_high_casted[(SYS_MODULES_PER_BEAT*sent_writeback_beats)  + sys_module][0],
-                    {{32 - HIGH_PRECISION_DATA_WIDTH} {1'd0}}, sys_module_pe_acc_high_casted[(SYS_MODULES_PER_BEAT*sent_writeback_beats)  + sys_module][1],
-                    {{32 - HIGH_PRECISION_DATA_WIDTH} {1'd0}}, sys_module_pe_acc_high_casted[(SYS_MODULES_PER_BEAT*sent_writeback_beats)  + sys_module][2],
-                    {{32 - HIGH_PRECISION_DATA_WIDTH} {1'd0}}, sys_module_pe_acc_high_casted[(SYS_MODULES_PER_BEAT*sent_writeback_beats)  + sys_module][3]
-                };
-            end
+            // if (((SYS_MODULES_PER_BEAT*sent_writeback_beats)  + sys_module) >= HIGH_PRECISION_SYSTOLIC_MODULE_COUNT) begin
+            //     // one Low precision module
+            //     axi_write_master_data_i[0][AXI_DATA_WIDTH-1-sys_module*MATRIX_N*32:AXI_DATA_WIDTH-1-((sys_module+1)*MATRIX_N*32-1)] = {
+            //         {{32 - HIGH_PRECISION_DATA_WIDTH} {1'd0}}, sys_module_pe_acc_low_casted[(SYS_MODULES_PER_BEAT*sent_writeback_beats)  + sys_module - HIGH_PRECISION_SYSTOLIC_MODULE_COUNT][0],
+            //         {{32 - HIGH_PRECISION_DATA_WIDTH} {1'd0}}, sys_module_pe_acc_low_casted[(SYS_MODULES_PER_BEAT*sent_writeback_beats)  + sys_module - HIGH_PRECISION_SYSTOLIC_MODULE_COUNT][1],
+            //         {{32 - HIGH_PRECISION_DATA_WIDTH} {1'd0}}, sys_module_pe_acc_low_casted[(SYS_MODULES_PER_BEAT*sent_writeback_beats)  + sys_module - HIGH_PRECISION_SYSTOLIC_MODULE_COUNT][2],
+            //         {{32 - HIGH_PRECISION_DATA_WIDTH} {1'd0}}, sys_module_pe_acc_low_casted[(SYS_MODULES_PER_BEAT*sent_writeback_beats)  + sys_module - HIGH_PRECISION_SYSTOLIC_MODULE_COUNT][3]
+            //     };
+            // end else begin
+            //     // one high precision module
+            //     axi_write_master_data_i[0][AXI_DATA_WIDTH-1-sys_module*MATRIX_N*32:AXI_DATA_WIDTH-1-((sys_module+1)*MATRIX_N*32-1)] = {
+            //         {{32 - HIGH_PRECISION_DATA_WIDTH} {1'd0}}, sys_module_pe_acc_high_casted[(SYS_MODULES_PER_BEAT*sent_writeback_beats)  + sys_module][0],
+            //         {{32 - HIGH_PRECISION_DATA_WIDTH} {1'd0}}, sys_module_pe_acc_high_casted[(SYS_MODULES_PER_BEAT*sent_writeback_beats)  + sys_module][1],
+            //         {{32 - HIGH_PRECISION_DATA_WIDTH} {1'd0}}, sys_module_pe_acc_high_casted[(SYS_MODULES_PER_BEAT*sent_writeback_beats)  + sys_module][2],
+            //         {{32 - HIGH_PRECISION_DATA_WIDTH} {1'd0}}, sys_module_pe_acc_high_casted[(SYS_MODULES_PER_BEAT*sent_writeback_beats)  + sys_module][3]
+            //     };
+            // end
+            axi_write_master_data_i[0][AXI_DATA_WIDTH-1-sys_module*MATRIX_N*32:AXI_DATA_WIDTH-1-((sys_module+1)*MATRIX_N*32-1)] = {
+                {{32 - HIGH_PRECISION_DATA_WIDTH} {1'd0}}, sys_module_pe_acc_casted[(SYS_MODULES_PER_BEAT*sent_writeback_beats)  + sys_module][0],
+                {{32 - HIGH_PRECISION_DATA_WIDTH} {1'd0}}, sys_module_pe_acc_casted[(SYS_MODULES_PER_BEAT*sent_writeback_beats)  + sys_module][1],
+                {{32 - HIGH_PRECISION_DATA_WIDTH} {1'd0}}, sys_module_pe_acc_casted[(SYS_MODULES_PER_BEAT*sent_writeback_beats)  + sys_module][2],
+                {{32 - HIGH_PRECISION_DATA_WIDTH} {1'd0}}, sys_module_pe_acc_casted[(SYS_MODULES_PER_BEAT*sent_writeback_beats)  + sys_module][3]
+            };
         end else begin
             axi_write_master_data_i[0][AXI_DATA_WIDTH-1-sys_module*MATRIX_N*32:AXI_DATA_WIDTH-1-((sys_module+1)*MATRIX_N*32-1)] = 0;
         end
@@ -394,7 +397,8 @@ end
 // TODO: As we are performing fix shifing here. Meaning the software has to assume the input feature is a multiple of 4
 for (genvar sys_module = 0; sys_module < 4; sys_module++) begin
     always_comb begin
-        if(SYS_MODULES_PER_BEAT*sent_writeback_beats + sys_module > SYSTOLIC_MODULE_COUNT | !sys_module_active[SYS_MODULES_PER_BEAT*sent_writeback_beats + sys_module]) begin
+        // if(SYS_MODULES_PER_BEAT*sent_writeback_beats + sys_module > SYSTOLIC_MODULE_COUNT | !sys_module_active[SYS_MODULES_PER_BEAT*sent_writeback_beats + sys_module]) begin
+        if(!sys_module_active[SYS_MODULES_PER_BEAT*sent_writeback_beats + sys_module]) begin
             axi_write_master_data_i[sys_module+1] = axi_write_master_data_i[sys_module] >> 128;
         end else begin
             axi_write_master_data_i[sys_module+1] = axi_write_master_data_i[sys_module];

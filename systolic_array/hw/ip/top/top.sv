@@ -9,6 +9,7 @@ module top #(
     parameter ID_WIDTH = 8,
     parameter SYSTOLIC_MODULE_COUNT = top_pkg::SYSTOLIC_MODULE_COUNT,
     parameter TRANSFORMATION_ROWS = top_pkg::TRANSFORMATION_ROWS,
+    parameter CORE_COUNT = top_pkg::CORE_COUNT,
     parameter MATRIX_N = 4
 )
 (
@@ -81,7 +82,7 @@ module top #(
     input logic [AXI_ADDR_WIDTH-2:0]                            layer_config_out_features_address_lsb_value,
     input logic [AXI_ADDR_WIDTH-1:0]                            writeback_offset,
     input logic [1:0]                                           layer_config_activation_function_value,
-    input logic [(SYSTOLIC_MODULE_COUNT*MATRIX_N)-1:0] [31:0]   layer_config_bias_value      
+    input logic [(CORE_COUNT*SYSTOLIC_MODULE_COUNT*MATRIX_N)-1:0] [31:0]   layer_config_bias_value      
     // input logic [1:0]  layer_config_activation_function_value,
     // input logic [31:0] layer_config_bias_value,
     // input logic [31:0] layer_config_leaky_relu_alpha_value,
@@ -332,7 +333,7 @@ WEIGHT_CHANNEL_RESP_t [top_pkg::PRECISION_COUNT-1:0] feature_channel_resp;
 prefetcher #(
     .AXI_DATA_WIDTH(AXI_DATA_WIDTH),
     .AXI_ADDR_WIDTH(AXI_ADDR_WIDTH),
-    .MAX_FIFO_ROWS(top_pkg::MAX_FEATURE_COUNT)
+    .MAX_FIFO_ROWS(CORE_COUNT*SYSTOLIC_MODULE_COUNT*MATRIX_N)
 ) prefetcher_weight_i (
     .core_clk                                                  (clk),
     .resetn                                                    (!rst),

@@ -14,16 +14,18 @@ module mixed_precision_systolic_module #(
     input  logic                                                                                      weight_channel_resp_valid,
     input  WEIGHT_CHANNEL_RESP_t                                                                      weight_channel_resp,
 
-
-    input [HIGH_PRECISION_SYSTOLIC_MODULE_COUNT:0] [MATRIX_N-1:0]                                     mp_sys_module_forward_high_valid, // 16
-    input [HIGH_PRECISION_SYSTOLIC_MODULE_COUNT:0] [MATRIX_N-1:0] [HIGH_PRECISION_DATA_WIDTH-1:0]     mp_sys_module_forward_high, // input is always in high precision
+    input  [MATRIX_N-1:0]                                     mp_sys_module_forward_high_valid, // 16
+    input  [MATRIX_N-1:0] [HIGH_PRECISION_DATA_WIDTH-1:0]     mp_sys_module_forward_high, // input is always in high precision
+    output [MATRIX_N-1:0]                                     mp_sys_module_forward_out_high_valid,
+    output [MATRIX_N-1:0] [HIGH_PRECISION_DATA_WIDTH-1:0]     mp_sys_module_forward_out_high,
 
     input  logic [SYSTOLIC_MODULE_COUNT*MATRIX_N-1:0] [31:0]                                          layer_config_bias_value,
     input  logic [1:0]                                                                                layer_config_activation_function_value,
     input  logic [31:0]                                                                               layer_config_leaky_relu_alpha_value,
 
-    output [SYSTOLIC_MODULE_COUNT-1:0] [MATRIX_N-1:0] [HIGH_PRECISION_DATA_WIDTH-1:0]  sys_module_pe_acc_high_casted, // NOTE: Data will get writeback in a high precision format. Low precision will get padded back to high precision by using 0.
-    output [SYSTOLIC_MODULE_COUNT-1:0] [MATRIX_N-1:0] [HIGH_PRECISION_DATA_WIDTH-1:0]  sys_module_pe_acc_low_casted, // NOTE: Data will get writeback in a high precision format. Low precision will get padded back to high precision by using 0.
+    // output [HIGH_PRECISION_SYSTOLIC_MODULE_COUNT-1:0] [MATRIX_N-1:0] [HIGH_PRECISION_DATA_WIDTH-1:0]  sys_module_pe_acc_high_casted, // NOTE: Data will get writeback in a high precision format. Low precision will get padded back to high precision by using 0.
+    // output [LOW_PRECISION_SYSTOLIC_MODULE_COUNT-1:0] [MATRIX_N-1:0] [HIGH_PRECISION_DATA_WIDTH-1:0]  sys_module_pe_acc_low_casted, // NOTE: Data will get writeback in a high precision format. Low precision will get padded back to high precision by using 0.
+    output [SYSTOLIC_MODULE_COUNT-1:0] [MATRIX_N-1:0] [HIGH_PRECISION_DATA_WIDTH-1:0] sys_module_pe_acc_casted,
 
     input                                                                           pulse_systolic_module,
     input                                                                           shift_sys_module,
@@ -41,10 +43,10 @@ module mixed_precision_systolic_module #(
  // Driven from weight channel
 logic [HIGH_PRECISION_SYSTOLIC_MODULE_COUNT:0] [MATRIX_N-1:0]                                  sys_module_forward_high_valid; // 16
 logic [HIGH_PRECISION_SYSTOLIC_MODULE_COUNT:0] [MATRIX_N-1:0] [HIGH_PRECISION_DATA_WIDTH-1:0]  sys_module_forward_high; // input is always in high precision
-logic [HIGH_PRECISION_SYSTOLIC_MODULE_COUNT:0] [MATRIX_N-1:0] [HIGH_PRECISION_DATA_WIDTH-1:0]  sys_module_forward_high_pass; // input is always in high precision
 
 logic [LOW_PRECISION_SYSTOLIC_MODULE_COUNT:0] [MATRIX_N-1:0]                                  sys_module_forward_low_valid; // 16
-logic [LOW_PRECISION_SYSTOLIC_MODULE_COUNT:0] [MATRIX_N-1:0] [LOW_PRECISION_DATA_WIDTH-1:0]  sys_module_forward_low; // input is always in high precision
+logic [LOW_PRECISION_SYSTOLIC_MODULE_COUNT:0] [MATRIX_N-1:0] [LOW_PRECISION_DATA_WIDTH-1:0]   sys_module_forward_low; // input is always in high precision
+logic [LOW_PRECISION_SYSTOLIC_MODULE_COUNT:0] [MATRIX_N-1:0] [HIGH_PRECISION_DATA_WIDTH-1:0]  sys_module_forward_high_pass; // only used in low precision systolic array
 
 // Driven from weight channel
 logic [MAX_FEATURE_COUNT-1:0]                                                   sys_module_down_in_high_valid;
@@ -62,8 +64,8 @@ logic [HIGH_PRECISION_SYSTOLIC_MODULE_COUNT*MATRIX_N-1:0] [HIGH_PRECISION_DATA_W
 logic [LOW_PRECISION_SYSTOLIC_MODULE_COUNT*MATRIX_N-1:0] [LOW_PRECISION_DATA_WIDTH-1:0]                       sys_bias_per_row_low;
 
 logic [SYSTOLIC_MODULE_COUNT-1:0]                                               sys_module_flush_done;
-logic [SYSTOLIC_MODULE_COUNT-1:0] [MATRIX_N:0] [MATRIX_N-1:0] [HIGH_PRECISION_ACCUMULATOR_WIDTH-1:0]  sys_module_pe_acc_high; // NOTE: Data will get writeback in a high precision format. Low precision will get padded back to high precision by using 0.
-logic [SYSTOLIC_MODULE_COUNT-1:0] [MATRIX_N:0] [MATRIX_N-1:0] [LOW_PRECISION_ACCUMULATOR_WIDTH-1:0]  sys_module_pe_acc_low; // NOTE: Data will get writeback in a high precision format. Low precision will get padded back to high precision by using 0.
+logic [HIGH_PRECISION_SYSTOLIC_MODULE_COUNT-1:0] [MATRIX_N:0] [MATRIX_N-1:0] [HIGH_PRECISION_ACCUMULATOR_WIDTH-1:0]  sys_module_pe_acc_high; // NOTE: Data will get writeback in a high precision format. Low precision will get padded back to high precision by using 0.
+logic [LOW_PRECISION_SYSTOLIC_MODULE_COUNT-1:0] [MATRIX_N:0] [MATRIX_N-1:0] [LOW_PRECISION_ACCUMULATOR_WIDTH-1:0]  sys_module_pe_acc_low; // NOTE: Data will get writeback in a high precision format. Low precision will get padded back to high precision by using 0.
 
 logic [SYSTOLIC_MODULE_COUNT-1:0] sys_module_active_m;                                  // use to recall if a systolic array is active or not to write out the result
 
@@ -89,11 +91,11 @@ count_ones #(
 
 
 always_comb begin
-    sys_module_forward_high_valid [0] = mp_sys_module_forward_high_valid[0];
+    sys_module_forward_high_valid [0] = mp_sys_module_forward_high_valid;
 end
 for (genvar index = 0; index < MATRIX_N; index++) begin
     always_comb begin
-        sys_module_forward_high   [0][index] = mp_sys_module_forward_high   [0][index];
+        sys_module_forward_high   [0][index] = mp_sys_module_forward_high [index];
     end
 end
 
@@ -175,7 +177,7 @@ for (genvar sys_module = 0; sys_module < HIGH_PRECISION_SYSTOLIC_MODULE_COUNT; s
         .OUT_FRAC_WIDTH (HIGH_PRECISION_FRACTIONAL_BITS)
     ) casting_high_row_0_i (
         .data_in    (sys_module_pe_acc_high[sys_module][0][0]),
-        .data_out   (sys_module_pe_acc_high_casted[sys_module][0])
+        .data_out   (sys_module_pe_acc_casted[sys_module][0])
     );
     fixed_cast_single #(
         .IN_WIDTH (HIGH_PRECISION_ACCUMULATOR_WIDTH),
@@ -184,7 +186,7 @@ for (genvar sys_module = 0; sys_module < HIGH_PRECISION_SYSTOLIC_MODULE_COUNT; s
         .OUT_FRAC_WIDTH (HIGH_PRECISION_FRACTIONAL_BITS)
     ) casting_high_row_1_i (
         .data_in    (sys_module_pe_acc_high[sys_module][0][1]),
-        .data_out   (sys_module_pe_acc_high_casted[sys_module][1])
+        .data_out   (sys_module_pe_acc_casted[sys_module][1])
     );
     fixed_cast_single #(
         .IN_WIDTH (HIGH_PRECISION_ACCUMULATOR_WIDTH),
@@ -193,7 +195,7 @@ for (genvar sys_module = 0; sys_module < HIGH_PRECISION_SYSTOLIC_MODULE_COUNT; s
         .OUT_FRAC_WIDTH (HIGH_PRECISION_FRACTIONAL_BITS)
     ) casting_high_row_2_i (
         .data_in    (sys_module_pe_acc_high[sys_module][0][2]),
-        .data_out   (sys_module_pe_acc_high_casted[sys_module][2])
+        .data_out   (sys_module_pe_acc_casted[sys_module][2])
     );
     fixed_cast_single #(
         .IN_WIDTH (HIGH_PRECISION_ACCUMULATOR_WIDTH),
@@ -202,7 +204,7 @@ for (genvar sys_module = 0; sys_module < HIGH_PRECISION_SYSTOLIC_MODULE_COUNT; s
         .OUT_FRAC_WIDTH (HIGH_PRECISION_FRACTIONAL_BITS)
     ) casting_high_row_3_i (
         .data_in    (sys_module_pe_acc_high[sys_module][0][3]),
-        .data_out   (sys_module_pe_acc_high_casted[sys_module][3])
+        .data_out   (sys_module_pe_acc_casted[sys_module][3])
     );
 end
 
@@ -236,6 +238,7 @@ for (genvar sys_module = 0; sys_module < LOW_PRECISION_SYSTOLIC_MODULE_COUNT; sy
         .DATA_WIDTH  (LOW_PRECISION_DATA_WIDTH),
         .ACCUMULATOR_WIDTH (LOW_PRECISION_ACCUMULATOR_WIDTH),
         .FRACTIONAL_BITS (LOW_PRECISION_FRACTIONAL_BITS),
+        .PASS_THROUGH_DATA_WIDTH(HIGH_PRECISION_DATA_WIDTH),
         .MATRIX_N    (MATRIX_N)
     ) sys_module_i (
         .core_clk                            (core_clk),
@@ -281,7 +284,7 @@ for (genvar sys_module = 0; sys_module < LOW_PRECISION_SYSTOLIC_MODULE_COUNT; sy
         .OUT_FRAC_WIDTH (HIGH_PRECISION_FRACTIONAL_BITS)
     ) casting_low_row_0_i (
         .data_in    (sys_module_pe_acc_low[sys_module][0][0]),
-        .data_out   (sys_module_pe_acc_low_casted[sys_module][0])
+        .data_out   (sys_module_pe_acc_casted[sys_module+HIGH_PRECISION_SYSTOLIC_MODULE_COUNT][0])
     );
     fixed_cast_single #(
         .IN_WIDTH (LOW_PRECISION_ACCUMULATOR_WIDTH),
@@ -290,7 +293,7 @@ for (genvar sys_module = 0; sys_module < LOW_PRECISION_SYSTOLIC_MODULE_COUNT; sy
         .OUT_FRAC_WIDTH (HIGH_PRECISION_FRACTIONAL_BITS)
     ) casting_low_row_1_i (
         .data_in    (sys_module_pe_acc_low[sys_module][0][1]),
-        .data_out   (sys_module_pe_acc_low_casted[sys_module][1])
+        .data_out   (sys_module_pe_acc_casted[sys_module+HIGH_PRECISION_SYSTOLIC_MODULE_COUNT][1])
     );
     fixed_cast_single #(
         .IN_WIDTH (LOW_PRECISION_ACCUMULATOR_WIDTH),
@@ -299,7 +302,7 @@ for (genvar sys_module = 0; sys_module < LOW_PRECISION_SYSTOLIC_MODULE_COUNT; sy
         .OUT_FRAC_WIDTH (HIGH_PRECISION_FRACTIONAL_BITS)
     ) casting_low_row_2_i (
         .data_in    (sys_module_pe_acc_low[sys_module][0][2]),
-        .data_out   (sys_module_pe_acc_low_casted[sys_module][2])
+        .data_out   (sys_module_pe_acc_casted[sys_module+HIGH_PRECISION_SYSTOLIC_MODULE_COUNT][2])
     );
     fixed_cast_single #(
         .IN_WIDTH (LOW_PRECISION_ACCUMULATOR_WIDTH),
@@ -308,7 +311,7 @@ for (genvar sys_module = 0; sys_module < LOW_PRECISION_SYSTOLIC_MODULE_COUNT; sy
         .OUT_FRAC_WIDTH (HIGH_PRECISION_FRACTIONAL_BITS)
     ) casting_low_row_3_i (
         .data_in    (sys_module_pe_acc_low[sys_module][0][3]),
-        .data_out   (sys_module_pe_acc_low_casted[sys_module][3])
+        .data_out   (sys_module_pe_acc_casted[sys_module+HIGH_PRECISION_SYSTOLIC_MODULE_COUNT][3])
     );
 end
 
@@ -331,6 +334,7 @@ for (genvar casting_row = 0; casting_row < MATRIX_N; casting_row++) begin
     end
 end
 
-
+assign mp_sys_module_forward_out_high_valid = sys_module_forward_low_valid[LOW_PRECISION_SYSTOLIC_MODULE_COUNT];
+assign mp_sys_module_forward_out_high = sys_module_forward_high_pass[LOW_PRECISION_SYSTOLIC_MODULE_COUNT];
 
 endmodule
