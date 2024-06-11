@@ -137,7 +137,7 @@ logic bias_applied, activation_applied;
 // Writeback AXI_DATA_WIDTH shifting logic (shifting horizontally)
 logic [CORE_COUNT*SYSTOLIC_MODULE_COUNT-1:0] sys_module_active;                                      // use to recall if a systolic array is active or not to write out the result
 logic [CORE_COUNT-1:0][$clog2(SYSTOLIC_MODULE_COUNT)-1:0] sys_module_active_count;
-logic [top_pkg::TRANSFORMATION_ROWS:0] [AXI_DATA_WIDTH-1:0] axi_write_master_data_i;    // use to shift the data horizontally
+logic [SYS_MODULES_PER_BEAT:0] [AXI_DATA_WIDTH-1:0] axi_write_master_data_i;    // use to shift the data horizontally
 
 // ==================================================================================================================================================
 // Instances

@@ -1,115 +1,88 @@
 # do sim_build/runsim.do
-# QuestaSim-64 vmap 2023.4 Lib Mapping Utility 2023.10 Oct  9 2023
+# Model Technology ModelSim SE-64 vmap 10.6d Lib Mapping Utility 2018.02 Feb 23 2018
 # vmap -c 
 # ** Warning: vmap will not overwrite local modelsim.ini.
-# QuestaSim-64 vmap 2023.4 Lib Mapping Utility 2023.10 Oct  9 2023
+# ** Warning: (vdel-134) Unable to remove locked optimized design "_opt".  Locker is thw20@ee-beholder0.ee.ic.ac.uk.
+# ** Warning: (vlib-34) Library already exists at "sim_build/work".
+# Model Technology ModelSim SE-64 vmap 10.6d Lib Mapping Utility 2018.02 Feb 23 2018
 # vmap work sim_build/work 
 # Modifying modelsim.ini
-# QuestaSim-64 vlog 2023.4 Compiler 2023.10 Oct  9 2023
-# Start time: 12:24:27 on Jun 07,2024
-# vlog -work work -L axi_vip_v1_1_6 -L xilinx_vip "+define+COCOTB_SIM" -sv "+define+XSIM" -timescale 1ns/1ps -mfcu "+acc" /home/thw20/FYP/systolic_array/hw/sim/modelsim/glbl.v /home/thw20/FYP/systolic_array/hw/ip/include/top_pkg.sv /home/thw20/FYP/systolic_array/hw/ip/lib/axi/axi_read_master.sv /home/thw20/FYP/systolic_array/hw/ip/lib/axi/axi_write_master.sv /home/thw20/FYP/systolic_array/hw/ip/lib/base_components/binary_to_onehot.sv /home/thw20/FYP/systolic_array/hw/ip/lib/base_components/fixed_cast_single.sv /home/thw20/FYP/systolic_array/hw/ip/lib/base_components/count_ones.sv /home/thw20/FYP/systolic_array/hw/ip/lib/base_components/onehot_to_binary_comb.sv /home/thw20/FYP/systolic_array/hw/ip/lib/base_components/rr_arbiter.sv /home/thw20/FYP/systolic_array/hw/ip/lib/arithmetic/fixed_point_mac.sv /home/thw20/FYP/systolic_array/hw/ip/lib/arithmetic/float_mac.sv /home/thw20/FYP/systolic_array/hw/ip/lib/arithmetic/mac.sv /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/activation_core.sv /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/processing_element.sv /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv /home/thw20/FYP/systolic_array/imports/verilog-axi/rtl/axi_ram.v /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher_weight_bank.sv /home/thw20/FYP/systolic_array/hw/ip/lib/buffer/ultraram.v /home/thw20/FYP/systolic_array/hw/ip/lib/buffer/ultraram_fifo.sv /home/thw20/FYP/systolic_array/hw/ip/lib/axi/axi_interface.sv /home/thw20/FYP/systolic_array/hw/ip/top/top.sv /home/thw20/FYP/systolic_array/hw/ip/top/top_wrapper_tb.sv /home/thw20/FYP/systolic_array/hw/build/project_1.srcs/sources_1/ip/axi_interconnect_0/sim/axi_interconnect_0.v /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_engine.sv /home/thw20/FYP/systolic_array/hw/ip/top/ram_test.sv 
+# Model Technology ModelSim SE-64 vlog 10.6d Compiler 2018.02 Feb 23 2018
+# Start time: 02:20:36 on Jun 11,2024
+# vlog -work work -L axi_vip_v1_1_6 -L xilinx_vip "+define+COCOTB_SIM" -sv "+define+XSIM" -timescale 1ns/1ps -mfcu "+acc" /home/thw20/FYP/systolic_array/hw/sim/modelsim/glbl.v /home/thw20/FYP/systolic_array/hw/ip/include/top_pkg.sv /home/thw20/FYP/systolic_array/hw/ip/lib/axi/axi_read_master.sv /home/thw20/FYP/systolic_array/hw/ip/lib/axi/axi_write_master.sv /home/thw20/FYP/systolic_array/hw/ip/lib/base_components/binary_to_onehot.sv /home/thw20/FYP/systolic_array/hw/ip/lib/base_components/fixed_cast_single.sv /home/thw20/FYP/systolic_array/hw/ip/lib/base_components/count_ones.sv /home/thw20/FYP/systolic_array/hw/ip/lib/base_components/onehot_to_binary_comb.sv /home/thw20/FYP/systolic_array/hw/ip/lib/base_components/rr_arbiter.sv /home/thw20/FYP/systolic_array/hw/ip/lib/arithmetic/fixed_point_mac.sv /home/thw20/FYP/systolic_array/hw/ip/lib/arithmetic/float_mac.sv /home/thw20/FYP/systolic_array/hw/ip/lib/arithmetic/mac.sv /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/activation_core.sv /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/processing_element.sv /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv /home/thw20/FYP/systolic_array/imports/verilog-axi/rtl/axi_ram.v /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher_weight_bank.sv /home/thw20/FYP/systolic_array/hw/ip/lib/buffer/ultraram.v /home/thw20/FYP/systolic_array/hw/ip/lib/buffer/ultraram_fifo.sv /home/thw20/FYP/systolic_array/hw/ip/lib/axi/axi_interface.sv /home/thw20/FYP/systolic_array/hw/ip/top/top.sv /home/thw20/FYP/systolic_array/hw/ip/top/top_wrapper_tb.sv /home/thw20/FYP/systolic_array/hw/build/project_1.srcs/sources_1/ip/axi_interconnect_0/sim/axi_interconnect_0.v /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/mixed_precision_systolic_module.sv /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_engine.sv /home/thw20/FYP/systolic_array/hw/ip/top/ram_test.sv 
 # -- Compiling module glbl
 # -- Compiling package top_pkg
 # -- Compiling module axi_read_master
 # -- Compiling module axi_write_master
 # -- Compiling module binary_to_onehot
 # -- Compiling module fixed_cast_single
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/base_components/fixed_cast_single.sv(70): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/base_components/fixed_cast_single.sv(75): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/base_components/fixed_cast_single.sv(76): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/base_components/fixed_cast_single.sv(88): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/base_components/fixed_cast_single.sv(93): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/base_components/fixed_cast_single.sv(110): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/base_components/fixed_cast_single.sv(112): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/base_components/fixed_cast_single.sv(158): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/base_components/fixed_cast_single.sv(160): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/base_components/fixed_cast_single.sv(165): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/base_components/fixed_cast_single.sv(167): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
 # -- Compiling module count_ones
 # -- Compiling module onehot_to_binary_comb
 # -- Compiling module rr_arbiter
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(35): (vlog-13314) Defaulting port 'sys_module_forward_in' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(38): (vlog-13314) Defaulting port 'sys_module_down_in' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(47): (vlog-13314) Defaulting port 'bias' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv(23): (vlog-13314) Defaulting port 'nsb_prefetcher_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv(91): (vlog-13314) Defaulting port 'weight_channel_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher_weight_bank.sv(24): (vlog-13314) Defaulting port 'nsb_prefetcher_weight_bank_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher_weight_bank.sv(46): (vlog-13314) Defaulting port 'weight_channel_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(59): (vlog-13314) Defaulting port 'weight_prefetcher_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(66): (vlog-13314) Defaulting port 'feature_prefetcher_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(73): (vlog-13314) Defaulting port 'nsb_fte_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(84): (vlog-13314) Defaulting port 'layer_config_bias_value' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/top/top_wrapper_tb.sv(18): (vlog-13314) Defaulting port 'weight_prefetcher_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/top/top_wrapper_tb.sv(25): (vlog-13314) Defaulting port 'feature_prefetcher_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/top/top_wrapper_tb.sv(32): (vlog-13314) Defaulting port 'nsb_fte_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/top/top_wrapper_tb.sv(43): (vlog-13314) Defaulting port 'layer_config_bias_value' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(21): (vlog-13314) Defaulting port 'nsb_fte_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(41): (vlog-13314) Defaulting port 'weight_channel_resp' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(50): (vlog-13314) Defaulting port 'feature_channel_resp' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(70): (vlog-13314) Defaulting port 'layer_config_bias_value' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_engine.sv(42): (vlog-13314) Defaulting port 'nsb_fte_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_engine.sv(61): (vlog-13314) Defaulting port 'weight_channel_resp' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_engine.sv(70): (vlog-13314) Defaulting port 'feature_channel_resp' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_engine.sv(126): (vlog-13314) Defaulting port 'layer_config_bias_value' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
 # -- Compiling package glbl_v_unit
 # -- Importing package top_pkg
 # -- Compiling module fixed_point_mac
 # -- Compiling module float_mac
 # -- Compiling module mac
 # -- Compiling module activation_core
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/activation_core.sv(74): (vlog-2583) [SVCHK] - Extra checking for conflicts with always_comb and always_latch variables is done at vopt time.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/activation_core.sv(75): (vlog-2583) [SVCHK] - Extra checking for conflicts with always_comb and always_latch variables is done at vopt time.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/activation_core.sv(74): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/activation_core.sv(75): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
 # -- Compiling module processing_element
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/processing_element.sv(133): (vlog-2583) [SVCHK] - Extra checking for conflicts with always_comb and always_latch variables is done at vopt time.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/processing_element.sv(134): (vlog-2583) [SVCHK] - Extra checking for conflicts with always_comb and always_latch variables is done at vopt time.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/processing_element.sv(137): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/processing_element.sv(138): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
 # -- Compiling module systolic_module
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(35): (vlog-13314) Defaulting port 'sys_module_forward_in' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(38): (vlog-13314) Defaulting port 'sys_module_down_in' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(47): (vlog-13314) Defaulting port 'bias' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(140): (vlog-2583) [SVCHK] - Extra checking for conflicts with always_comb and always_latch variables is done at vopt time.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(141): (vlog-2583) [SVCHK] - Extra checking for conflicts with always_comb and always_latch variables is done at vopt time.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(144): (vlog-2583) [SVCHK] - Extra checking for conflicts with always_comb and always_latch variables is done at vopt time.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(145): (vlog-2583) [SVCHK] - Extra checking for conflicts with always_comb and always_latch variables is done at vopt time.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(155): (vlog-2583) [SVCHK] - Extra checking for conflicts with always_comb and always_latch variables is done at vopt time.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(156): (vlog-2583) [SVCHK] - Extra checking for conflicts with always_comb and always_latch variables is done at vopt time.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(159): (vlog-2583) [SVCHK] - Extra checking for conflicts with always_comb and always_latch variables is done at vopt time.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(160): (vlog-2583) [SVCHK] - Extra checking for conflicts with always_comb and always_latch variables is done at vopt time.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(146): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(147): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(148): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(151): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(152): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(153): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(163): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(164): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(167): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(168): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
 # -- Compiling module axi_ram
 # -- Compiling module prefetcher
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv(23): (vlog-13314) Defaulting port 'nsb_prefetcher_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv(91): (vlog-13314) Defaulting port 'weight_channel_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
 # -- Compiling module prefetcher_weight_bank
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher_weight_bank.sv(24): (vlog-13314) Defaulting port 'nsb_prefetcher_weight_bank_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher_weight_bank.sv(46): (vlog-13314) Defaulting port 'weight_channel_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
 # -- Compiling module ultraram
 # -- Compiling module ultraram_fifo
 # -- Compiling module axi_interface
 # -- Compiling module top
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(59): (vlog-13314) Defaulting port 'weight_prefetcher_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(66): (vlog-13314) Defaulting port 'feature_prefetcher_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(73): (vlog-13314) Defaulting port 'nsb_fte_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(84): (vlog-13314) Defaulting port 'layer_config_bias_value' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
 # -- Compiling module top_wrapper_tb
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/top/top_wrapper_tb.sv(18): (vlog-13314) Defaulting port 'weight_prefetcher_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/top/top_wrapper_tb.sv(25): (vlog-13314) Defaulting port 'feature_prefetcher_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/top/top_wrapper_tb.sv(32): (vlog-13314) Defaulting port 'nsb_fte_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/top/top_wrapper_tb.sv(43): (vlog-13314) Defaulting port 'layer_config_bias_value' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
 # -- Compiling module axi_interconnect_0
+# -- Compiling module mixed_precision_systolic_module
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/mixed_precision_systolic_module.sv(98): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/mixed_precision_systolic_module.sv(109): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/mixed_precision_systolic_module.sv(125): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/mixed_precision_systolic_module.sv(126): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/mixed_precision_systolic_module.sv(215): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/mixed_precision_systolic_module.sv(230): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/mixed_precision_systolic_module.sv(231): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/mixed_precision_systolic_module.sv(332): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/mixed_precision_systolic_module.sv(333): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
 # -- Compiling module feature_transformation_core
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(21): (vlog-13314) Defaulting port 'nsb_fte_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(41): (vlog-13314) Defaulting port 'weight_channel_resp' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(50): (vlog-13314) Defaulting port 'feature_channel_resp' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(70): (vlog-13314) Defaulting port 'layer_config_bias_value' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(198): (vlog-2583) [SVCHK] - Extra checking for conflicts with always_comb and always_latch variables is done at vopt time.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(214): (vlog-2583) [SVCHK] - Extra checking for conflicts with always_comb and always_latch variables is done at vopt time.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(215): (vlog-2583) [SVCHK] - Extra checking for conflicts with always_comb and always_latch variables is done at vopt time.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(303): (vlog-2583) [SVCHK] - Extra checking for conflicts with always_comb and always_latch variables is done at vopt time.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(318): (vlog-2583) [SVCHK] - Extra checking for conflicts with always_comb and always_latch variables is done at vopt time.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(319): (vlog-2583) [SVCHK] - Extra checking for conflicts with always_comb and always_latch variables is done at vopt time.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(417): (vlog-2583) [SVCHK] - Extra checking for conflicts with always_comb and always_latch variables is done at vopt time.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(549): (vlog-2583) [SVCHK] - Extra checking for conflicts with always_comb and always_latch variables is done at vopt time.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(615): (vlog-2583) [SVCHK] - Extra checking for conflicts with always_comb and always_latch variables is done at vopt time.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(623): (vlog-2583) [SVCHK] - Extra checking for conflicts with always_comb and always_latch variables is done at vopt time.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(631): (vlog-2583) [SVCHK] - Extra checking for conflicts with always_comb and always_latch variables is done at vopt time.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(641): (vlog-2583) [SVCHK] - Extra checking for conflicts with always_comb and always_latch variables is done at vopt time.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(643): (vlog-2583) [SVCHK] - Extra checking for conflicts with always_comb and always_latch variables is done at vopt time.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(147): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(148): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(316): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(384): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(391): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(402): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(404): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
 # -- Compiling module feature_transformation_engine
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_engine.sv(42): (vlog-13314) Defaulting port 'nsb_fte_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_engine.sv(61): (vlog-13314) Defaulting port 'weight_channel_resp' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_engine.sv(70): (vlog-13314) Defaulting port 'feature_channel_resp' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_engine.sv(126): (vlog-13314) Defaulting port 'layer_config_bias_value' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_engine.sv(480): (vlog-2583) [SVCHK] - Extra checking for conflicts with always_comb and always_latch variables is done at vopt time.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_engine.sv(481): (vlog-2583) [SVCHK] - Extra checking for conflicts with always_comb and always_latch variables is done at vopt time.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_engine.sv(483): (vlog-2583) [SVCHK] - Extra checking for conflicts with always_comb and always_latch variables is done at vopt time.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_engine.sv(474): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_engine.sv(475): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
+# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_engine.sv(477): (vlog-2583) [SVCHK] - Some checking for conflicts with always_comb and always_latch variables not yet supported. Run vopt to provide additional design-level checks.
 # -- Compiling module ram_test
 # 
 # Top level modules:
@@ -119,73 +92,28 @@
 # 	axi_interface
 # 	top_wrapper_tb
 # 	ram_test
-# End time: 12:24:28 on Jun 07,2024, Elapsed time: 0:00:01
-# Errors: 0, Warnings: 74
+# End time: 02:20:37 on Jun 11,2024, Elapsed time: 0:00:01
+# Errors: 0, Warnings: 44
 # vsim -L axi_infrastructure_v1_1_0 -L axi_vip_v1_1_6 -L fifo_generator_v13_2_5 -L axi_interconnect_v1_7_17 -L generic_baseblocks_v2_1_0 -L axi_register_slice_v2_1_20 -L axi_data_fifo_v2_1_19 -L axi_crossbar_v2_1_21 -L xbip_utils_v3_0_10 -L axi_utils_v2_0_6 -L xbip_pipe_v3_0_6 -L xbip_dsp48_wrapper_v3_0_4 -L xbip_dsp48_addsub_v3_0_6 -L xbip_dsp48_multadd_v3_0_6 -L xbip_bram18k_v3_0_6 -L mult_gen_v12_0_16 -L floating_point_v7_1_9 -L xilinx_vip -L unisims_ver -L unimacro_ver -L secureip -L xpm -onfinish exit -pli "/home/thw20/miniconda3/envs/mase/lib/python3.11/site-packages/cocotb/libs/libcocotbvpi_modelsim.so" sim_build/work.top_wrapper_tb sim_build/work.glbl 
-# Start time: 12:24:28 on Jun 07,2024
-# ** Note: (vsim-2179) An older version (version 10) DPI tfdb file is being read.
-#    Time: 0 fs  Iteration: 0  Unknown: <UNKNOWN>
+# Start time: 02:20:37 on Jun 11,2024
 # ** Note: (vsim-3812) Design is being optimized...
-# ** Warning: (vsim-3865) Due to PLI being present, global +acc is being enabled automatically. This will cause your simulation to run very slowly. Please use vsim -no_autoacc to disable this feature. This feature is now deprecated and will be removed from future releases.
-# ** Warning: (vopt-10587) Some optimizations are turned off because the +acc switch is in effect. This will cause your simulation to run slowly. Please use -access/-debug to maintain needed visibility.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_engine.sv(42): (vopt-13314) Defaulting port 'nsb_fte_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_engine.sv(61): (vopt-13314) Defaulting port 'weight_channel_resp' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_engine.sv(70): (vopt-13314) Defaulting port 'feature_channel_resp' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_engine.sv(126): (vopt-13314) Defaulting port 'layer_config_bias_value' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(59): (vopt-13314) Defaulting port 'weight_prefetcher_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(66): (vopt-13314) Defaulting port 'feature_prefetcher_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(73): (vopt-13314) Defaulting port 'nsb_fte_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(84): (vopt-13314) Defaulting port 'layer_config_bias_value' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Note: (vopt-143) Recognized 1 FSM in module "axi_interconnect_v1_7_17_axic_reg_srl_fifo(fast__1)".
-# ** Note: (vopt-143) Recognized 1 FSM in module "axi_interconnect_v1_7_17_axic_reg_srl_fifo(fast)".
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv(23): (vopt-13314) Defaulting port 'nsb_prefetcher_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv(91): (vopt-13314) Defaulting port 'weight_channel_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv(23): (vopt-13314) Defaulting port 'nsb_prefetcher_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv(91): (vopt-13314) Defaulting port 'weight_channel_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Note: (vopt-143) Recognized 1 FSM in module "axi_read_master(fast)".
-# ** Note: (vopt-143) Recognized 1 FSM in module "axi_write_master(fast)".
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/top/top_wrapper_tb.sv(18): (vopt-13314) Defaulting port 'weight_prefetcher_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/top/top_wrapper_tb.sv(25): (vopt-13314) Defaulting port 'feature_prefetcher_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/top/top_wrapper_tb.sv(32): (vopt-13314) Defaulting port 'nsb_fte_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/top/top_wrapper_tb.sv(43): (vopt-13314) Defaulting port 'layer_config_bias_value' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(35): (vopt-13314) Defaulting port 'sys_module_forward_in' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(38): (vopt-13314) Defaulting port 'sys_module_down_in' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(47): (vopt-13314) Defaulting port 'bias' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(35): (vopt-13314) Defaulting port 'sys_module_forward_in' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(38): (vopt-13314) Defaulting port 'sys_module_down_in' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(47): (vopt-13314) Defaulting port 'bias' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(35): (vopt-13314) Defaulting port 'sys_module_forward_in' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(38): (vopt-13314) Defaulting port 'sys_module_down_in' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(47): (vopt-13314) Defaulting port 'bias' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(35): (vopt-13314) Defaulting port 'sys_module_forward_in' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(38): (vopt-13314) Defaulting port 'sys_module_down_in' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/lib/systolic_modules/systolic_module.sv(47): (vopt-13314) Defaulting port 'bias' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher_weight_bank.sv(24): (vopt-13314) Defaulting port 'nsb_prefetcher_weight_bank_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher_weight_bank.sv(46): (vopt-13314) Defaulting port 'weight_channel_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+# ** Note: (vsim-3865) Due to PLI being present, full design access is being specified.
 # ** Note: (vopt-143) Recognized 1 FSM in module "prefetcher_weight_bank(fast__1)".
 # ** Note: (vopt-143) Recognized 1 FSM in module "axi_ram(fast)".
 # ** Note: (vopt-143) Recognized 1 FSM in module "axi_interconnect_v1_7_17_axic_register_slice(fast__10)".
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(21): (vopt-13314) Defaulting port 'nsb_fte_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(41): (vopt-13314) Defaulting port 'weight_channel_resp' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(50): (vopt-13314) Defaulting port 'feature_channel_resp' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(70): (vopt-13314) Defaulting port 'layer_config_bias_value' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Note: (vopt-143) Recognized 1 FSM in module "feature_transformation_core(fast)".
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(21): (vopt-13314) Defaulting port 'nsb_fte_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(41): (vopt-13314) Defaulting port 'weight_channel_resp' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(50): (vopt-13314) Defaulting port 'feature_channel_resp' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/transformation_engine/rtl/feature_transformation_core.sv(70): (vopt-13314) Defaulting port 'layer_config_bias_value' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Note: (vopt-143) Recognized 1 FSM in module "feature_transformation_core(fast__1)".
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher_weight_bank.sv(24): (vopt-13314) Defaulting port 'nsb_prefetcher_weight_bank_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
-# ** Warning: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher_weight_bank.sv(46): (vopt-13314) Defaulting port 'weight_channel_req' kind to 'var' rather than 'wire' due to default compile option setting of -svinputport=relaxed.
+# ** Note: (vopt-143) Recognized 1 FSM in module "axi_interconnect_v1_7_17_axic_reg_srl_fifo(fast__1)".
+# ** Note: (vopt-143) Recognized 1 FSM in module "axi_interconnect_v1_7_17_axic_reg_srl_fifo(fast)".
+# ** Note: (vopt-143) Recognized 1 FSM in module "axi_read_master(fast)".
+# ** Note: (vopt-143) Recognized 1 FSM in module "axi_write_master(fast)".
 # ** Note: (vopt-143) Recognized 1 FSM in module "prefetcher_weight_bank(fast)".
-# ** Note: (vsim-12126) Error and warning message counts have been restored: Errors=0, Warnings=42.
-# //  Questa Sim-64
-# //  Version 2023.4 linux_x86_64 Oct  9 2023
+# ** Note: (vopt-143) Recognized 1 FSM in module "feature_transformation_core(fast)".
+# ** Note: (vopt-143) Recognized 1 FSM in module "feature_transformation_core(fast__1)".
+# //  ModelSim SE-64 10.6d Feb 23 2018Linux 3.10.0-1160.105.1.el7.x86_64
 # //
-# //  Copyright 1991-2023 Mentor Graphics Corporation
+# //  Copyright 1991-2018 Mentor Graphics Corporation
 # //  All Rights Reserved.
 # //
-# //  QuestaSim and its associated documentation contain trade
+# //  ModelSim SE-64 and its associated documentation contain trade
 # //  secrets and commercial or financial information that are the property of
 # //  Mentor Graphics Corporation and are privileged, confidential,
 # //  and exempt from disclosure under the Freedom of Information Act,
@@ -207,6 +135,8 @@
 # Loading work.prefetcher_weight_bank(fast__1)
 # Loading work.feature_transformation_engine(fast)
 # Loading work.feature_transformation_core(fast)
+# Loading work.mixed_precision_systolic_module(fast)
+# Loading work.count_ones(fast)
 # Loading work.systolic_module(fast)
 # Loading work.processing_element(fast)
 # Loading work.mac(fast)
@@ -218,8 +148,8 @@
 # Loading work.activation_core(fast__1)
 # Loading work.fixed_cast_single(fast__1)
 # Loading work.fixed_cast_single(fast__2)
-# Loading work.count_ones(fast)
 # Loading work.feature_transformation_core(fast__1)
+# Loading work.mixed_precision_systolic_module(fast__1)
 # Loading work.systolic_module(fast__2)
 # Loading work.processing_element(fast__2)
 # Loading work.mac(fast__2)
@@ -261,10 +191,10 @@
 # Loading axi_interconnect_v1_7_17.axi_interconnect_v1_7_17_axi_crossbar(fast)
 # Loading axi_interconnect_v1_7_17.axi_interconnect_v1_7_17_crossbar(fast)
 # Loading axi_interconnect_v1_7_17.axi_interconnect_v1_7_17_si_transactor(fast)
-# Loading axi_interconnect_v1_7_17.axi_interconnect_v1_7_17_mux_enc(fast)
+# Loading axi_interconnect_v1_7_17.axi_interconnect_v1_7_17_mux_enc(fast__2)
 # Loading axi_interconnect_v1_7_17.axi_interconnect_v1_7_17_si_transactor(fast__1)
 # Loading axi_interconnect_v1_7_17.axi_interconnect_v1_7_17_si_transactor(fast__2)
-# Loading axi_interconnect_v1_7_17.axi_interconnect_v1_7_17_mux_enc(fast__1)
+# Loading axi_interconnect_v1_7_17.axi_interconnect_v1_7_17_mux_enc(fast__3)
 # Loading axi_interconnect_v1_7_17.axi_interconnect_v1_7_17_splitter(fast)
 # Loading axi_interconnect_v1_7_17.axi_interconnect_v1_7_17_wdata_router(fast)
 # Loading axi_interconnect_v1_7_17.axi_interconnect_v1_7_17_axic_reg_srl_fifo(fast)
@@ -278,7 +208,7 @@
 # Loading axi_interconnect_v1_7_17.axi_interconnect_v1_7_17_comparator_static(fast__2)
 # Loading axi_interconnect_v1_7_17.axi_interconnect_v1_7_17_wdata_mux(fast)
 # Loading axi_interconnect_v1_7_17.axi_interconnect_v1_7_17_axic_reg_srl_fifo(fast__1)
-# Loading axi_interconnect_v1_7_17.axi_interconnect_v1_7_17_mux_enc(fast__2)
+# Loading axi_interconnect_v1_7_17.axi_interconnect_v1_7_17_mux_enc(fast__4)
 # Loading axi_interconnect_v1_7_17.axi_interconnect_v1_7_17_axi_register_slice(fast__2)
 # Loading axi_interconnect_v1_7_17.axi_interconnect_v1_7_17_axic_register_slice(fast__8)
 # Loading axi_interconnect_v1_7_17.axi_interconnect_v1_7_17_axic_register_slice(fast__9)
@@ -286,52 +216,61 @@
 # Loading axi_interconnect_v1_7_17.axi_interconnect_v1_7_17_axi_register_slice(fast__3)
 # Loading axi_interconnect_v1_7_17.axi_interconnect_v1_7_17_axic_register_slice(fast__11)
 # Loading axi_interconnect_v1_7_17.axi_interconnect_v1_7_17_addr_arbiter(fast)
-# Loading axi_interconnect_v1_7_17.axi_interconnect_v1_7_17_mux_enc(fast__3)
-# Loading axi_interconnect_v1_7_17.axi_interconnect_v1_7_17_mux_enc(fast__4)
+# Loading axi_interconnect_v1_7_17.axi_interconnect_v1_7_17_mux_enc(fast)
+# Loading axi_interconnect_v1_7_17.axi_interconnect_v1_7_17_mux_enc(fast__1)
 # Loading work.axi_ram(fast)
 # Loading work.glbl(fast)
-# ** Warning: (vsim-3015) [PCDPC] - Port size (30) does not match connection size (34) for port 'c0_ddr4_s_axi_awaddr'. The port definition is at: /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(19).
-#    Time: 0 ps  Iteration: 0  Instance: /top_wrapper_tb/top_i File: /home/thw20/FYP/systolic_array/hw/ip/top/top_wrapper_tb.sv Line: 92
-# ** Warning: (vsim-3015) [PCDPC] - Port size (30) does not match connection size (34) for port 'c0_ddr4_s_axi_araddr'. The port definition is at: /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(39).
-#    Time: 0 ps  Iteration: 0  Instance: /top_wrapper_tb/top_i File: /home/thw20/FYP/systolic_array/hw/ip/top/top_wrapper_tb.sv Line: 92
-# ** Warning: (vsim-3015) [PCDPC] - Port size (34) does not match connection size (30) for port 'axi_araddr'. The port definition is at: /home/thw20/FYP/systolic_array/hw/ip/lib/axi/axi_read_master.sv(35).
-#    Time: 0 ps  Iteration: 0  Instance: /top_wrapper_tb/top_i/prefetcher_weight_i/weight_read_master_i File: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv Line: 257
-# ** Warning: (vsim-3015) [PCDPC] - Port size (34) does not match connection size (30) for port 'axi_araddr'. The port definition is at: /home/thw20/FYP/systolic_array/hw/ip/lib/axi/axi_read_master.sv(35).
-#    Time: 0 ps  Iteration: 0  Instance: /top_wrapper_tb/top_i/prefetcher_feature_i/weight_read_master_i File: /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv Line: 257
-# ** Warning: (vsim-3015) [PCDPC] - Port size (34) does not match connection size (30) for port 'S00_AXI_AWADDR'. The port definition is at: /home/thw20/FYP/systolic_array/hw/build/project_1.srcs/sources_1/ip/axi_interconnect_0/sim/axi_interconnect_0.v(62).
-#    Time: 0 ps  Iteration: 0  Instance: /top_wrapper_tb/top_i/axi_memory_interconnect_i File: /home/thw20/FYP/systolic_array/hw/ip/top/top.sv Line: 643
-# ** Warning: (vsim-3015) [PCDPC] - Port size (34) does not match connection size (30) for port 'S00_AXI_ARADDR'. The port definition is at: /home/thw20/FYP/systolic_array/hw/build/project_1.srcs/sources_1/ip/axi_interconnect_0/sim/axi_interconnect_0.v(82).
-#    Time: 0 ps  Iteration: 0  Instance: /top_wrapper_tb/top_i/axi_memory_interconnect_i File: /home/thw20/FYP/systolic_array/hw/ip/top/top.sv Line: 643
-# ** Warning: (vsim-3015) [PCDPC] - Port size (34) does not match connection size (30) for port 'S01_AXI_AWADDR'. The port definition is at: /home/thw20/FYP/systolic_array/hw/build/project_1.srcs/sources_1/ip/axi_interconnect_0/sim/axi_interconnect_0.v(101).
-#    Time: 0 ps  Iteration: 0  Instance: /top_wrapper_tb/top_i/axi_memory_interconnect_i File: /home/thw20/FYP/systolic_array/hw/ip/top/top.sv Line: 643
-# ** Warning: (vsim-3015) [PCDPC] - Port size (34) does not match connection size (30) for port 'S01_AXI_ARADDR'. The port definition is at: /home/thw20/FYP/systolic_array/hw/build/project_1.srcs/sources_1/ip/axi_interconnect_0/sim/axi_interconnect_0.v(121).
-#    Time: 0 ps  Iteration: 0  Instance: /top_wrapper_tb/top_i/axi_memory_interconnect_i File: /home/thw20/FYP/systolic_array/hw/ip/top/top.sv Line: 643
-# ** Warning: (vsim-3015) [PCDPC] - Port size (34) does not match connection size (30) for port 'S02_AXI_AWADDR'. The port definition is at: /home/thw20/FYP/systolic_array/hw/build/project_1.srcs/sources_1/ip/axi_interconnect_0/sim/axi_interconnect_0.v(140).
-#    Time: 0 ps  Iteration: 0  Instance: /top_wrapper_tb/top_i/axi_memory_interconnect_i File: /home/thw20/FYP/systolic_array/hw/ip/top/top.sv Line: 643
-# ** Warning: (vsim-3015) [PCDPC] - Port size (34) does not match connection size (30) for port 'S02_AXI_ARADDR'. The port definition is at: /home/thw20/FYP/systolic_array/hw/build/project_1.srcs/sources_1/ip/axi_interconnect_0/sim/axi_interconnect_0.v(160).
-#    Time: 0 ps  Iteration: 0  Instance: /top_wrapper_tb/top_i/axi_memory_interconnect_i File: /home/thw20/FYP/systolic_array/hw/ip/top/top.sv Line: 643
-# ** Warning: (vsim-3015) [PCDPC] - Port size (34) does not match connection size (30) for port 'M00_AXI_AWADDR'. The port definition is at: /home/thw20/FYP/systolic_array/hw/build/project_1.srcs/sources_1/ip/axi_interconnect_0/sim/axi_interconnect_0.v(179).
-#    Time: 0 ps  Iteration: 0  Instance: /top_wrapper_tb/top_i/axi_memory_interconnect_i File: /home/thw20/FYP/systolic_array/hw/ip/top/top.sv Line: 643
-# ** Warning: (vsim-3015) [PCDPC] - Port size (34) does not match connection size (30) for port 'M00_AXI_ARADDR'. The port definition is at: /home/thw20/FYP/systolic_array/hw/build/project_1.srcs/sources_1/ip/axi_interconnect_0/sim/axi_interconnect_0.v(199).
-#    Time: 0 ps  Iteration: 0  Instance: /top_wrapper_tb/top_i/axi_memory_interconnect_i File: /home/thw20/FYP/systolic_array/hw/ip/top/top.sv Line: 643
-# ** Warning: (vsim-3015) [PCDPC] - Port size (30) does not match connection size (34) for port 's_axi_awaddr'. The port definition is at: /home/thw20/FYP/systolic_array/imports/verilog-axi/rtl/axi_ram.v(52).
-#    Time: 0 ps  Iteration: 0  Instance: /top_wrapper_tb/ram_model File: /home/thw20/FYP/systolic_array/hw/ip/top/top_wrapper_tb.sv Line: 167
-# ** Warning: (vsim-3015) [PCDPC] - Port size (30) does not match connection size (34) for port 's_axi_araddr'. The port definition is at: /home/thw20/FYP/systolic_array/imports/verilog-axi/rtl/axi_ram.v(71).
-#    Time: 0 ps  Iteration: 0  Instance: /top_wrapper_tb/ram_model File: /home/thw20/FYP/systolic_array/hw/ip/top/top_wrapper_tb.sv Line: 167
+# ** Warning: (vsim-3015) /home/thw20/FYP/systolic_array/hw/ip/top/top_wrapper_tb.sv(92): [PCDPC] - Port size (30) does not match connection size (34) for port 'c0_ddr4_s_axi_awaddr'. The port definition is at: /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(20).
+#    Time: 0 ps  Iteration: 0  Instance: /top_wrapper_tb/top_i File: /home/thw20/FYP/systolic_array/hw/ip/top/top.sv
+# ** Warning: (vsim-3015) /home/thw20/FYP/systolic_array/hw/ip/top/top_wrapper_tb.sv(92): [PCDPC] - Port size (30) does not match connection size (34) for port 'c0_ddr4_s_axi_araddr'. The port definition is at: /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(40).
+#    Time: 0 ps  Iteration: 0  Instance: /top_wrapper_tb/top_i File: /home/thw20/FYP/systolic_array/hw/ip/top/top.sv
+# ** Warning: (vsim-3015) /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv(255): [PCDPC] - Port size (34) does not match connection size (30) for port 'axi_araddr'. The port definition is at: /home/thw20/FYP/systolic_array/hw/ip/lib/axi/axi_read_master.sv(35).
+#    Time: 0 ps  Iteration: 0  Instance: /top_wrapper_tb/top_i/prefetcher_weight_i/weight_read_master_i File: /home/thw20/FYP/systolic_array/hw/ip/lib/axi/axi_read_master.sv
+# ** Warning: (vsim-3015) /home/thw20/FYP/systolic_array/hw/ip/rtl/prefetcher.sv(255): [PCDPC] - Port size (34) does not match connection size (30) for port 'axi_araddr'. The port definition is at: /home/thw20/FYP/systolic_array/hw/ip/lib/axi/axi_read_master.sv(35).
+#    Time: 0 ps  Iteration: 0  Instance: /top_wrapper_tb/top_i/prefetcher_feature_i/weight_read_master_i File: /home/thw20/FYP/systolic_array/hw/ip/lib/axi/axi_read_master.sv
+# ** Warning: (vsim-3015) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(644): [PCDPC] - Port size (34) does not match connection size (30) for port 'S00_AXI_AWADDR'. The port definition is at: /home/thw20/FYP/systolic_array/hw/build/project_1.srcs/sources_1/ip/axi_interconnect_0/sim/axi_interconnect_0.v(62).
+#    Time: 0 ps  Iteration: 0  Instance: /top_wrapper_tb/top_i/axi_memory_interconnect_i File: /home/thw20/FYP/systolic_array/hw/build/project_1.srcs/sources_1/ip/axi_interconnect_0/sim/axi_interconnect_0.v
+# ** Warning: (vsim-3015) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(644): [PCDPC] - Port size (34) does not match connection size (30) for port 'S00_AXI_ARADDR'. The port definition is at: /home/thw20/FYP/systolic_array/hw/build/project_1.srcs/sources_1/ip/axi_interconnect_0/sim/axi_interconnect_0.v(82).
+#    Time: 0 ps  Iteration: 0  Instance: /top_wrapper_tb/top_i/axi_memory_interconnect_i File: /home/thw20/FYP/systolic_array/hw/build/project_1.srcs/sources_1/ip/axi_interconnect_0/sim/axi_interconnect_0.v
+# ** Warning: (vsim-3015) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(644): [PCDPC] - Port size (34) does not match connection size (30) for port 'S01_AXI_AWADDR'. The port definition is at: /home/thw20/FYP/systolic_array/hw/build/project_1.srcs/sources_1/ip/axi_interconnect_0/sim/axi_interconnect_0.v(101).
+#    Time: 0 ps  Iteration: 0  Instance: /top_wrapper_tb/top_i/axi_memory_interconnect_i File: /home/thw20/FYP/systolic_array/hw/build/project_1.srcs/sources_1/ip/axi_interconnect_0/sim/axi_interconnect_0.v
+# ** Warning: (vsim-3015) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(644): [PCDPC] - Port size (34) does not match connection size (30) for port 'S01_AXI_ARADDR'. The port definition is at: /home/thw20/FYP/systolic_array/hw/build/project_1.srcs/sources_1/ip/axi_interconnect_0/sim/axi_interconnect_0.v(121).
+#    Time: 0 ps  Iteration: 0  Instance: /top_wrapper_tb/top_i/axi_memory_interconnect_i File: /home/thw20/FYP/systolic_array/hw/build/project_1.srcs/sources_1/ip/axi_interconnect_0/sim/axi_interconnect_0.v
+# ** Warning: (vsim-3015) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(644): [PCDPC] - Port size (34) does not match connection size (30) for port 'S02_AXI_AWADDR'. The port definition is at: /home/thw20/FYP/systolic_array/hw/build/project_1.srcs/sources_1/ip/axi_interconnect_0/sim/axi_interconnect_0.v(140).
+#    Time: 0 ps  Iteration: 0  Instance: /top_wrapper_tb/top_i/axi_memory_interconnect_i File: /home/thw20/FYP/systolic_array/hw/build/project_1.srcs/sources_1/ip/axi_interconnect_0/sim/axi_interconnect_0.v
+# ** Warning: (vsim-3015) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(644): [PCDPC] - Port size (34) does not match connection size (30) for port 'S02_AXI_ARADDR'. The port definition is at: /home/thw20/FYP/systolic_array/hw/build/project_1.srcs/sources_1/ip/axi_interconnect_0/sim/axi_interconnect_0.v(160).
+#    Time: 0 ps  Iteration: 0  Instance: /top_wrapper_tb/top_i/axi_memory_interconnect_i File: /home/thw20/FYP/systolic_array/hw/build/project_1.srcs/sources_1/ip/axi_interconnect_0/sim/axi_interconnect_0.v
+# ** Warning: (vsim-3015) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(644): [PCDPC] - Port size (34) does not match connection size (30) for port 'M00_AXI_AWADDR'. The port definition is at: /home/thw20/FYP/systolic_array/hw/build/project_1.srcs/sources_1/ip/axi_interconnect_0/sim/axi_interconnect_0.v(179).
+#    Time: 0 ps  Iteration: 0  Instance: /top_wrapper_tb/top_i/axi_memory_interconnect_i File: /home/thw20/FYP/systolic_array/hw/build/project_1.srcs/sources_1/ip/axi_interconnect_0/sim/axi_interconnect_0.v
+# ** Warning: (vsim-3015) /home/thw20/FYP/systolic_array/hw/ip/top/top.sv(644): [PCDPC] - Port size (34) does not match connection size (30) for port 'M00_AXI_ARADDR'. The port definition is at: /home/thw20/FYP/systolic_array/hw/build/project_1.srcs/sources_1/ip/axi_interconnect_0/sim/axi_interconnect_0.v(199).
+#    Time: 0 ps  Iteration: 0  Instance: /top_wrapper_tb/top_i/axi_memory_interconnect_i File: /home/thw20/FYP/systolic_array/hw/build/project_1.srcs/sources_1/ip/axi_interconnect_0/sim/axi_interconnect_0.v
+# ** Warning: (vsim-3015) /home/thw20/FYP/systolic_array/hw/ip/top/top_wrapper_tb.sv(167): [PCDPC] - Port size (30) does not match connection size (34) for port 's_axi_awaddr'. The port definition is at: /home/thw20/FYP/systolic_array/imports/verilog-axi/rtl/axi_ram.v(52).
+#    Time: 0 ps  Iteration: 0  Instance: /top_wrapper_tb/ram_model File: /home/thw20/FYP/systolic_array/imports/verilog-axi/rtl/axi_ram.v
+# ** Warning: (vsim-3015) /home/thw20/FYP/systolic_array/hw/ip/top/top_wrapper_tb.sv(167): [PCDPC] - Port size (30) does not match connection size (34) for port 's_axi_araddr'. The port definition is at: /home/thw20/FYP/systolic_array/imports/verilog-axi/rtl/axi_ram.v(71).
+#    Time: 0 ps  Iteration: 0  Instance: /top_wrapper_tb/ram_model File: /home/thw20/FYP/systolic_array/imports/verilog-axi/rtl/axi_ram.v
 # Loading /home/thw20/miniconda3/envs/mase/lib/python3.11/site-packages/cocotb/libs/libcocotbvpi_modelsim.so
 #      -.--ns INFO     gpi                                ..mbed/gpi_embed.cpp:76   in set_program_name_in_venv        Did not detect Python virtual environment. Using system-wide Python interpreter
 #      -.--ns INFO     gpi                                ../gpi/GpiCommon.cpp:101  in gpi_print_registered_impl       VPI registered
 # 1
 # 1
-#      0.00ns INFO     cocotb                             Running on ModelSim for Questa-64 version 2023.2 2023.10
+#      0.00ns INFO     cocotb                             Running on ModelSim SE-64 version 10.6d 2018.02
 #      0.00ns INFO     cocotb                             Running tests with cocotb v1.8.0 from /home/thw20/miniconda3/envs/mase/lib/python3.11/site-packages/cocotb
-#      0.00ns INFO     cocotb                             Seeding Python random module with 1717759473
+#      0.00ns INFO     cocotb                             Seeding Python random module with 1718068872
 # ['', '/home/thw20/miniconda3/envs/mase/lib/python311.zip', '/home/thw20/miniconda3/envs/mase/lib/python3.11', '/home/thw20/miniconda3/envs/mase/lib/python3.11/lib-dynload', '/home/thw20/miniconda3/envs/mase/lib/python3.11/site-packages', '/home/thw20/FYP/systolic_array/hw/sim/cocotb/../../..']
 # first layer bias: [54, 214, 42, 103, 91, 149, 207, 19, 110, 37, 25, 40, 46, 25, 168, 112, 5, 221, 59, 190, 211, 17, 104, 254, 155, 120, 244, 152, 82, 125, 64, 217, 236, 170, 84, 15, 181, 102, 72, 158, 235, 94, 73, 11, 44, 244, 227, 154, 88, 144, 40, 227, 151, 113, 177, 98, 6, 235, 133, 45, 63, 152, 123, 197]
 # last layer bias: [146, 65, 173, 215, 33]
-# ['', '/home/thw20/miniconda3/envs/mase/lib/python311.zip', '/home/thw20/miniconda3/envs/mase/lib/python3.11', '/home/thw20/miniconda3/envs/mase/lib/python3.11/lib-dynload', '/home/thw20/miniconda3/envs/mase/lib/python3.11/site-packages', '/home/thw20/FYP/systolic_array/hw/sim/cocotb/../../..', '/home/thw20/FYP/systolic_array/tb/runners/../../..', '/home/thw20/FYP/systolic_array/tb/runners/../../..', '/home/thw20/FYP/systolic_array/tb/runners/../../..', '/home/thw20/FYP/systolic_array/tb/software/../../..', '/home/thw20/FYP/systolic_array/tb/runners/../../..', '/home/thw20/mase-tools/machop', '/tmp/tmpw3026o1h', '/workspace/machop/']
+# ['', '/home/thw20/miniconda3/envs/mase/lib/python311.zip', '/home/thw20/miniconda3/envs/mase/lib/python3.11', '/home/thw20/miniconda3/envs/mase/lib/python3.11/lib-dynload', '/home/thw20/miniconda3/envs/mase/lib/python3.11/site-packages', '/home/thw20/FYP/systolic_array/hw/sim/cocotb/../../..', '/home/thw20/FYP/systolic_array/tb/runners/../../..', '/home/thw20/FYP/systolic_array/tb/runners/../../..', '/home/thw20/FYP/systolic_array/tb/runners/../../..', '/home/thw20/FYP/systolic_array/tb/software/../../..', '/home/thw20/FYP/systolic_array/tb/runners/../../..', '/home/thw20/mase-tools/machop', '/tmp/tmp0s1kbqev', '/workspace/machop/']
 #      0.00ns INFO     chop                               Set logging level to info
 #      0.00ns INFO     chop.tools.checkpoint_load         Loaded mase checkpoint from /home/thw20/mase-tools/mase_output/fused/software/transform/transformed_ckpt/graph_module.mz
+# Input data:
+# tensor([[-0.4311,  0.6358, -0.6799, -0.7477, -0.6344, -0.5635, -0.1949, -0.3151,
+#          -0.1949,  0.8040,  1.1575,  0.6252,  0.6269,  0.0914, -0.7231, -0.0235],
+#         [ 0.8355, -0.7784, -0.4432, -0.4710,  0.3163, -0.0607,  2.3280,  1.2629,
+#           2.3280, -0.1812, -0.6005, -0.6836,  0.5041,  0.0431, -0.3726, -0.0235],
+#         [ 0.0194,  0.4672,  0.1894, -0.0511, -0.0818, -0.4025, -0.6455, -0.9697,
+#          -0.6455, -0.8589, -0.7608, -0.9992, -0.7950, -1.0682,  0.2621, -0.7470],
+#         [-0.5452,  0.1779,  0.1613, -0.2514, -0.0852, -0.3614, -0.6098, -0.6689,
+#          -0.6098, -0.0277,  0.3095,  0.0547, -0.0319, -0.3033,  0.0274,  0.7000]])
 # **************************************************
 # Model output:
 # tensor([[1.0977, 1.5703, 0.0391, 0.0000, 0.0000],
@@ -744,34 +683,34 @@
 # input_matrix_iteration=1, weight_matrix_iteration=4
 #     40.00ns INFO     tb_signals                         Start executing instructions
 #     40.00ns INFO     tb_signals                         Writeback address: 0x12000c0, Offset: 0, Load weight from: 0xc00, Load input from: 0x1100000
-#  14820.00ns INFO     instruction                        Weight prefetcher response is valid
-#  14840.00ns INFO     instruction                        Weight prefetcher is reset
-#  14840.00ns INFO     tb_signals                         Done instructing weight prefetcher
-#  15800.00ns INFO     tb_signals                         Done instructing feature prefetcher
-#  15810.00ns INFO     tb_signals                         Feeding bias:
-#  15810.00ns INFO     tb_signals                         [2, 1, 1, 255, 1, 255, 0, 1, 2, 15, 15, 13, 14, 14, 15, 15]
-#  20450.00ns INFO     tb_signals                         Done instructing fte
-#  20460.00ns INFO     tb_signals                         Writeback address: 0x1200080, Offset: 0, Load weight from: 0x800, Load input from: 0x1100000
-#  35190.00ns INFO     instruction                        Weight prefetcher response is valid
-#  35210.00ns INFO     instruction                        Weight prefetcher is reset
-#  35210.00ns INFO     tb_signals                         Done instructing weight prefetcher
-#  35220.00ns INFO     tb_signals                         Feeding bias:
-#  35220.00ns INFO     tb_signals                         [1, 0, 1, 0, 0, 1, 2, 1, 15, 14, 2, 0, 1, 0, 15, 2]
-#  38050.00ns INFO     tb_signals                         Done instructing fte
-#  38060.00ns INFO     tb_signals                         Writeback address: 0x1200040, Offset: 0, Load weight from: 0x400, Load input from: 0x1100000
-#  52790.00ns INFO     instruction                        Weight prefetcher response is valid
-#  52810.00ns INFO     instruction                        Weight prefetcher is reset
-#  52810.00ns INFO     tb_signals                         Done instructing weight prefetcher
-#  52820.00ns INFO     tb_signals                         Feeding bias:
-#  52820.00ns INFO     tb_signals                         [255, 1, 1, 0, 255, 0, 1, 0, 1, 1, 2, 0, 2, 15, 2, 4]
-#  55650.00ns INFO     tb_signals                         Done instructing fte
-#  55660.00ns INFO     tb_signals                         Writeback address: 0x1200000, Offset: 0, Load weight from: 0x0, Load input from: 0x1100000
-#  70390.00ns INFO     instruction                        Weight prefetcher response is valid
-#  70410.00ns INFO     instruction                        Weight prefetcher is reset
-#  70410.00ns INFO     tb_signals                         Done instructing weight prefetcher
-#  70420.00ns INFO     tb_signals                         Feeding bias:
-#  70420.00ns INFO     tb_signals                         [1, 0, 1, 1, 1, 2, 0, 2, 1, 15, 14, 1, 14, 0, 14, 13]
-#  73250.00ns INFO     tb_signals                         Done instructing fte
+#   3785.00ns INFO     instruction                        Weight prefetcher response is valid
+#   3800.00ns INFO     instruction                        Weight prefetcher is reset
+#   3800.00ns INFO     tb_signals                         Done instructing weight prefetcher
+#   4750.00ns INFO     tb_signals                         Done instructing feature prefetcher
+#   4760.00ns INFO     tb_signals                         Feeding bias:
+#   4760.00ns INFO     tb_signals                         [2, 1, 1, 255, 1, 255, 0, 1, 2, 15, 15, 13, 14, 14, 15, 15]
+#   6140.00ns INFO     tb_signals                         Done instructing fte
+#   6150.00ns INFO     tb_signals                         Writeback address: 0x1200080, Offset: 0, Load weight from: 0x800, Load input from: 0x1100000
+#   9845.00ns INFO     instruction                        Weight prefetcher response is valid
+#   9860.00ns INFO     instruction                        Weight prefetcher is reset
+#   9860.00ns INFO     tb_signals                         Done instructing weight prefetcher
+#   9870.00ns INFO     tb_signals                         Feeding bias:
+#   9870.00ns INFO     tb_signals                         [1, 0, 1, 0, 0, 1, 2, 1, 15, 14, 2, 0, 1, 0, 15, 2]
+#  11250.00ns INFO     tb_signals                         Done instructing fte
+#  11260.00ns INFO     tb_signals                         Writeback address: 0x1200040, Offset: 0, Load weight from: 0x400, Load input from: 0x1100000
+#  14955.00ns INFO     instruction                        Weight prefetcher response is valid
+#  14970.00ns INFO     instruction                        Weight prefetcher is reset
+#  14970.00ns INFO     tb_signals                         Done instructing weight prefetcher
+#  14980.00ns INFO     tb_signals                         Feeding bias:
+#  14980.00ns INFO     tb_signals                         [255, 1, 1, 0, 255, 0, 1, 0, 1, 1, 2, 0, 2, 15, 2, 4]
+#  16360.00ns INFO     tb_signals                         Done instructing fte
+#  16370.00ns INFO     tb_signals                         Writeback address: 0x1200000, Offset: 0, Load weight from: 0x0, Load input from: 0x1100000
+#  20065.00ns INFO     instruction                        Weight prefetcher response is valid
+#  20080.00ns INFO     instruction                        Weight prefetcher is reset
+#  20080.00ns INFO     tb_signals                         Done instructing weight prefetcher
+#  20090.00ns INFO     tb_signals                         Feeding bias:
+#  20090.00ns INFO     tb_signals                         [1, 0, 1, 1, 1, 2, 0, 2, 1, 15, 14, 1, 14, 0, 14, 13]
+#  21470.00ns INFO     tb_signals                         Done instructing fte
 # Waiting for arready at address:  0x1200000
 # arready received
 # rdata:  0xc0000000000000000000000000000000b00000017000000000000000f00000000000000060000001f000000000000000d000000000000001400000012
@@ -852,7 +791,7 @@
 # rdata:  0x5000000010000000000000000000000080000000000000000000000000000000200000000000000000000000e00000008000000000000000000000004
 # 00000000000000000000000000000101000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000010000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000111000000000000000000000000000001000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000100
 # 00000005000000010000000000000000000000080000000000000000000000000000000200000000000000000000000e00000008000000000000000000000004
-#  74060.00ns INFO     tb_signals                         Hardware matrix:
+#  22280.00ns INFO     tb_signals                         Hardware matrix:
 # [[12  0  0  0 11 23  0 15  0  6 31  0 13  0 20 18 10  8  5  0  0  2  0 17
 #    0  1  0 11  0  0  0  0  0  0 21  9  6  0 18  9 12 21  0  0  0  5 12  0
 #    6  8  0  0  5 12  0  0  0  0  0 22 26  0  0 10]
@@ -865,7 +804,7 @@
 #  [ 1  3  4  0  0  9  0  7  0 12 12  5  5  9  0  0  0  6  3  1  0  0  0 10
 #    6  0  0 12  0  0  0  2  0  0  6  5  0  0  0 12  1  0  0  5 11  0  0 10
 #    5  1  0  0  8  0  0  0  2  0  0 14  8  0  0  4]]
-#  74060.00ns INFO     tb_signals                         Software matrix:
+#  22280.00ns INFO     tb_signals                         Software matrix:
 # [[12  0  0  0 11 23  0 15  0  6 31  0 13  0 20 18 10  8  5  0  0  2  0 17
 #    0  1  0 11  0  0  0  0  0  0 21  9  6  0 18  9 12 21  0  0  0  5 12  0
 #    6  8  0  0  5 12  0  0  0  0  0 22 26  0  0 10]
@@ -878,22 +817,22 @@
 #  [ 1  3  4  0  0  9  0  7  0 12 12  5  5  9  0  0  0  6  3  1  0  0  0 10
 #    6  0  0 12  0  0  0  2  0  0  6  5  0  0  0 12  1  0  0  5 11  0  0 10
 #    5  1  0  0  8  0  0  0  2  0  0 14  8  0  0  4]]
-#  74060.00ns INFO     cocotb.regression                  graph_test failed
+#  22280.00ns INFO     cocotb.regression                  graph_test failed
 #                                                         Traceback (most recent call last):
 #                                                           File "/home/thw20/FYP/systolic_array/hw/sim/cocotb/runner.py", line 29, in graph_test
 #                                                             await mase_mixed_precision(dut)
-#                                                           File "/home/thw20/FYP/systolic_array/tb/runners/../../../systolic_array/tb/runners/mase_integration.py", line 412, in mase_mixed_precision
+#                                                           File "/home/thw20/FYP/systolic_array/tb/runners/../../../systolic_array/tb/runners/mase_integration.py", line 422, in mase_mixed_precision
 #                                                             raise
 #                                                         RuntimeError: No active exception to reraise
-#  74060.00ns INFO     cocotb.regression                  **************************************************************************************
+#  22280.00ns INFO     cocotb.regression                  **************************************************************************************
 #                                                         ** TEST                          STATUS  SIM TIME (ns)  REAL TIME (s)  RATIO (ns/s) **
 #                                                         **************************************************************************************
-#                                                         ** runner.graph_test              FAIL       74060.00           4.39      16856.88  **
+#                                                         ** runner.graph_test              FAIL       22280.00          10.58       2105.17  **
 #                                                         **************************************************************************************
-#                                                         ** TESTS=1 PASS=0 FAIL=1 SKIP=0              74060.00          25.07       2953.94  **
+#                                                         ** TESTS=1 PASS=0 FAIL=1 SKIP=0              22280.00          56.05        397.48  **
 #                                                         **************************************************************************************
 #                                                         
 # ** Note: $finish    : /home/thw20/FYP/systolic_array/imports/verilog-axi/rtl/axi_ram.v(176)
-#    Time: 74060001 ps  Iteration: 0  Instance: /top_wrapper_tb
-# End time: 12:24:58 on Jun 07,2024, Elapsed time: 0:00:30
-# Errors: 0, Warnings: 56
+#    Time: 22280001 ps  Iteration: 0  Instance: /top_wrapper_tb
+# End time: 02:22:08 on Jun 11,2024, Elapsed time: 0:01:31
+# Errors: 0, Warnings: 14
