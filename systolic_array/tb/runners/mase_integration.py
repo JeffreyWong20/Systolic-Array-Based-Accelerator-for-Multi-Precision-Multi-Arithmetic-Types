@@ -136,8 +136,8 @@ third_layer_result = 0x1400000
 fourth_layer_result = 0x1500000
 fifth_layer_result = 0x1600000
 
-CHECKPOINT_PATH = "/home/thw20/mase-tools/mase_output/jsc-s-high-11-6-low-1-1-16-4/fused/software/transform/transformed_ckpt/graph_module.mz"
-# "/home/thw20/mase-tools/mase_output/fused/software/transform/transformed_ckpt/graph_module.mz"
+# CHECKPOINT_PATH = "/home/thw20/mase-tools/mase_output/jsc-s-high-11-6-low-1-1-16-4/fused/software/transform/transformed_ckpt/graph_module.mz"
+CHECKPOINT_PATH = "/home/thw20/mase-tools/mase_output/fused/software/transform/transformed_ckpt/graph_module.mz"
 
 
 
