@@ -152,6 +152,7 @@ VERILOG_SOURCES += \
 	$(FYP_DIR)/hw/ip/lib/systolic_modules/activation_core.sv \
 	$(FYP_DIR)/hw/ip/lib/systolic_modules/processing_element.sv \
 	$(FYP_DIR)/hw/ip/lib/systolic_modules/systolic_module.sv \
+	$(FYP_DIR)/hw/ip/lib/systolic_modules/mp_systolic_module.sv \
 	$(FYP_DIR)/imports/verilog-axi/rtl/axi_ram.v \
 
 # IP
@@ -168,6 +169,7 @@ VERILOG_SOURCES	+= \
 	$(FYP_DIR)/hw/ip/transformation_engine/rtl/feature_transformation_core.sv \
 	$(FYP_DIR)/hw/ip/transformation_engine/rtl/feature_transformation_engine.sv \
 	$(FYP_DIR)/hw/ip/top/ram_test.sv \
+	$(FYP_DIR)/hw/ip/transformation_engine/rtl/mixed_precision_pe_systolic_module.sv \
 
 VSIM_LIBS = \
 	axi_infrastructure_v1_1_0 \

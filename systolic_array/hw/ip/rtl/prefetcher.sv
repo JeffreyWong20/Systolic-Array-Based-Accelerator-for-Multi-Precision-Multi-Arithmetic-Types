@@ -332,7 +332,7 @@ module prefetcher #
 
   // Drive weight bank request
   for (
-      genvar precision = top_pkg::FLOAT_32; precision < top_pkg::PRECISION_COUNT; precision++
+      genvar precision = 0; precision < top_pkg::PRECISION_COUNT; precision++
   ) begin
     assign nsb_prefetcher_weight_bank_req_valid [precision]  = nsb_prefetcher_req_valid && (nsb_prefetcher_req.req_opcode == WEIGHTS) && (precision == nsb_prefetcher_req.nodeslot_precision);
 

@@ -1,5 +1,8 @@
 # create_clock -period 20.000 -name regbank_clk -waveform {0.000 10.000} [get_ports regbank_clk]
-create_clock -period 5.000 -name clk -waveform {0.000 2.500} [get_ports clk]
+# create_clock -period 5.000 -name clk -waveform {0.000 2.500} [get_ports clk]
+
+
+create_clock -period 3.000 -name clk -waveform {0.000 1.500} [get_ports clk]
 
 # set_property C_CLK_INPUT_FREQ_HZ 300000000 [get_debug_cores dbg_hub]
 # set_property C_ENABLE_CLK_DIVIDER false [get_debug_cores dbg_hub]

@@ -275,6 +275,15 @@ add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_
 
 
 
+
+
+# Mixed Precision PE
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/genblk1[0]/mp_sys/genblk2[0]/sys_module_i/*}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/genblk1[0]/mp_sys/sys_module_i/*}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/genblk1[0]/mp_sys/genblk3[0]/sys_module_i/*}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/genblk1[0]/mp_sys/genblk3[1]/sys_module_i/*}
+add wave -position insertpoint {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/genblk1[0]/mp_sys/*}
+
 for {set i 0} {$i < 128} {incr i} {
     add wave -position insertpoint [format {sim:/top_wrapper_tb/top_i/transformation_engine_i/genblk1[1]/feature_transformation_core_i/genblk1[%d]/sys_module_i/sys_module_pe_acc} $i]
 }

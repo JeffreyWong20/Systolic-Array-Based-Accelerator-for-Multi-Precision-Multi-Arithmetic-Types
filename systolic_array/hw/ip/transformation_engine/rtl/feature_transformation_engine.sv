@@ -246,7 +246,11 @@ logic [$clog2(top_pkg::PRECISION_COUNT)-1:0] transformation_core_write_master_al
 // Transformation Cores
 // --------------------------------------------------------------------------------
 
-for (genvar precision = 0; precision < top_pkg::PRECISION_COUNT; precision++) begin
+assign transformation_core_resp_valid[0] = 0;
+assign transformation_core_axi_write_master_req_valid[0] = 0;
+
+
+for (genvar precision = 1; precision < top_pkg::PRECISION_COUNT; precision++) begin
     feature_transformation_core #(
         .PRECISION             (top_pkg::NODE_PRECISION_e'(precision)),
         .FLOAT_WIDTH           (FLOAT_WIDTH),
