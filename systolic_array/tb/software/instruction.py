@@ -185,7 +185,7 @@ async def load_feature_block_instruction_b(dut, start_address=0x0000, input_bloc
         
 async def calculate_linear_and_writeback_b(dut, writeback_address=0x200000000, output_matrix_size=(8, 8), offset=0, precision=1, activation_code=0, bias=0, blocking=True, timeout=10000):
     dut.nsb_fte_req_valid.value = 1                                             # enable the fte
-    dut.nsb_fte_req.precision.value = 1                                         # 01 is for fixed 8-bit precision
+    dut.nsb_fte_req.precision.value = precision                                 # 01 is for fixed 8-bit precision
     dut.layer_config_out_channel_count.value = output_matrix_size[0]            # here we used the first dimension of the input matrix as output channel count
     dut.layer_config_out_features_count.value = output_matrix_size[1]           # here we used the first dimension of the weight matrix as output features count       
     dut.layer_config_out_features_address_msb_value.value = (writeback_address >> 32) & 0b11        # 2 is for the msb of 34 bits address

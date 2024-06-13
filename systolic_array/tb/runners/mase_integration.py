@@ -111,9 +111,9 @@ dataset_name = "jsc"
 CORE_COUNT = 1
 SYSTOLIC_MODULE_COUNT = 4
 SYSTOLIC_MODULE_HEIGHT = 4
-HIGH_PRECISION_SYSTOLIC_MODULE_COUNT = 2
-high_precision = (8, 4)
-low_precision = (4, 3)
+HIGH_PRECISION_SYSTOLIC_MODULE_COUNT = 1
+high_precision = (11, 6) #(8, 4)
+low_precision = (1, 1)#(4, 3)
 
 systolic_array_size = (SYSTOLIC_MODULE_HEIGHT, SYSTOLIC_MODULE_COUNT*4*CORE_COUNT)
 block_width, block_high_width = SYSTOLIC_MODULE_COUNT*4, HIGH_PRECISION_SYSTOLIC_MODULE_COUNT*4
@@ -136,7 +136,8 @@ third_layer_result = 0x1400000
 fourth_layer_result = 0x1500000
 fifth_layer_result = 0x1600000
 
-CHECKPOINT_PATH = "/home/thw20/mase-tools/mase_output/fused/software/transform/transformed_ckpt/graph_module.mz"
+# CHECKPOINT_PATH = "/home/thw20/mase-tools/mase_output/fused/software/transform/transformed_ckpt/graph_module.mz"
+CHECKPOINT_PATH = "/home/thw20/mase-tools/mase_output/jsc-s-high-11-6-low-1-1-16-4/fused/software/transform/transformed_ckpt/graph_module.mz"
 
 
 
@@ -410,7 +411,7 @@ async def mase_mixed_precision(dut):
 
         
         # Read the result from the RAM and compare it with the software result
-        if layer_index==0:
+        if layer_index==4:
             software_result_matrix = result_list[layer_index]
             hardware_result_matrix = await read_ram(axi_ram_driver, software_result_matrix, byte_per_feature, feature_start_address_list[layer_index+1])
             logger.info("Hardware matrix:")
