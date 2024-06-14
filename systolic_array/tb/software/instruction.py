@@ -1,4 +1,4 @@
-from cocotb.triggers import RisingEdge, Timer, ReadOnly, ReadWrite
+from cocotb.triggers import RisingEdge, Timer, ReadOnly, ReadWrite, FallingEdge
 import logging
 
 debug = True
@@ -136,11 +136,13 @@ async def load_weight_block_instruction_b(dut, start_address=0x0000, weight_bloc
     dut.weight_prefetcher_req.nodeslot.value        = 0                         # not used for weight bank requests
     dut.weight_prefetcher_req.nodeslot_precision.value = precision              # 01 is for fixed 8-bit precision
     dut.weight_prefetcher_req.neighbour_count.value = 0                         # not used for weight bank requests
+    number_of_clock = 1 
     await RisingEdge(dut.clk)
     if blocking:
         p = 0
         while True:
-            await RisingEdge(dut.clk)
+            number_of_clock += 1
+            await FallingEdge(dut.clk)
             await ReadOnly()
             if dut.weight_prefetcher_resp_valid.value == 1:
                 logger.info("Weight prefetcher response is valid")
@@ -151,6 +153,7 @@ async def load_weight_block_instruction_b(dut, start_address=0x0000, weight_bloc
     await RisingEdge(dut.clk)
     await clear_weight_prefetcher(dut)
     logger.info("Weight prefetcher is reset")
+    return number_of_clock
         
 async def load_feature_block_instruction_b(dut, start_address=0x0000, input_block_size=(8, 128), precision=1, blocking=True, timeout=10000):
     dut.feature_prefetcher_req_valid.value          = 1                         # enable the prefetcher
@@ -161,12 +164,14 @@ async def load_feature_block_instruction_b(dut, start_address=0x0000, input_bloc
     dut.feature_prefetcher_req.nodeslot.value       = 0                         # not used for weight bank requests
     dut.feature_prefetcher_req.nodeslot_precision.value = precision             # 01 is for fixed 8-bit precision
     dut.feature_prefetcher_req.neighbour_count.value = 0                        # not used for weight bank requests
+    number_of_clock = 1
     await RisingEdge(dut.clk)
     if blocking:
         p = 0
         while True:
             await ReadOnly()
-            await RisingEdge(dut.clk)
+            number_of_clock += 1
+            await FallingEdge(dut.clk)
             if dut.feature_prefetcher_resp_valid.value == 1:
                 logging.info("Feature prefetcher response is valid")
                 break
@@ -176,6 +181,7 @@ async def load_feature_block_instruction_b(dut, start_address=0x0000, input_bloc
     await RisingEdge(dut.clk)
     await clear_feature_prefetcher(dut)
     logging.info("Feature prefetcher is reset")
+    return number_of_clock
         
 async def calculate_linear_and_writeback_b(dut, writeback_address=0x200000000, output_matrix_size=(8, 8), offset=0, precision=1, activation_code=0, bias=0, blocking=True, timeout=10000):
     dut.nsb_fte_req_valid.value = 1                                             # enable the fte
@@ -191,22 +197,25 @@ async def calculate_linear_and_writeback_b(dut, writeback_address=0x200000000, o
             dut.layer_config_bias_value[i].value = bias[i]
     else:
         dut.layer_config_bias_value.value = 0
-    # dut.layer_config_bias_value.value = bias                                    
+    # dut.layer_config_bias_value.value = bias    
+    number_of_clock = 1                                
     await RisingEdge(dut.clk)    
     if blocking:
-        while True:
-            await RisingEdge(dut.clk)
-            await ReadOnly()
-            if dut.nsb_fte_req_valid.value == 1:
-                logging.info("FTE response is valid")
-                break
-        await RisingEdge(dut.clk)
-        dut.nsb_fte_req_valid.value = 0
+        # while True:
+        #     number_of_clock += 1
+        #     await FallingEdge(dut.clk)
+        #     await ReadOnly()
+        #     if dut.nsb_fte_req_valid.value == 1:
+        #         logging.info("FTE response is valid")
+        #         break
+        # await RisingEdge(dut.clk)
+        # dut.nsb_fte_req_valid.value = 0
         
         p = 0
         while True:
+            number_of_clock += 1
             await ReadOnly()
-            await RisingEdge(dut.clk)
+            await FallingEdge(dut.clk)
             if dut.nsb_fte_resp_valid.value == 1:
                 logging.info("FTE response is valid")
                 break
@@ -216,3 +225,4 @@ async def calculate_linear_and_writeback_b(dut, writeback_address=0x200000000, o
     await RisingEdge(dut.clk)
     await clear_fte(dut)
     logging.info("FTE is reset")
+    return number_of_clock

@@ -105,17 +105,28 @@ class FCN_mix(torch.nn.Module):
 # --------------------------------------------------
 torch.manual_seed(42)  
 np.random.seed(0)
-batch_size = 4
 model_name = "jsc-s"
 dataset_name = "jsc"
+SYSTOLIC_MODULE_HEIGHT = 4
 
+
+CORE_COUNT = 1
 SYSTOLIC_MODULE_COUNT = 4
-systolic_array_size = (1*4, SYSTOLIC_MODULE_COUNT*4)
-byte_per_feature, precision = 4, 8
+HIGH_PRECISION_SYSTOLIC_MODULE_COUNT = 1
+high_precision  =  (11, 6)  # (8, 4)
+low_precision   =  (1, 1)  #(4, 3)
 
-high_precision = (8, 4)
-low_precision = (4, 3)
+systolic_array_size = (SYSTOLIC_MODULE_HEIGHT, SYSTOLIC_MODULE_COUNT*4*CORE_COUNT)
+block_width, block_high_width = SYSTOLIC_MODULE_COUNT*4, HIGH_PRECISION_SYSTOLIC_MODULE_COUNT*4
+byte_per_feature = 4
 
+
+# Remember to execute this script to prepare the memory
+CHECKPOINT_PATH = "/home/thw20/mase-tools/mase_output/jsc-s-high-11-6-low-1-1-16-4/fused/software/transform/transformed_ckpt/graph_module.mz"
+# CHECKPOINT_PATH = "/home/thw20/mase-tools/mase_output/fused/software/transform/transformed_ckpt/graph_module.mz"
+
+
+batch_size = systolic_array_size[0]
 input_shape = (batch_size, 16)
 first_layer_weight_shape = (64, 16)
 second_layer_weight_shape = (32, 64)
@@ -130,8 +141,6 @@ second_layer_result = 0x1300000
 third_layer_result = 0x1400000
 fourth_layer_result = 0x1500000
 fifth_layer_result = 0x1600000
-
-CHECKPOINT_PATH = "/home/thw20/mase-tools/mase_output/fused/software/transform/transformed_ckpt/graph_module.mz"
 
 
 
@@ -195,8 +204,8 @@ config = {
     "bias_low_width": low_precision[0],
     "bias_low_frac_width": low_precision[1],
     #
-    "block_width": int(systolic_array_size[1]),
-    "block_high_width": int(systolic_array_size[1]/2),
+    "block_width": int(block_width),
+    "block_high_width": int(block_high_width),
     "block_height": 4,
     # 
     "weight_width": 8,
@@ -216,6 +225,8 @@ ceildiv = lambda a, b: -(-a // b)
 feature_start_address_list = [input_start_address, first_layer_result, second_layer_result, third_layer_result, fourth_layer_result, fifth_layer_result]
 
 input_data = dummy_in["x"]
+print("Input data:")
+print(input_data)
 
 fc = FCN_mix(first_layer_weight_shape, second_layer_weight_shape, third_layer_weight_shape, fourth_layer_weight_shape, fifth_layer_weight_shape, config=config)
 
@@ -352,6 +363,7 @@ async def mase_mixed_precision(dut):
     
     # write weights to RAM
     axi_ram_driver = AXIDriver(dut.ram_model)
+    clock_list = []
     # Instruct the core
     for layer_index, (input_shape, weight_shape) in enumerate(combined_list):
         byte_per_weight_block = ceildiv(weight_shape[1] * 4, 64) * 64 * systolic_array_size[1]
@@ -366,6 +378,7 @@ async def mase_mixed_precision(dut):
         
         logger.info("Start executing instructions")
         for i, (writeback_address, offset) in enumerate(writeback_address_generator(writeback_address=feature_start_address_list[layer_index+1], input_matrix_size=input_shape, weight_matrix_size=weight_shape, systolic_array_size=systolic_array_size)):
+            clk_w, clk_f, clk_c = 0, 0, 0
             reversed_index =  (weight_matrix_iteration-1-(i % weight_matrix_iteration))
             weight_start_address = weight_start_address_list[layer_index] + byte_per_weight_block * reversed_index
             input_start_address = feature_start_address_list[layer_index] + byte_per_input_block * (i // weight_matrix_iteration)
@@ -373,12 +386,12 @@ async def mase_mixed_precision(dut):
             logger.info(f"Writeback address: {hex(writeback_address)}, Offset: {offset}, Load weight from: {hex(weight_start_address)}, Load input from: {hex(input_start_address)}")
 
             await RisingEdge(dut.clk)
-            await load_weight_block_instruction_b(dut, start_address=weight_start_address, weight_block_size=weight_shape, timeout=timeout)
+            clk_w = await load_weight_block_instruction_b(dut, start_address=weight_start_address, weight_block_size=weight_shape, timeout=timeout)
             logger.info("Done instructing weight prefetcher")
             
             if i % weight_matrix_iteration == 0:
                 await RisingEdge(dut.clk)
-                await load_feature_block_instruction_b(dut, start_address=input_start_address, input_block_size=input_shape, timeout=timeout)
+                clk_f = await load_feature_block_instruction_b(dut, start_address=input_start_address, input_block_size=input_shape, timeout=timeout)
                 logger.info("Done instructing feature prefetcher")
 
             await RisingEdge(dut.clk)
@@ -393,8 +406,9 @@ async def mase_mixed_precision(dut):
             logger.info("Feeding bias:")
             logger.info(bias_section)
             Activation_code = Activation.NONE.value if layer_index==10 else Activation.RELU.value
-            await calculate_linear_and_writeback_b(dut, writeback_address=writeback_address, offset=offset, output_matrix_size=(input_shape[0], weight_shape[0]), activation_code=Activation_code, timeout=timeout, bias=bias_section)
+            clk_c = await calculate_linear_and_writeback_b(dut, writeback_address=writeback_address, offset=offset, output_matrix_size=(input_shape[0], weight_shape[0]), activation_code=Activation_code, timeout=timeout, bias=bias_section)
             logger.info("Done instructing fte")
+            clock_list.append((clk_w, clk_f, clk_c))
 
             await RisingEdge(dut.clk)
 
@@ -410,6 +424,8 @@ async def mase_mixed_precision(dut):
             print(software_result_matrix)
             assert ((hardware_result_matrix == software_result_matrix).all()), "The solution is not correct"
             raise
+    print("clock_list:" , clock_list)
+    print("total clock:", sum([sum(clock) for clock in clock_list]))
     
     print("reading from:", feature_start_address_list[-1])
     software_result_matrix = result_list[-1]

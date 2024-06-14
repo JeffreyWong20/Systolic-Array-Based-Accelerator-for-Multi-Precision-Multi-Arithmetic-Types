@@ -7,7 +7,8 @@ module feature_transformation_engine #(
     parameter AXI_ADDRESS_WIDTH = 32,
     parameter AXI_DATA_WIDTH = 512,
     parameter MATRIX_N = top_pkg::TRANSFORMATION_ROWS,
-    parameter SYSTOLIC_MODULE_COUNT = top_pkg::SYSTOLIC_MODULE_COUNT
+    parameter SYSTOLIC_MODULE_COUNT = top_pkg::SYSTOLIC_MODULE_COUNT,
+    parameter CORE_COUNT = top_pkg::CORE_COUNT
 ) (
     input logic                                                 core_clk,
     input logic                                                 resetn,
@@ -43,13 +44,6 @@ module feature_transformation_engine #(
 
     output logic                                                nsb_fte_resp_valid,
     output NSB_FTE_RESP_t                                       nsb_fte_resp,
-
-    // // Aggregation Buffer Interface
-    // input  logic [top_pkg::PRECISION_COUNT-1:0] [top_pkg::AGGREGATION_BUFFER_SLOTS-1:0] [top_pkg::NODE_ID_WIDTH-1:0]                 aggregation_buffer_node_id,
-    // output logic [top_pkg::PRECISION_COUNT-1:0] [top_pkg::AGGREGATION_BUFFER_SLOTS-1:0]                                              aggregation_buffer_pop,
-    // input  logic [top_pkg::PRECISION_COUNT-1:0] [top_pkg::AGGREGATION_BUFFER_SLOTS-1:0]                                              aggregation_buffer_out_feature_valid,
-    // input  logic [top_pkg::PRECISION_COUNT-1:0] [top_pkg::AGGREGATION_BUFFER_SLOTS-1:0] [top_pkg::AGGREGATION_BUFFER_READ_WIDTH-1:0] aggregation_buffer_out_feature,
-    // input  logic [top_pkg::PRECISION_COUNT-1:0] [top_pkg::AGGREGATION_BUFFER_SLOTS-1:0]                                              aggregation_buffer_slot_free,
 
     // Weight Channels: FTE -> Prefetcher Weight Bank (REQ)
     output logic                 [top_pkg::PRECISION_COUNT-1:0] weight_channel_req_valid,
@@ -123,7 +117,7 @@ module feature_transformation_engine #(
     input logic [31:0]  layer_config_out_channel_count,  // Number of output channels
     input logic [31:0]  layer_config_out_features_count, // Number of output features in a channel                                 
     input logic [1:0]  layer_config_activation_function_value,
-    input logic [SYSTOLIC_MODULE_COUNT*MATRIX_N-1:0] [31:0] layer_config_bias_value,
+    input logic [CORE_COUNT*SYSTOLIC_MODULE_COUNT*MATRIX_N-1:0] [31:0] layer_config_bias_value,
     input logic [31:0] layer_config_leaky_relu_alpha_value,
     input logic [1:0]  layer_config_out_features_address_msb_value,
     input logic [AXI_ADDRESS_WIDTH-2:0] layer_config_out_features_address_lsb_value,
@@ -252,83 +246,151 @@ logic [$clog2(top_pkg::PRECISION_COUNT)-1:0] transformation_core_write_master_al
 // Transformation Cores
 // --------------------------------------------------------------------------------
 
-for (genvar precision = 0; precision < top_pkg::PRECISION_COUNT; precision++) begin
-    feature_transformation_core #(
-        .PRECISION             (top_pkg::NODE_PRECISION_e'(precision)),
+// for (genvar precision = 0; precision < top_pkg::PRECISION_COUNT; precision++) begin
+//     feature_transformation_core #(
+//         .PRECISION             (top_pkg::NODE_PRECISION_e'(precision)),
+//         .FLOAT_WIDTH           (FLOAT_WIDTH),
+//         .DATA_WIDTH            (top_pkg::bits_per_precision(top_pkg::NODE_PRECISION_e'(precision))),
+//         .AXI_ADDRESS_WIDTH     (AXI_ADDRESS_WIDTH),
+//         .AXI_DATA_WIDTH        (AXI_DATA_WIDTH),
+//         .MATRIX_N              (MATRIX_N),
+//         .SYSTOLIC_MODULE_COUNT (SYSTOLIC_MODULE_COUNT)
+//     ) feature_transformation_core_i (
+//         .core_clk                                                   (core_clk),
+//         .resetn                                                     (resetn),
+
+//         // Node Scoreboard -> Transformation Engine Interface
+//         .nsb_fte_req_valid                                          (nsb_fte_req_valid && (nsb_fte_req.precision == precision)),
+//         .nsb_fte_req_ready                                          (transformation_core_req_ready [precision]),
+//         .nsb_fte_req                                                (nsb_fte_req),
+
+//         .nsb_fte_resp_valid                                         (transformation_core_resp_valid                         [precision]),
+//         .nsb_fte_resp_ready                                         (transformation_core_resp_ready                         [precision]),
+//         .nsb_fte_resp                                               (transformation_core_resp                               [precision]),
+
+//         // // Aggregation Buffer Interface
+//         // .transformation_core_aggregation_buffer_node_id             (aggregation_buffer_node_id                             [precision]),
+//         // .transformation_core_aggregation_buffer_pop                 (aggregation_buffer_pop                                 [precision]),
+//         // .transformation_core_aggregation_buffer_out_feature_valid   (aggregation_buffer_out_feature_valid                   [precision]),
+//         // .transformation_core_aggregation_buffer_out_feature         (aggregation_buffer_out_feature                         [precision]),
+//         // .transformation_core_aggregation_buffer_slot_free           (aggregation_buffer_slot_free                           [precision]),
+
+//         // Weight Channels: FTE -> Prefetcher Weight Bank (REQ)
+//         .weight_channel_req_valid                                   (weight_channel_req_valid                               [precision]),
+//         .weight_channel_req_ready                                   (weight_channel_req_ready                               [precision]),
+//         .weight_channel_req                                         (weight_channel_req                                     [precision]),
+//         .weight_channel_resp_valid                                  (weight_channel_resp_valid                              [precision]),
+//         .weight_channel_resp_ready                                  (weight_channel_resp_ready                              [precision]),
+//         .weight_channel_resp                                        (weight_channel_resp                                    [precision]),
+
+//         // Feature Channels: FTE -> Prefetcher Weight Bank (REQ)
+//         .feature_channel_req_valid                                   (feature_channel_req_valid                               [precision]),
+//         .feature_channel_req_ready                                   (feature_channel_req_ready                               [precision]),
+//         .feature_channel_req                                         (feature_channel_req                                     [precision]),
+//         .feature_channel_resp_valid                                  (feature_channel_resp_valid                              [precision]),
+//         .feature_channel_resp_ready                                  (feature_channel_resp_ready                              [precision]),
+//         .feature_channel_resp                                        (feature_channel_resp                                    [precision]),
+
+//         // // Transformation Buffer Interface
+//         // .transformation_buffer_write_enable                         (transformation_buffer_write_enable                     [precision]),
+//         // .transformation_buffer_write_address                        (transformation_buffer_write_address                    [precision]),
+//         // .transformation_buffer_write_data                           (transformation_buffer_write_data                       [precision]),
+//         // .transformation_buffer_slot_free                            (transformation_buffer_slot_free                        [precision]),
+
+//         // AXI Write Master Interface
+//         .axi_write_master_req_valid                                 (transformation_core_axi_write_master_req_valid         [precision]),
+//         .axi_write_master_req_ready                                 (transformation_core_axi_write_master_req_ready         [precision]),
+//         .axi_write_master_req_start_address                         (transformation_core_axi_write_master_req_start_address [precision]),
+//         .axi_write_master_req_len                                   (transformation_core_axi_write_master_req_len           [precision]),
+
+//         .axi_write_master_pop                                       (transformation_core_axi_write_master_pop               [precision]),
+//         .axi_write_master_data_valid                                (transformation_core_axi_write_master_data_valid        [precision]),
+//         .axi_write_master_data                                      (transformation_core_axi_write_master_data              [precision]),
+
+//         .axi_write_master_resp_valid                                (transformation_core_axi_write_master_resp_valid        [precision]),
+//         .axi_write_master_resp_ready                                (transformation_core_axi_write_master_resp_ready        [precision]),
+
+//         // Layer configuration
+//         .writeback_offset                                           (writeback_offset),
+//         .layer_config_out_features_count                            (layer_config_out_features_count),
+//         .layer_config_out_channel_count                             (layer_config_out_channel_count),
+//         .layer_config_out_features_address_msb_value                (layer_config_out_features_address_msb_value),
+//         .layer_config_out_features_address_lsb_value                (layer_config_out_features_address_lsb_value),
+//         .layer_config_bias_value                                    (layer_config_bias_value),
+//         .layer_config_activation_function_value                     (layer_config_activation_function_value),
+//         .layer_config_leaky_relu_alpha_value                        (layer_config_leaky_relu_alpha_value),
+//         .ctrl_buffering_enable_value                                (ctrl_buffering_enable_value),
+//         .ctrl_writeback_enable_value                                (ctrl_writeback_enable_value)
+//     );
+// end
+
+
+assign transformation_core_resp_valid[0] = 0;
+assign transformation_core_axi_write_master_req_valid[0] = 0;
+
+feature_transformation_core #(
+        .PRECISION             (top_pkg::NODE_PRECISION_e'(top_pkg::FIXED_8)),
         .FLOAT_WIDTH           (FLOAT_WIDTH),
-        .DATA_WIDTH            (top_pkg::bits_per_precision(top_pkg::NODE_PRECISION_e'(precision))),
+        .DATA_WIDTH            (top_pkg::bits_per_precision(top_pkg::NODE_PRECISION_e'(top_pkg::FIXED_8))),
         .AXI_ADDRESS_WIDTH     (AXI_ADDRESS_WIDTH),
         .AXI_DATA_WIDTH        (AXI_DATA_WIDTH),
         .MATRIX_N              (MATRIX_N),
         .SYSTOLIC_MODULE_COUNT (SYSTOLIC_MODULE_COUNT)
-    ) feature_transformation_core_i (
-        .core_clk                                                   (core_clk),
-        .resetn                                                     (resetn),
+) feature_transformation_core_i (
+    .core_clk                                                   (core_clk),
+    .resetn                                                     (resetn),
 
-        // Node Scoreboard -> Transformation Engine Interface
-        .nsb_fte_req_valid                                          (nsb_fte_req_valid && (nsb_fte_req.precision == precision)),
-        .nsb_fte_req_ready                                          (transformation_core_req_ready [precision]),
-        .nsb_fte_req                                                (nsb_fte_req),
+    // Node Scoreboard -> Transformation Engine Interface
+    .nsb_fte_req_valid                                          (nsb_fte_req_valid && (nsb_fte_req.precision == top_pkg::FIXED_8)),
+    .nsb_fte_req_ready                                          (transformation_core_req_ready [top_pkg::FIXED_8]),
+    .nsb_fte_req                                                (nsb_fte_req),
 
-        .nsb_fte_resp_valid                                         (transformation_core_resp_valid                         [precision]),
-        .nsb_fte_resp_ready                                         (transformation_core_resp_ready                         [precision]),
-        .nsb_fte_resp                                               (transformation_core_resp                               [precision]),
+    .nsb_fte_resp_valid                                         (transformation_core_resp_valid                         [top_pkg::FIXED_8]),
+    .nsb_fte_resp_ready                                         (transformation_core_resp_ready                         [top_pkg::FIXED_8]),
+    .nsb_fte_resp                                               (transformation_core_resp                               [top_pkg::FIXED_8]),
 
-        // // Aggregation Buffer Interface
-        // .transformation_core_aggregation_buffer_node_id             (aggregation_buffer_node_id                             [precision]),
-        // .transformation_core_aggregation_buffer_pop                 (aggregation_buffer_pop                                 [precision]),
-        // .transformation_core_aggregation_buffer_out_feature_valid   (aggregation_buffer_out_feature_valid                   [precision]),
-        // .transformation_core_aggregation_buffer_out_feature         (aggregation_buffer_out_feature                         [precision]),
-        // .transformation_core_aggregation_buffer_slot_free           (aggregation_buffer_slot_free                           [precision]),
+    // Weight Channels: FTE -> Prefetcher Weight Bank (REQ)
+    .weight_channel_req_valid                                   (weight_channel_req_valid                               [top_pkg::FIXED_8]),
+    .weight_channel_req_ready                                   (weight_channel_req_ready                               [top_pkg::FIXED_8]),
+    .weight_channel_req                                         (weight_channel_req                                     [top_pkg::FIXED_8]),
+    .weight_channel_resp_valid                                  (weight_channel_resp_valid                              [top_pkg::FIXED_8]),
+    .weight_channel_resp_ready                                  (weight_channel_resp_ready                              [top_pkg::FIXED_8]),
+    .weight_channel_resp                                        (weight_channel_resp                                    [top_pkg::FIXED_8]),
 
-        // Weight Channels: FTE -> Prefetcher Weight Bank (REQ)
-        .weight_channel_req_valid                                   (weight_channel_req_valid                               [precision]),
-        .weight_channel_req_ready                                   (weight_channel_req_ready                               [precision]),
-        .weight_channel_req                                         (weight_channel_req                                     [precision]),
-        .weight_channel_resp_valid                                  (weight_channel_resp_valid                              [precision]),
-        .weight_channel_resp_ready                                  (weight_channel_resp_ready                              [precision]),
-        .weight_channel_resp                                        (weight_channel_resp                                    [precision]),
+    // Feature Channels: FTE -> Prefetcher Weight Bank (REQ)
+    .feature_channel_req_valid                                   (feature_channel_req_valid                               [top_pkg::FIXED_8]),
+    .feature_channel_req_ready                                   (feature_channel_req_ready                               [top_pkg::FIXED_8]),
+    .feature_channel_req                                         (feature_channel_req                                     [top_pkg::FIXED_8]),
+    .feature_channel_resp_valid                                  (feature_channel_resp_valid                              [top_pkg::FIXED_8]),
+    .feature_channel_resp_ready                                  (feature_channel_resp_ready                              [top_pkg::FIXED_8]),
+    .feature_channel_resp                                        (feature_channel_resp                                    [top_pkg::FIXED_8]),
 
-        // Feature Channels: FTE -> Prefetcher Weight Bank (REQ)
-        .feature_channel_req_valid                                   (feature_channel_req_valid                               [precision]),
-        .feature_channel_req_ready                                   (feature_channel_req_ready                               [precision]),
-        .feature_channel_req                                         (feature_channel_req                                     [precision]),
-        .feature_channel_resp_valid                                  (feature_channel_resp_valid                              [precision]),
-        .feature_channel_resp_ready                                  (feature_channel_resp_ready                              [precision]),
-        .feature_channel_resp                                        (feature_channel_resp                                    [precision]),
 
-        // // Transformation Buffer Interface
-        // .transformation_buffer_write_enable                         (transformation_buffer_write_enable                     [precision]),
-        // .transformation_buffer_write_address                        (transformation_buffer_write_address                    [precision]),
-        // .transformation_buffer_write_data                           (transformation_buffer_write_data                       [precision]),
-        // .transformation_buffer_slot_free                            (transformation_buffer_slot_free                        [precision]),
+    // AXI Write Master Interface
+    .axi_write_master_req_valid                                 (transformation_core_axi_write_master_req_valid         [top_pkg::FIXED_8]),
+    .axi_write_master_req_ready                                 (transformation_core_axi_write_master_req_ready         [top_pkg::FIXED_8]),
+    .axi_write_master_req_start_address                         (transformation_core_axi_write_master_req_start_address [top_pkg::FIXED_8]),
+    .axi_write_master_req_len                                   (transformation_core_axi_write_master_req_len           [top_pkg::FIXED_8]),
 
-        // AXI Write Master Interface
-        .axi_write_master_req_valid                                 (transformation_core_axi_write_master_req_valid         [precision]),
-        .axi_write_master_req_ready                                 (transformation_core_axi_write_master_req_ready         [precision]),
-        .axi_write_master_req_start_address                         (transformation_core_axi_write_master_req_start_address [precision]),
-        .axi_write_master_req_len                                   (transformation_core_axi_write_master_req_len           [precision]),
+    .axi_write_master_pop                                       (transformation_core_axi_write_master_pop               [top_pkg::FIXED_8]),
+    .axi_write_master_data_valid                                (transformation_core_axi_write_master_data_valid        [top_pkg::FIXED_8]),
+    .axi_write_master_data                                      (transformation_core_axi_write_master_data              [top_pkg::FIXED_8]),
 
-        .axi_write_master_pop                                       (transformation_core_axi_write_master_pop               [precision]),
-        .axi_write_master_data_valid                                (transformation_core_axi_write_master_data_valid        [precision]),
-        .axi_write_master_data                                      (transformation_core_axi_write_master_data              [precision]),
+    .axi_write_master_resp_valid                                (transformation_core_axi_write_master_resp_valid        [top_pkg::FIXED_8]),
+    .axi_write_master_resp_ready                                (transformation_core_axi_write_master_resp_ready        [top_pkg::FIXED_8]),
 
-        .axi_write_master_resp_valid                                (transformation_core_axi_write_master_resp_valid        [precision]),
-        .axi_write_master_resp_ready                                (transformation_core_axi_write_master_resp_ready        [precision]),
-
-        // Layer configuration
-        .writeback_offset                                           (writeback_offset),
-        .layer_config_out_features_count                            (layer_config_out_features_count),
-        .layer_config_out_channel_count                             (layer_config_out_channel_count),
-        .layer_config_out_features_address_msb_value                (layer_config_out_features_address_msb_value),
-        .layer_config_out_features_address_lsb_value                (layer_config_out_features_address_lsb_value),
-        .layer_config_bias_value                                    (layer_config_bias_value),
-        .layer_config_activation_function_value                     (layer_config_activation_function_value),
-        .layer_config_leaky_relu_alpha_value                        (layer_config_leaky_relu_alpha_value),
-        .ctrl_buffering_enable_value                                (ctrl_buffering_enable_value),
-        .ctrl_writeback_enable_value                                (ctrl_writeback_enable_value)
-    );
-end
+    // Layer configuration
+    .writeback_offset                                           (writeback_offset),
+    .layer_config_out_features_count                            (layer_config_out_features_count),
+    .layer_config_out_channel_count                             (layer_config_out_channel_count),
+    .layer_config_out_features_address_msb_value                (layer_config_out_features_address_msb_value),
+    .layer_config_out_features_address_lsb_value                (layer_config_out_features_address_lsb_value),
+    .layer_config_bias_value                                    (layer_config_bias_value),
+    .layer_config_activation_function_value                     (layer_config_activation_function_value),
+    .layer_config_leaky_relu_alpha_value                        (layer_config_leaky_relu_alpha_value),
+    .ctrl_buffering_enable_value                                (ctrl_buffering_enable_value),
+    .ctrl_writeback_enable_value                                (ctrl_writeback_enable_value)
+);
 
 // AXI Write Master
 // -------------------------------------------------------------------------------------
@@ -474,7 +536,7 @@ always_comb begin
     axi_write_master_resp_ready = transformation_core_axi_write_master_resp_ready [transformation_core_write_master_alloc_bin_q];
 end
 
-for (genvar precision = top_pkg::FLOAT_32; precision < top_pkg::PRECISION_COUNT; precision++) begin
+for (genvar precision = 0; precision < top_pkg::PRECISION_COUNT; precision++) begin
 
     always_comb begin
         transformation_core_axi_write_master_req_ready [precision] = axi_write_master_req_ready && (transformation_core_write_master_alloc_bin == precision);

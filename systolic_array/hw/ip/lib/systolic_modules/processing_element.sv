@@ -18,7 +18,8 @@ module processing_element #(
     parameter DATA_WIDTH = 32,
     parameter ACCUMULATOR_WIDTH = 32,
     parameter FRACTIONAL_BITS = 0,
-    parameter FLOAT_WIDTH = 32
+    parameter FLOAT_WIDTH = 32,
+    parameter PASS_THROUGH_DATA_WIDTH = 32
 ) (
     input  logic                            core_clk,
     input  logic                            resetn,
@@ -33,6 +34,9 @@ module processing_element #(
     
     output logic                            pe_forward_out_valid,
     output logic [DATA_WIDTH-1:0]           pe_forward_out,
+
+    input  logic signed [PASS_THROUGH_DATA_WIDTH-1:0]    pe_forward_in_copy,
+    output logic signed [PASS_THROUGH_DATA_WIDTH-1:0]    pe_forward_out_copy,
     
     output logic                            pe_down_out_valid,
     output logic [DATA_WIDTH-1:0]           pe_down_out,
@@ -167,6 +171,7 @@ always_ff @(posedge core_clk or negedge resetn) begin
     if (!resetn) begin
         pe_forward_out_valid        <= '0;
         pe_forward_out              <= '0;
+        pe_forward_out_copy         <= '0;
         
         pe_down_out_valid           <= '0;
         pe_down_out                 <= '0;
@@ -174,6 +179,7 @@ always_ff @(posedge core_clk or negedge resetn) begin
     end else if (pulse_systolic_module) begin
         pe_forward_out_valid        <= pe_forward_in_valid;
         pe_forward_out              <= pe_forward_in;
+        pe_forward_out_copy         <= pe_forward_in_copy;
 
         pe_down_out_valid           <= pe_down_in_valid;
         pe_down_out                 <= pe_down_in;
