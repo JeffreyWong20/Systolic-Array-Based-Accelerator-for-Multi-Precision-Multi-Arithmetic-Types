@@ -148,7 +148,7 @@ for (genvar mp_sys_module = 0; mp_sys_module < CORE_COUNT; mp_sys_module++) begi
         mp_weight_channel_resp[mp_sys_module].data = weight_channel_resp.data[mp_sys_module*SYSTOLIC_MODULE_COUNT*MATRIX_N + SYSTOLIC_MODULE_COUNT*MATRIX_N-1 : mp_sys_module*SYSTOLIC_MODULE_COUNT*MATRIX_N];
     end
 
-    mixed_precision_systolic_module #(
+    (* keep_hierarchy = "yes" *) mixed_precision_systolic_module #(
         .PRECISION(PRECISION),
         .FLOAT_WIDTH(FLOAT_WIDTH),
         .MATRIX_N(MATRIX_N),
@@ -414,6 +414,7 @@ end
 always_ff @(posedge core_clk or negedge resetn) begin
     if (!resetn) begin
         output_row_to_writeback <= '0;
+        total_row_to_writeback <= '0;
         sent_writeback_beats <= '0;
 
     // Accepting NSB request

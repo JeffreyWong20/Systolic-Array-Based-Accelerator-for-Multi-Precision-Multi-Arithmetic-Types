@@ -107,17 +107,23 @@ torch.manual_seed(42)
 np.random.seed(0)
 model_name = "jsc-s"
 dataset_name = "jsc"
+SYSTOLIC_MODULE_HEIGHT = 4
+
 
 CORE_COUNT = 1
 SYSTOLIC_MODULE_COUNT = 4
-SYSTOLIC_MODULE_HEIGHT = 4
-HIGH_PRECISION_SYSTOLIC_MODULE_COUNT = 2
-high_precision = (8, 4)
-low_precision = (4, 3)
+HIGH_PRECISION_SYSTOLIC_MODULE_COUNT = 1
+high_precision  =  (11, 6)  # (8, 4)
+low_precision   =  (1, 1)  #(4, 3)
 
 systolic_array_size = (SYSTOLIC_MODULE_HEIGHT, SYSTOLIC_MODULE_COUNT*4*CORE_COUNT)
 block_width, block_high_width = SYSTOLIC_MODULE_COUNT*4, HIGH_PRECISION_SYSTOLIC_MODULE_COUNT*4
 byte_per_feature = 4
+
+
+# Remember to execute this script to prepare the memory
+CHECKPOINT_PATH = "/home/thw20/mase-tools/mase_output/jsc-s-high-11-6-low-1-1-16-4/fused/software/transform/transformed_ckpt/graph_module.mz"
+# CHECKPOINT_PATH = "/home/thw20/mase-tools/mase_output/fused/software/transform/transformed_ckpt/graph_module.mz"
 
 
 batch_size = systolic_array_size[0]
@@ -135,9 +141,6 @@ second_layer_result = 0x1300000
 third_layer_result = 0x1400000
 fourth_layer_result = 0x1500000
 fifth_layer_result = 0x1600000
-
-# CHECKPOINT_PATH = "/home/thw20/mase-tools/mase_output/jsc-s-high-11-6-low-1-1-16-4/fused/software/transform/transformed_ckpt/graph_module.mz"
-CHECKPOINT_PATH = "/home/thw20/mase-tools/mase_output/fused/software/transform/transformed_ckpt/graph_module.mz"
 
 
 

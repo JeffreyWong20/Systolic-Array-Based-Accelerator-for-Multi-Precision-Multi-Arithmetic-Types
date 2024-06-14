@@ -131,7 +131,7 @@ VERILOG_SOURCES = \
 
 # Packages
 VERILOG_SOURCES += \
-	$(FYP_DIR)/hw/ip/include/top_pkg.sv
+	$(FYP_DIR)/hw/include/top_pkg.sv
 
 # VHDL_SOURCES = \
 # 	$(FYP_DIR)/hw/build/project_1.srcs/sources_1/ip/fp_mult/sim/fp_mult.vhd \
